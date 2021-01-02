@@ -44,6 +44,6 @@ def test_valid_kpp(kpp):
     "77100234440",
     "7709ABС02"    # don't match regexp
 ])
-def test_wrong_inn(kpp):
+def test_wrong_kpp(kpp):
     with pytest.raises(ValidationError):
         validate_kpp(kpp)
