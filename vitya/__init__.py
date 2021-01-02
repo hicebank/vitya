@@ -45,4 +45,21 @@ def validate_inn(inn: str) -> None:
             raise ValidationError(f"wrong checksum on last digit: {inn[11]}; expected: {n12}")
         return
 
-    raise ValidationError("wrong size of inn, it can be 10 or 12 only")
+    raise ValidationError("wrong size of inn, it can be 10 or 12 chars only")
+
+
+def validate_kpp(kpp: str) -> None:
+    """
+    Source: https://kontur.ru/bk/spravka/491-chtotakoe_kpp
+    """
+    if not kpp:
+        raise ValidationError("kpp is empty")
+
+    if not isinstance(kpp, str):
+        raise ValidationError("kpp should be passed as string")
+
+    if len(kpp) != 9:
+        raise ValidationError("wrong size of kpp, it can be 9 chars only")
+
+    if not re.fullmatch(r'[0-9]{4}[0-9A-Z]{2}[0-9]{3}', kpp):
+        raise ValidationError("wrong kpp")
