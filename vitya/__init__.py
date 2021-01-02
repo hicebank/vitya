@@ -63,3 +63,21 @@ def validate_kpp(kpp: str) -> None:
 
     if not re.fullmatch(r'[0-9]{4}[0-9A-Z]{2}[0-9]{3}', kpp):
         raise ValidationError("wrong kpp")
+
+
+def validate_bic(bic: str) -> None:
+    """
+    Source:
+    https://ru.wikipedia.org/wiki/%D0%91%D0%B0%D0%BD%D0%BA%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B9_%D0%B8%D0%B4%D0%B5%D0%BD%D1%82%D0%B8%D1%84%D0%B8%D0%BA%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D1%8B%D0%B9_%D0%BA%D0%BE%D0%B4
+    """
+    if not bic:
+        raise ValidationError("bic is empty")
+
+    if not isinstance(bic, str):
+        raise ValidationError("bic should be passed as string")
+
+    if len(bic) != 9:
+        raise ValidationError("wrong size of bic, it can be 9 chars only")
+
+    if not re.fullmatch(r'04[0-9]+', bic):
+        raise ValidationError("wrong bic")
