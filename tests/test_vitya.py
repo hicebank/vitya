@@ -1,6 +1,6 @@
 import pytest
 
-from vitya import validate_inn, ValidationError, validate_kpp
+from vitya import validate_inn, ValidationError, validate_kpp, validate_bic
 
 
 @pytest.mark.parametrize("inn", [
@@ -12,11 +12,11 @@ def test_valid_inn(inn):
 
 
 @pytest.mark.parametrize("inn", [
-    None,           # inn can't be None
+    None,           # can't be None
     "",
-    3664069397,     # inn can't be nothing than str
+    3664069397,     # can't be nothing than str
     302502032671,
-    "770708389",    # inn should be size of 10 or 12 chars
+    "770708389",    # should be size of 10 or 12 chars
     "77100234440",
     "3664069398",   # wrong checksums
     "302502032672",
@@ -37,14 +37,36 @@ def test_valid_kpp(kpp):
 
 
 @pytest.mark.parametrize("kpp", [
-    None,          # inn can't be None
+    None,          # can't be None
     "",
-    616401001,     # inn can't be nothing than str
+    616401001,     # can't be nothing than str
     770943002,
-    "77070838",    # inn should be size of 9 chars
+    "77070838",    # should be size of 9 chars
     "77100234440",
     "7709ABС02"    # don't match regexp
 ])
 def test_wrong_kpp(kpp):
     with pytest.raises(ValidationError):
         validate_kpp(kpp)
+
+
+@pytest.mark.parametrize("bic", [
+    "044525901", "043002717"
+])
+def test_valid_bic(bic):
+    """No exception raise"""
+    assert validate_bic(bic) is None
+
+
+@pytest.mark.parametrize("bic", [
+    None,          # inn can't be None
+    "",
+    770943002,     # inn can't be nothing than str
+    "04452590",    # inn should be size of 9 chars
+    "0445259011",
+    "034525901"    # don't match regexp
+    "04452A901"
+])
+def test_wrong_bic(bic):
+    with pytest.raises(ValidationError):
+        validate_bic(bic)
