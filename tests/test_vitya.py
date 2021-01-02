@@ -13,6 +13,7 @@ def test_valid_inn(inn):
 
 @pytest.mark.parametrize("inn", [
     None,           # inn can't be None
+    "",
     3664069397,     # inn can't be nothing than str
     302502032671,
     "770708389",    # inn should be size of 10 or 12 chars
