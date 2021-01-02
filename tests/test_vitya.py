@@ -59,10 +59,10 @@ def test_valid_bic(bic):
 
 
 @pytest.mark.parametrize("bic", [
-    None,          # inn can't be None
+    None,          # can't be None
     "",
-    770943002,     # inn can't be nothing than str
-    "04452590",    # inn should be size of 9 chars
+    770943002,     # can't be nothing than str
+    "04452590",    # should be size of 9 chars
     "0445259011",
     "034525901"    # don't match regexp
     "04452A901"
