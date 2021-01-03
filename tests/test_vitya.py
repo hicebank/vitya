@@ -1,6 +1,6 @@
 import pytest
 
-from vitya import validate_inn, ValidationError, validate_kpp, validate_bic
+from vitya import validate_inn, ValidationError, validate_kpp, validate_bic, validate_ogrn
 
 
 @pytest.mark.parametrize("inn", [
@@ -70,3 +70,25 @@ def test_valid_bic(bic):
 def test_wrong_bic(bic):
     with pytest.raises(ValidationError):
         validate_bic(bic)
+
+
+@pytest.mark.parametrize("ogrn", [
+    "1027700132195", "1037700013020"
+])
+def test_valid_ogrn(ogrn):
+    """No exception raise"""
+    assert validate_ogrn(ogrn) is None
+
+
+@pytest.mark.parametrize("ogrn", [
+    None,          # can't be None
+    "",
+    1027700132195,     # can't be nothing than str
+    "102770013219",    # should be size of 13 chars
+    "10277001321955",
+    "1027A00132195"    # don't match regexp
+    "0027700132195"
+])
+def test_wrong_ogrn(ogrn):
+    with pytest.raises(ValidationError):
+        validate_ogrn(ogrn)
