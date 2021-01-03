@@ -7,8 +7,8 @@ setuptools.setup(
     name="vitya",   # Replace with your own username
     version="0.0.3",
     author="hicebank.ru",
-    author_email="levashov@hicebank.ru",
-    description="validators for different russian banking values",
+    author_email="inyutin@hicebank.ru",
+    description="Validators for different russian banking values",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/hicebank/vitya",
