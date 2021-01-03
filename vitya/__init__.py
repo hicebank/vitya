@@ -81,3 +81,25 @@ def validate_bic(bic: str) -> None:
 
     if not re.fullmatch(r'04[0-9]+', bic):
         raise ValidationError("wrong bic")
+
+
+def validate_ogrn(ogrn: str) -> None:
+    """
+    Source:
+    https://ru.wikipedia.org/wiki/%D0%9E%D1%81%D0%BD%D0%BE%D0%B2%D0%BD%D0%BE%D0%B9_%D0%B3%D0%BE%D1%81%D1%83%D0%B4%D0%B0%D1%80%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BD%D1%8B%D0%B9_%D1%80%D0%B5%D0%B3%D0%B8%D1%81%D1%82%D1%80%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D1%8B%D0%B9_%D0%BD%D0%BE%D0%BC%D0%B5%D1%80
+    """
+    if not ogrn:
+        raise ValidationError("ogrn is empty")
+
+    if not isinstance(ogrn, str):
+        raise ValidationError("ogrn should be passed as string")
+
+    if len(ogrn) != 13:
+        raise ValidationError("wrong size of ogrn, it can be 13 chars only")
+
+    if not re.fullmatch(r'[1-9][0-9]+', ogrn):
+        raise ValidationError("wrong kpp")
+
+    n13 = int(ogrn[:-1]) % 11 % 10
+    if n13 != int(ogrn[12]):
+        raise ValidationError(f"wrong checksum on pre-last digit: {ogrn[12]}; expected: {n13}")
