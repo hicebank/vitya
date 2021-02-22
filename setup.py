@@ -4,8 +4,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="vitya",   # Replace with your own username
-    version="0.0.3",
+    name="vitya",
+    version="0.0.4",
     author="hicebank.ru",
     author_email="inyutin@hicebank.ru",
     description="Validators for different russian banking values",
