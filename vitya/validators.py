@@ -94,12 +94,16 @@ def validate_ogrn(ogrn: str) -> None:
     if not isinstance(ogrn, str):
         raise ValidationError("ogrn should be passed as string")
 
-    if len(ogrn) != 13:
+    if len(ogrn) != 13 and len(ogrn) != 15:
         raise ValidationError("wrong size of ogrn, it can be 13 chars only")
 
     if not re.fullmatch(r'[1-9][0-9]+', ogrn):
         raise ValidationError("wrong ogrn")
 
-    n13 = int(ogrn[:-1]) % 11 % 10
-    if n13 != int(ogrn[12]):
-        raise ValidationError(f"wrong checksum on pre-last digit: {ogrn[12]}; expected: {n13}")
+    if len(ogrn) == 13:
+        n13 = int(ogrn[:-1]) % 11 % 10
+        if n13 != int(ogrn[12]):
+            raise ValidationError(f"wrong checksum on pre-last digit: {ogrn[12]}; expected: {n13}")
+    if len(ogrn) == 15:
+        # TODO: add ОГРНИП validation
+        return

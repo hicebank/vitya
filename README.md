@@ -1,4 +1,7 @@
 # vitya
+
+**WARNING**: This library is still in development stage.
+
 Validators for different russian banking values.  
 Values you can validate:
 - ИНН ```validate_inn```

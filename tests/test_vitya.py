@@ -73,7 +73,7 @@ def test_wrong_bic(bic):
 
 
 @pytest.mark.parametrize("ogrn", [
-    "1027700132195", "1037700013020"
+    "1027700132195", "1037700013020", "316784700262702"
 ])
 def test_valid_ogrn(ogrn):
     """No exception raise"""
