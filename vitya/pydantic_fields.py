@@ -16,7 +16,7 @@ class PydanticValidationError(PydanticValueError):
     msg_template = 'invalid {name}: {reason}'
 
 
-def _validate_wrapper(func: Callable[[str], None], name: str, value: str):
+def _validate_wrapper(func: Callable[[str], None], name: str, value: str) -> str:
     try:
         func(value)
     except ValidationError as e:
