@@ -104,6 +104,46 @@ def validate_ogrn(ogrn: str) -> None:
         n13 = int(ogrn[:-1]) % 11 % 10
         if n13 != int(ogrn[12]):
             raise ValidationError(f'wrong checksum on pre-last digit: {ogrn[12]}; expected: {n13}')
+
     if len(ogrn) == 15:
-        # TODO: add ОГРНИП validation
-        return
+        n15 = int(ogrn[:-1]) % 13 % 10
+        if n15 != int(ogrn[14]):
+            raise ValidationError(f'wrong checksum on pre-last digit: {ogrn[14]}; expected: {n15}')
+
+
+def validate_snils(snils: str) -> None:
+    """
+    Source:
+    https://www.consultant.ru/document/cons_doc_LAW_124607/68ac3b2d1745f9cc7d4332b63c2818ca5d5d20d0/
+    """
+    if not snils:
+        raise ValidationError('snils is empty')
+
+    if not isinstance(snils, str):
+        raise ValidationError('snils should be passed as string')
+
+    if not re.fullmatch(r'[0-9]{3}-[0-9]{3}-[0-9]{3} [0-9]{2}', snils):
+        raise ValidationError('wrong snils')
+
+    numbers = []
+    parts = [snils[0:3], snils[4:7], snils[8:11]]
+    for part in parts:
+        numbers.extend([int(num) for num in part])
+
+    # results = [numbers[i-1] * (10-i) for i in range(1, 10)]
+    #checksum = sum(results)
+    checksum = 0
+    for i in range(1, 10):
+        checksum += numbers[i-1] * (10-i)
+
+    if checksum == 100:
+        checksum_str = "00"
+    else:
+        checksum = checksum % 101
+        if checksum < 10:
+            checksum_str = f"0{checksum}"
+        else:
+            checksum_str = str(checksum)
+
+    if checksum_str != snils[-2:]:
+        raise ValidationError(f'wrong checksum: {snils[-2:]}; expected: {checksum_str}')
