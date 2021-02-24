@@ -1,1 +1,2 @@
-from .validators import validate_inn, validate_ogrn, validate_bic, validate_kpp, ValidationError    # noqa: F401
+from .validators import (ValidationError, validate_bic,  # noqa: F401
+                         validate_inn, validate_kpp, validate_ogrn)

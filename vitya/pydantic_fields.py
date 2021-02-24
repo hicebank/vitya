@@ -1,23 +1,28 @@
-from typing import Generator, Callable, Any
+from typing import Any, Callable, Generator
 
-from vitya import validate_inn, ValidationError, validate_kpp, validate_bic, validate_ogrn
-
-# TODO: add tests
-
+from vitya import (ValidationError, validate_bic, validate_inn, validate_kpp,
+                   validate_ogrn)
+from vitya.validators import validate_snils
 
 try:
     from pydantic import PydanticValueError
 except ImportError:
     pass
 
-try:
-    from pydantic.typing import CallableGenerator
-except ImportError:
-    CallableGenerator = Generator[Callable[..., Any], None, None]
+CallableGenerator = Generator[Callable[..., Any], None, None]
 
 
-class InvalidValueError(PydanticValueError):
-    msg_template = 'invalid value'
+class PydanticValidationError(PydanticValueError):
+    msg_template = 'invalid {name}: {reason}'
+
+
+def _validate_wrapper(func: Callable[[str], None], name: str, value: str) -> str:
+    try:
+        func(value)
+    except ValidationError as e:
+        raise PydanticValidationError(name=name, reason=str(e))
+
+    return value
 
 
 class Inn(str):
@@ -26,13 +31,8 @@ class Inn(str):
         yield cls.validate
 
     @classmethod
-    def validate(cls, value: str):
-        try:
-            validate_inn(value)
-        except ValidationError as e:
-            raise InvalidValueError() from e
-
-        return value
+    def validate(cls, value: str) -> str:
+        return _validate_wrapper(validate_inn, "inn", value)
 
 
 class Kpp(str):
@@ -41,13 +41,8 @@ class Kpp(str):
         yield cls.validate
 
     @classmethod
-    def validate(cls, value: str):
-        try:
-            validate_kpp(value)
-        except ValidationError as e:
-            raise InvalidValueError() from e
-
-        return value
+    def validate(cls, value: str) -> str:
+        return _validate_wrapper(validate_kpp, "kpp", value)
 
 
 class Bic(str):
@@ -56,13 +51,8 @@ class Bic(str):
         yield cls.validate
 
     @classmethod
-    def validate(cls, value: str):
-        try:
-            validate_bic(value)
-        except ValidationError as e:
-            raise InvalidValueError() from e
-
-        return value
+    def validate(cls, value: str) -> str:
+        return _validate_wrapper(validate_bic, "bic", value)
 
 
 class Ogrn(str):
@@ -71,10 +61,15 @@ class Ogrn(str):
         yield cls.validate
 
     @classmethod
-    def validate(cls, value: str):
-        try:
-            validate_ogrn(value)
-        except ValidationError as e:
-            raise InvalidValueError() from e
+    def validate(cls, value: str) -> str:
+        return _validate_wrapper(validate_ogrn, "ogrn", value)
 
-        return value
+
+class Snils(str):
+    @classmethod
+    def __get_validators__(cls) -> CallableGenerator:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: str) -> str:
+        return _validate_wrapper(validate_snils, "snils", value)
