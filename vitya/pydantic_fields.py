@@ -1,6 +1,7 @@
-from typing import Generator, Callable, Any
+from typing import Any, Callable, Generator
 
-from vitya import validate_inn, ValidationError, validate_kpp, validate_bic, validate_ogrn
+from vitya import (ValidationError, validate_bic, validate_inn, validate_kpp,
+                   validate_ogrn)
 
 # TODO: add tests
 
@@ -10,10 +11,7 @@ try:
 except ImportError:
     pass
 
-try:
-    from pydantic.typing import CallableGenerator
-except ImportError:
-    CallableGenerator = Generator[Callable[..., Any], None, None]
+CallableGenerator = Generator[Callable[..., Any], None, None]
 
 
 class InvalidValueError(PydanticValueError):
@@ -26,7 +24,7 @@ class Inn(str):
         yield cls.validate
 
     @classmethod
-    def validate(cls, value: str):
+    def validate(cls, value: str) -> str:
         try:
             validate_inn(value)
         except ValidationError as e:
@@ -41,7 +39,7 @@ class Kpp(str):
         yield cls.validate
 
     @classmethod
-    def validate(cls, value: str):
+    def validate(cls, value: str) -> str:
         try:
             validate_kpp(value)
         except ValidationError as e:
@@ -56,7 +54,7 @@ class Bic(str):
         yield cls.validate
 
     @classmethod
-    def validate(cls, value: str):
+    def validate(cls, value: str) -> str:
         try:
             validate_bic(value)
         except ValidationError as e:
@@ -71,7 +69,7 @@ class Ogrn(str):
         yield cls.validate
 
     @classmethod
-    def validate(cls, value: str):
+    def validate(cls, value: str) -> str:
         try:
             validate_ogrn(value)
         except ValidationError as e:

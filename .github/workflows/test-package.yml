@@ -27,6 +27,9 @@ jobs:
     - name: Lint with flake8
       run: |
         flake8 --max-line-length=127 .
+    - name: Check isort
+      run: |
+        isort -c vitya/ tests/
     - name: Test with pytest
       env:
         PYTHONPATH: .
@@ -34,4 +37,4 @@ jobs:
         pytest
     - name: Test with mypy
       run: |
-        mypy -m vitya
+        mypy --config-file mypy.ini -p vitya
