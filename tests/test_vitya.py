@@ -151,7 +151,7 @@ def test_wrong_ogrn(ogrn):
 @pytest.mark.parametrize('snils', [
     '112-233-445 95'
 ])
-def test_valid_ogrn(snils):
+def test_valid_snils(snils):
     """No exception raise"""
     assert validate_snils(snils) is None
 
@@ -169,7 +169,7 @@ def test_valid_ogrn(snils):
     '12-233-44595',
     '12-233-445 96',
 ])
-def test_wrong_ogrn(snils):
+def test_wrong_snils(snils):
     with pytest.raises(VityaValidationError):
         validate_snils(snils)
 

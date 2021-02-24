@@ -130,11 +130,8 @@ def validate_snils(snils: str) -> None:
     for part in parts:
         numbers.extend([int(num) for num in part])
 
-    # results = [numbers[i-1] * (10-i) for i in range(1, 10)]
-    #checksum = sum(results)
-    checksum = 0
-    for i in range(1, 10):
-        checksum += numbers[i-1] * (10-i)
+    results = [numbers[i-1] * (10-i) for i in range(1, 10)]
+    checksum = sum(results)
 
     if checksum == 100:
         checksum_str = "00"
