@@ -3,9 +3,8 @@ from pydantic import BaseModel
 from pydantic import ValidationError as PydanticValidationError
 
 from vitya import ValidationError as VityaValidationError
-from vitya import validate_bic, validate_inn, validate_kpp, validate_ogrn
+from vitya import validate_bic, validate_inn, validate_kpp, validate_ogrn, validate_snils
 from vitya.pydantic_fields import Bic, Inn, Kpp, Ogrn, Snils
-from vitya.validators import validate_snils
 
 
 class InnModel(BaseModel):
