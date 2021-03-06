@@ -1,5 +1,5 @@
 import re
-from typing import List
+from typing import List, Optional
 
 
 class ValidationError(ValueError):
@@ -9,38 +9,40 @@ class ValidationError(ValueError):
     pass
 
 
-def validate_inn(inn: str) -> None:
+def _count_inn_checksum(inn: str, coefficients: List[int]) -> int:
+    assert len(inn) == len(coefficients)
+    n = sum([int(digit) * coef for digit, coef in zip(inn, coefficients)])
+    return n % 11 % 10
+
+
+def validate_inn(inn: str, is_ip: Optional[bool] = None) -> None:
     """
     Source:
     https://www.consultant.ru/document/cons_doc_LAW_134082/947eeb5630c9f58cbc6103f0910440cef8eaccac/
     https://ru.wikipedia.org/wiki/%D0%98%D0%B4%D0%B5%D0%BD%D1%82%D0%B8%D1%84%D0%B8%D0%BA%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D1%8B%D0%B9_%D0%BD%D0%BE%D0%BC%D0%B5%D1%80_%D0%BD%D0%B0%D0%BB%D0%BE%D0%B3%D0%BE%D0%BF%D0%BB%D0%B0%D1%82%D0%B5%D0%BB%D1%8C%D1%89%D0%B8%D0%BA%D0%B0
     """
-    if not inn:
-        raise ValidationError('inn is empty')
-
     if not isinstance(inn, str):
         raise ValidationError('inn should be passed as string')
 
     if not re.fullmatch(r'[0-9]+', inn):
         raise ValidationError('inn can contain only numbers')
 
-    def count_checksum(inn: str, coefficients: List[int]) -> int:
-        assert len(inn) >= len(coefficients)
-        n = sum([int(a) * b for a, b in zip(inn[:len(coefficients)], coefficients)])
-        return n % 11 % 10
+    coefs10 = [2, 4, 10, 3, 5, 9, 4, 6, 8]
+    coefs11 = [7] + coefs10
+    coefs12 = [3] + coefs11
 
-    if len(inn) == 10:
-        n10 = count_checksum(inn, [2, 4, 10, 3, 5, 9, 4, 6, 8])
+    if len(inn) == 10 and is_ip is not True:
+        n10 = _count_inn_checksum(inn[:9], coefs10)
         if n10 != int(inn[9]):
             raise ValidationError(f'wrong checksum on last digit: {inn[9]}; expected: {n10}')
         return
 
-    if len(inn) == 12:
-        n11 = count_checksum(inn, [7, 2, 4, 10, 3, 5, 9, 4, 6, 8])
+    if len(inn) == 12 and is_ip is not False:
+        n11 = _count_inn_checksum(inn[:10], coefs11)
         if n11 != int(inn[10]):
             raise ValidationError(f'wrong checksum on pre-last digit: {inn[10]}; expected: {n11}')
 
-        n12 = count_checksum(inn, [3, 7, 2, 4, 10, 3, 5, 9, 4, 6, 8])
+        n12 = _count_inn_checksum(inn[:11], coefs12)
         if n12 != int(inn[11]):
             raise ValidationError(f'wrong checksum on last digit: {inn[11]}; expected: {n12}')
         return
@@ -48,13 +50,18 @@ def validate_inn(inn: str) -> None:
     raise ValidationError('wrong size of inn, it can be 10 or 12 chars only')
 
 
+def validate_inn_ip(inn: str) -> None:
+    return validate_inn(inn, is_ip=True)
+
+
+def validate_inn_jur(inn: str) -> None:
+    return validate_inn(inn, is_ip=False)
+
+
 def validate_kpp(kpp: str) -> None:
     """
     Source: https://kontur.ru/bk/spravka/491-chtotakoe_kpp
     """
-    if not kpp:
-        raise ValidationError('kpp is empty')
-
     if not isinstance(kpp, str):
         raise ValidationError('kpp should be passed as string')
 
@@ -69,10 +76,8 @@ def validate_bic(bic: str) -> None:
     """
     Source:
     https://ru.wikipedia.org/wiki/%D0%91%D0%B0%D0%BD%D0%BA%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B9_%D0%B8%D0%B4%D0%B5%D0%BD%D1%82%D0%B8%D1%84%D0%B8%D0%BA%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D1%8B%D0%B9_%D0%BA%D0%BE%D0%B4
+    https://bik-info.ru/
     """
-    if not bic:
-        raise ValidationError('bic is empty')
-
     if not isinstance(bic, str):
         raise ValidationError('bic should be passed as string')
 
@@ -83,14 +88,11 @@ def validate_bic(bic: str) -> None:
         raise ValidationError('wrong bic')
 
 
-def validate_ogrn(ogrn: str) -> None:
+def validate_ogrn(ogrn: str, is_ip: Optional[bool] = None) -> None:
     """
     Source:
     https://ru.wikipedia.org/wiki/%D0%9E%D1%81%D0%BD%D0%BE%D0%B2%D0%BD%D0%BE%D0%B9_%D0%B3%D0%BE%D1%81%D1%83%D0%B4%D0%B0%D1%80%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BD%D1%8B%D0%B9_%D1%80%D0%B5%D0%B3%D0%B8%D1%81%D1%82%D1%80%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D1%8B%D0%B9_%D0%BD%D0%BE%D0%BC%D0%B5%D1%80
     """
-    if not ogrn:
-        raise ValidationError('ogrn is empty')
-
     if not isinstance(ogrn, str):
         raise ValidationError('ogrn should be passed as string')
 
@@ -100,15 +102,23 @@ def validate_ogrn(ogrn: str) -> None:
     if not re.fullmatch(r'[1-9][0-9]+', ogrn):
         raise ValidationError('wrong ogrn')
 
-    if len(ogrn) == 13:
+    if len(ogrn) == 13 and is_ip is not True:
         n13 = int(ogrn[:-1]) % 11 % 10
         if n13 != int(ogrn[12]):
             raise ValidationError(f'wrong checksum on pre-last digit: {ogrn[12]}; expected: {n13}')
+        return
 
-    if len(ogrn) == 15:
+    if len(ogrn) == 15 and is_ip is not False:
         n15 = int(ogrn[:-1]) % 13 % 10
         if n15 != int(ogrn[14]):
             raise ValidationError(f'wrong checksum on pre-last digit: {ogrn[14]}; expected: {n15}')
+        return
+
+    raise ValidationError('ogrn for ip can be 15 chars only')
+
+
+def validate_ogrnip(ogrnip: str) -> None:
+    return validate_ogrn(ogrnip, is_ip=True)
 
 
 def validate_snils(snils: str) -> None:
@@ -116,9 +126,6 @@ def validate_snils(snils: str) -> None:
     Source:
     https://www.consultant.ru/document/cons_doc_LAW_124607/68ac3b2d1745f9cc7d4332b63c2818ca5d5d20d0/
     """
-    if not snils:
-        raise ValidationError('snils is empty')
-
     if not isinstance(snils, str):
         raise ValidationError('snils should be passed as string')
 
@@ -130,7 +137,7 @@ def validate_snils(snils: str) -> None:
     for part in parts:
         numbers.extend([int(num) for num in part])
 
-    results = [numbers[i-1] * (10-i) for i in range(1, 10)]
+    results = [numbers[i - 1] * (10 - i) for i in range(1, 10)]
     checksum = sum(results)
 
     if checksum == 100:

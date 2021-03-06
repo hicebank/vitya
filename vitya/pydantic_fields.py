@@ -1,11 +1,10 @@
 from typing import Any, Callable, Generator
 
-from vitya import (ValidationError, validate_bic, validate_inn, validate_kpp,
-                   validate_ogrn)
-from vitya.validators import validate_snils
+from .validators import (ValidationError, validate_bic, validate_inn, validate_kpp,
+                         validate_ogrn, validate_snils, validate_inn_ip, validate_inn_jur, validate_ogrnip)
 
 try:
-    from pydantic import PydanticValueError
+    from pydantic.errors import PydanticValueError
 except ImportError:
     pass
 
@@ -33,6 +32,26 @@ class Inn(str):
     @classmethod
     def validate(cls, value: str) -> str:
         return _validate_wrapper(validate_inn, "inn", value)
+
+
+class InnIp(str):
+    @classmethod
+    def __get_validators__(cls) -> CallableGenerator:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: str) -> str:
+        return _validate_wrapper(validate_inn_ip, "inn_ip", value)
+
+
+class InnJur(str):
+    @classmethod
+    def __get_validators__(cls) -> CallableGenerator:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: str) -> str:
+        return _validate_wrapper(validate_inn_jur, "inn_jur", value)
 
 
 class Kpp(str):
@@ -63,6 +82,16 @@ class Ogrn(str):
     @classmethod
     def validate(cls, value: str) -> str:
         return _validate_wrapper(validate_ogrn, "ogrn", value)
+
+
+class OgrnIp(str):
+    @classmethod
+    def __get_validators__(cls) -> CallableGenerator:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: str) -> str:
+        return _validate_wrapper(validate_ogrnip, "ogrn_ip", value)
 
 
 class Snils(str):

@@ -5,9 +5,12 @@
 Validators for different russian banking values.  
 Values you can validate:
 - ИНН ```validate_inn```
+    - ИНН для ИП/Физ.Лица ```validate_inn_ip```
+    - ИНН для Юр.Лица ```validate_inn_jur```
 - КПП ```validate_kpp```
 - БИК ```validate_bic```
 - ОГРН ```validate_ogrn```
+    - ОГРНИП ```validate_ogrnip```
 - СНИЛС ```validate_snils```
 
 You should pass value as ```str```, otherwise exception will be raised.  

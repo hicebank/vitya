@@ -2,14 +2,21 @@ import pytest
 from pydantic import BaseModel
 from pydantic import ValidationError as PydanticValidationError
 
-from vitya import ValidationError as VityaValidationError
-from vitya import (validate_bic, validate_inn, validate_kpp, validate_ogrn,
-                   validate_snils)
-from vitya.pydantic_fields import Bic, Inn, Kpp, Ogrn, Snils
+from vitya import ValidationError as VityaValidationError, validate_inn_jur, validate_inn_ip, validate_ogrnip
+from vitya import validate_bic, validate_inn, validate_kpp, validate_ogrn, validate_snils
+from vitya.pydantic_fields import Bic, Inn, Kpp, Ogrn, Snils, InnIp, InnJur, OgrnIp
 
 
 class InnModel(BaseModel):
     inn: Inn
+
+
+class InnModelIp(BaseModel):
+    inn: InnIp
+
+
+class InnModelJur(BaseModel):
+    inn: InnJur
 
 
 class KppModel(BaseModel):
@@ -22,6 +29,10 @@ class BicModel(BaseModel):
 
 class OgrnModel(BaseModel):
     ogrn: Ogrn
+
+
+class OgrnIpModel(BaseModel):
+    ogrnip: OgrnIp
 
 
 class SnilsModel(BaseModel):
@@ -37,6 +48,32 @@ def test_valid_inn(inn):
 
     inn_model = InnModel(inn=inn)
     assert inn_model.inn == inn
+
+
+@pytest.mark.parametrize('inn', [
+    '469933069430', '368332974449', '298410962506', '686899030369', '097289845404'
+])
+def test_valid_inn_ip(inn):
+    assert validate_inn_ip(inn) is None
+
+    inn_model_ip = InnModelIp(inn=inn)
+    assert inn_model_ip.inn == inn
+
+    with pytest.raises(PydanticValidationError):
+        InnModelJur(inn=inn)
+
+
+@pytest.mark.parametrize('inn', [
+    '9267145148', '5302008630', '6524062615', '0207895252', '0990471741'
+])
+def test_valid_inn_jur(inn):
+    assert validate_inn_jur(inn) is None
+
+    inn_model_jur = InnModelJur(inn=inn)
+    assert inn_model_jur.inn == inn
+
+    with pytest.raises(PydanticValidationError):
+        InnModelIp(inn=inn)
 
 
 @pytest.mark.parametrize('inn', [
@@ -58,9 +95,15 @@ def test_wrong_inn(inn):
     with pytest.raises(PydanticValidationError):
         InnModel(inn=inn)
 
+    with pytest.raises(PydanticValidationError):
+        InnModelIp(inn=inn)
+
+    with pytest.raises(PydanticValidationError):
+        InnModelJur(inn=inn)
+
 
 @pytest.mark.parametrize('kpp', [
-    '616401001', '770943002', '7709AB002'
+    '616401001', '770943002', '7709AB002', '320143522', '704601307'
 ])
 def test_valid_kpp(kpp):
     """No exception raise"""
@@ -84,11 +127,11 @@ def test_wrong_kpp(kpp):
         validate_kpp(kpp)
 
     with pytest.raises(PydanticValidationError):
-        InnModel(kpp=kpp)
+        KppModel(kpp=kpp)
 
 
 @pytest.mark.parametrize('bic', [
-    '044525901', '043002717'
+    '044525901', '043002717', '046577964', '040349758', '041806647'
 ])
 def test_valid_bic(bic):
     """No exception raise"""
@@ -112,11 +155,11 @@ def test_wrong_bic(bic):
         validate_bic(bic)
 
     with pytest.raises(PydanticValidationError):
-        InnModel(bic=bic)
+        BicModel(bic=bic)
 
 
 @pytest.mark.parametrize('ogrn', [
-    '1027700132195', '1037700013020', '316784700262702', '304500116000157'
+    '1027700132195', '1037700013020', '316784700262702', '304500116000157', '1076935620520'
 ])
 def test_valid_ogrn(ogrn):
     """No exception raise"""
@@ -124,6 +167,25 @@ def test_valid_ogrn(ogrn):
 
     ogrn_model = OgrnModel(ogrn=ogrn)
     assert ogrn_model.ogrn == ogrn
+
+
+@pytest.mark.parametrize('ogrnip', [
+    '304051927964808', '314057243354856', '307870729546242', '312550098407541', '308633624812989'
+])
+def test_valid_ogrnip(ogrnip):
+    """No exception raise"""
+    assert validate_ogrnip(ogrnip) is None
+
+    ogrnip_model = OgrnIpModel(ogrnip=ogrnip)
+    assert ogrnip_model.ogrnip == ogrnip
+
+
+@pytest.mark.parametrize('ogrnip', [
+    '1076935620520', '5122703513136', '5081268440446', '5063675362394'
+])
+def test_wrong_ogrnip(ogrnip):
+    with pytest.raises(PydanticValidationError):
+        OgrnIpModel(ogrnip=ogrnip)
 
 
 @pytest.mark.parametrize('ogrn', [
@@ -147,9 +209,16 @@ def test_wrong_ogrn(ogrn):
     with pytest.raises(PydanticValidationError):
         OgrnModel(ogrn=ogrn)
 
+    with pytest.raises(PydanticValidationError):
+        OgrnIpModel(ogrnip=ogrn)
+
 
 @pytest.mark.parametrize('snils', [
-    '112-233-445 95'
+    '112-233-445 95',
+    '216-471-647 63',
+    '477-893-655 77',
+    '931-499-478 49',
+    '589-663-029 61'
 ])
 def test_valid_snils(snils):
     """No exception raise"""
@@ -168,6 +237,7 @@ def test_valid_snils(snils):
     '12-233-445-95',
     '12-233-44595',
     '12-233-445 96',
+    '216-471-647 60',
 ])
 def test_wrong_snils(snils):
     with pytest.raises(VityaValidationError):
