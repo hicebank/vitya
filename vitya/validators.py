@@ -129,11 +129,11 @@ def validate_snils(snils: str) -> None:
     if not isinstance(snils, str):
         raise ValidationError('snils should be passed as string')
 
-    if not re.fullmatch(r'[0-9]{3}-[0-9]{3}-[0-9]{3} [0-9]{2}', snils):
+    if not re.fullmatch(r'[0-9]{11}', snils):
         raise ValidationError('wrong snils')
 
     numbers = []
-    parts = [snils[0:3], snils[4:7], snils[8:11]]
+    parts = [snils[0:3], snils[3:6], snils[6:9]]
     for part in parts:
         numbers.extend([int(num) for num in part])
 
