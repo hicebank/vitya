@@ -33,7 +33,7 @@ except ValidationError as e:
 validate_kpp("616401001")
 validate_bic("044525901")
 validate_ogrn("1027700132195")
-validate_snils("112-233-445 95")
+validate_snils("11223344595")
 ```
 
 ```python
