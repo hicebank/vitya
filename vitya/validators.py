@@ -132,6 +132,9 @@ def validate_snils(snils: str) -> None:
     if not re.fullmatch(r'[0-9]{11}', snils):
         raise ValidationError('wrong snils')
 
+    if int(snils[:9]) < 1001998:     # less than 001-001-998
+        raise ValidationError('snils must be more than "001-001-998" ')
+
     numbers = []
     parts = [snils[0:3], snils[3:6], snils[6:9]]
     for part in parts:

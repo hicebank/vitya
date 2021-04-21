@@ -241,6 +241,7 @@ def test_valid_snils(snils):
     '12-233-44595',
     '12-233-445 96',
     '216-471-647 60',
+    '00000000000'
 ])
 def test_wrong_snils(snils):
     with pytest.raises(VityaValidationError):
