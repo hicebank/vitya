@@ -147,6 +147,8 @@ def validate_snils(snils: str) -> None:
         checksum_str = "00"
     else:
         checksum = checksum % 101
+        if checksum > 99: 
+            checksum = checksum % 100
         if checksum < 10:
             checksum_str = f"0{checksum}"
         else:
