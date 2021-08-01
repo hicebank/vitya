@@ -12,7 +12,17 @@ from vitya import (
     validate_ogrnip,
     validate_snils,
 )
-from vitya.pydantic_fields import Bic, Inn, InnIp, InnJur, Kpp, Ogrn, OgrnIp, Snils, Oktmo
+from vitya.pydantic_fields import (
+    Bic,
+    Inn,
+    InnIp,
+    InnJur,
+    Kpp,
+    Ogrn,
+    OgrnIp,
+    Oktmo,
+    Snils,
+)
 
 
 class InnModel(BaseModel):

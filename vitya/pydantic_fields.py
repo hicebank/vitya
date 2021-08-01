@@ -9,10 +9,9 @@ from .validators import (
     validate_kpp,
     validate_ogrn,
     validate_ogrnip,
+    validate_oktmo,
     validate_snils,
-    validate_oktmo
 )
-
 
 try:
     from pydantic.errors import PydanticValueError
