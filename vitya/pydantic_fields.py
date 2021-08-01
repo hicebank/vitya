@@ -10,7 +10,9 @@ from .validators import (
     validate_ogrn,
     validate_ogrnip,
     validate_snils,
+    validate_oktmo
 )
+
 
 try:
     from pydantic.errors import PydanticValueError
@@ -111,3 +113,13 @@ class Snils(str):
     @classmethod
     def validate(cls, value: str) -> str:
         return _validate_wrapper(validate_snils, "snils", value)
+
+
+class Oktmo(str):
+    @classmethod
+    def __get_validators__(cls) -> CallableGenerator:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: str) -> str:
+        return _validate_wrapper(validate_oktmo, "oktmo", value)

@@ -12,7 +12,7 @@ from vitya import (
     validate_ogrnip,
     validate_snils,
 )
-from vitya.pydantic_fields import Bic, Inn, InnIp, InnJur, Kpp, Ogrn, OgrnIp, Snils
+from vitya.pydantic_fields import Bic, Inn, InnIp, InnJur, Kpp, Ogrn, OgrnIp, Snils, Oktmo
 
 
 class InnModel(BaseModel):
@@ -45,6 +45,10 @@ class OgrnIpModel(BaseModel):
 
 class SnilsModel(BaseModel):
     snils: Snils
+
+
+class OktmoModel(BaseModel):
+    oktmo: Oktmo
 
 
 @pytest.mark.parametrize('inn', [
@@ -254,3 +258,34 @@ def test_wrong_snils(snils):
 
     with pytest.raises(PydanticValidationError):
         SnilsModel(snils=snils)
+
+
+@pytest.mark.parametrize('oktmo', [
+    '69654000',
+    '69701000001',
+    '98603170051',
+    '78623427116',
+    '66614465117'
+])
+def test_valid_oktmo(oktmo):
+    """No exception raise"""
+    assert validate_oktmo(oktmo) is None
+
+    oktmo_model = OktmoModel(oktmo=oktmo)
+    assert oktmo_model.oktmo == oktmo
+
+
+@pytest.mark.parametrize('oktmo', [
+    None,
+    '',
+    69654000,
+    '69154000',
+    '69701000000',
+    '69 701 000 001'
+])
+def test_wrong_oktmo(oktmo):
+    with pytest.raises(VityaValidationError):
+        validate_oktmo(oktmo)
+
+    with pytest.raises(PydanticValidationError):
+        OktmoModel(oktmo=oktmo)
