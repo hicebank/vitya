@@ -1,13 +1,18 @@
 import pytest
-from pydantic import BaseModel
-from pydantic import ValidationError as PydanticValidationError
+from pydantic import BaseModel, ValidationError as PydanticValidationError
 
-from vitya import ValidationError as VityaValidationError
-from vitya import (validate_bic, validate_inn, validate_inn_ip,
-                   validate_inn_jur, validate_kpp, validate_ogrn,
-                   validate_ogrnip, validate_snils)
-from vitya.pydantic_fields import (Bic, Inn, InnIp, InnJur, Kpp, Ogrn, OgrnIp,
-                                   Snils)
+from vitya import (
+    ValidationError as VityaValidationError,
+    validate_bic,
+    validate_inn,
+    validate_inn_ip,
+    validate_inn_jur,
+    validate_kpp,
+    validate_ogrn,
+    validate_ogrnip,
+    validate_snils,
+)
+from vitya.pydantic_fields import Bic, Inn, InnIp, InnJur, Kpp, Ogrn, OgrnIp, Snils
 
 
 class InnModel(BaseModel):
