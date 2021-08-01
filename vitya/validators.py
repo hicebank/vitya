@@ -143,14 +143,13 @@ def validate_snils(snils: str) -> None:
     results = [numbers[i - 1] * (10 - i) for i in range(1, 10)]
     checksum = sum(results)
 
+    checksum = checksum % 101
     if checksum == 100:
         checksum_str = "00"
+    elif checksum < 10:
+        checksum_str = f"0{checksum}"
     else:
-        checksum = checksum % 101
-        if checksum < 10:
-            checksum_str = f"0{checksum}"
-        else:
-            checksum_str = str(checksum)
+        checksum_str = str(checksum)
 
     if checksum_str != snils[-2:]:
         raise ValidationError(f'wrong checksum: {snils[-2:]}; expected: {checksum_str}')
