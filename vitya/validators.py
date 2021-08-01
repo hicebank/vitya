@@ -154,3 +154,24 @@ def validate_snils(snils: str) -> None:
 
     if checksum_str != snils[-2:]:
         raise ValidationError(f'wrong checksum: {snils[-2:]}; expected: {checksum_str}')
+
+
+def validate_oktmo(oktmo: str) -> None:
+    """
+    Source:
+    https://www.consultant.ru/cons/CGI/online.cgi?req=doc;base=LAW;n=149911#fUpVRbSdflobnNc4
+    """
+    if not isinstance(oktmo, str):
+        raise ValidationError('oktmo should be passed as string')
+
+    if not re.fullmatch(r'([0-9]{11}|[0-9]{8})', oktmo):
+        raise ValidationError('wrong oktmo')
+
+    if oktmo[2] not in ['3', '6', '7', '8', '9']:
+        raise ValidationError(f'wrong P1: {oktmo[2]}; expected: 3, 6, 7, 8 or 9')
+
+    if oktmo[5] not in ['0', '1', '3', '4', '7']:
+        raise ValidationError(f'wrong P2: {oktmo[5]}; expected: 0, 1, 3, 4 or 7')
+
+    if len(oktmo) == 11 and oktmo[-3:] == '000':
+        raise ValidationError(f'wrong locality subcode: {oktmo[-3:]}; must be greater than 000')

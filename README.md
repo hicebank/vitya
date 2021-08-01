@@ -12,6 +12,7 @@ Values you can validate:
 - ОГРН ```validate_ogrn```
     - ОГРНИП ```validate_ogrnip```
 - СНИЛС ```validate_snils```
+- ОКТМО ```validate_oktmo```
 
 You should pass value as ```str```, otherwise exception will be raised.  
 If passed value is wrong, all functions will raise ```ValidationError```.
@@ -34,6 +35,7 @@ validate_kpp("616401001")
 validate_bic("044525901")
 validate_ogrn("1027700132195")
 validate_snils("11223344595")
+validate_oktmo("69701000001")
 ```
 
 ```python

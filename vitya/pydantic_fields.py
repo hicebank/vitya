@@ -2,7 +2,8 @@ from typing import Any, Callable, Generator
 
 from .validators import (ValidationError, validate_bic, validate_inn,
                          validate_inn_ip, validate_inn_jur, validate_kpp,
-                         validate_ogrn, validate_ogrnip, validate_snils)
+                         validate_ogrn, validate_ogrnip, validate_snils,
+                         validate_oktmo)
 
 try:
     from pydantic.errors import PydanticValueError
@@ -103,3 +104,13 @@ class Snils(str):
     @classmethod
     def validate(cls, value: str) -> str:
         return _validate_wrapper(validate_snils, "snils", value)
+
+
+class Oktmo(str):
+    @classmethod
+    def __get_validators__(cls) -> CallableGenerator:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: str) -> str:
+        return _validate_wrapper(validate_oktmo, "oktmo", value)
