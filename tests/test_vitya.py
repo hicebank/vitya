@@ -10,6 +10,7 @@ from vitya import (
     validate_kpp,
     validate_ogrn,
     validate_ogrnip,
+    validate_oktmo,
     validate_snils,
 )
 from vitya.pydantic_fields import (

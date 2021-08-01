@@ -7,5 +7,6 @@ from .validators import (
     validate_kpp as validate_kpp,
     validate_ogrn as validate_ogrn,
     validate_ogrnip as validate_ogrnip,
+    validate_oktmo as validate_oktmo,
     validate_snils as validate_snils,
 )
