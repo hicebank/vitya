@@ -1,9 +1,17 @@
 from typing import Any, Callable, Generator
 
-from .validators import (ValidationError, validate_bic, validate_inn,
-                         validate_inn_ip, validate_inn_jur, validate_kpp,
-                         validate_ogrn, validate_ogrnip, validate_snils,
-                         validate_oktmo)
+from .validators import (
+    ValidationError,
+    validate_bic,
+    validate_inn,
+    validate_inn_ip,
+    validate_inn_jur,
+    validate_kpp,
+    validate_ogrn,
+    validate_ogrnip,
+    validate_oktmo,
+    validate_snils,
+)
 
 try:
     from pydantic.errors import PydanticValueError
