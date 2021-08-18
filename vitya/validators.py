@@ -84,7 +84,7 @@ def validate_bic(bic: str) -> None:
     if len(bic) != 9:
         raise ValidationError('wrong size of bic, it can be 9 chars only')
 
-    if not re.fullmatch(r'04[0-9]+', bic):
+    if not re.fullmatch(r'[0-9]+', bic):
         raise ValidationError('wrong bic')
 
 
