@@ -167,7 +167,7 @@ def validate_oktmo(oktmo: str) -> None:
         raise ValidationError('wrong oktmo')
 
     if oktmo[2] not in ['3', '5', '6', '7', '8', '9']:
-        raise ValidationError(f'wrong P1: {oktmo[2]}; expected: 3, 6, 7, 8 or 9')
+        raise ValidationError(f'wrong P1: {oktmo[2]}; expected: 3, 5, 6, 7, 8 or 9')
 
     if oktmo[5] not in ['0', '1', '3', '4', '7']:
         raise ValidationError(f'wrong P2: {oktmo[5]}; expected: 0, 1, 3, 4 or 7')
