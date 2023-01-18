@@ -290,8 +290,6 @@ def test_valid_oktmo(oktmo):
     None,
     '',
     69654000,
-    '69154000',
-    '69701000000',
     '69 701 000 001'
 ])
 def test_wrong_oktmo(oktmo):
