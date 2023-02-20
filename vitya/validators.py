@@ -65,6 +65,10 @@ def validate_kpp(kpp: str) -> None:
     if not isinstance(kpp, str):
         raise ValidationError('kpp should be passed as string')
 
+    if kpp == '0':
+        # '0' allowed as kpp value
+        return
+
     if len(kpp) != 9:
         raise ValidationError('wrong size of kpp, it can be 9 chars only')
 

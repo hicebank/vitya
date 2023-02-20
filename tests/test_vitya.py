@@ -126,7 +126,7 @@ def test_wrong_inn(inn):
 
 
 @pytest.mark.parametrize('kpp', [
-    '616401001', '770943002', '7709AB002', '320143522', '704601307'
+    '616401001', '770943002', '7709AB002', '320143522', '704601307', '0'
 ])
 def test_valid_kpp(kpp):
     """No exception raise"""
