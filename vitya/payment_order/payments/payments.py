@@ -10,7 +10,7 @@ from vitya.payment_order.payments.validators import validate_payment_data
 from vitya.pydantic_fields import Bic
 
 
-class PaymentBase(BaseModel):
+class Payment(BaseModel):
     # внутренее поле для типа платежного поручения (зависит от получателя)
     _type: PaymentType
 
@@ -152,13 +152,3 @@ class PaymentBase(BaseModel):
             document_number=values['document_number'],
             document_date=values['document_date'],
         )
-
-
-class Payment(PaymentBase):
-    # не бюджетный платеж
-    # Код (УИН) (22)
-    uin: str = '0'
-    # Статус плательщика (101)
-    payer_status: Optional[str]
-    # КПП получателя (103)
-    payer_kpp: Optional[str] = '0'

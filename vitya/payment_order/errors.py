@@ -1,5 +1,7 @@
 from pydantic.errors import PydanticValueError
 
+from vitya.payment_order.payments.helpers import CHARS_FOR_PURPOSE
+
 
 class AmountValidationError(PydanticValueError):
     msg_template = 'invalid amount: base error'
@@ -61,6 +63,14 @@ class UINValidationError(PydanticValueError):
     msg_template = 'invalid uin: base error'
 
 
+class UINValidationDigitsOnlyError(UINValidationError):
+    msg_template = 'invalid uin: uin must contains only digits'
+
+
+class UINValidationControlSumError(UINValidationError):
+    msg_template = 'invalid uin: control sum error'
+
+
 class UINValidationValueZeroError(UINValidationError):
     msg_template = 'invalid uin: value cannot be zero'
 
@@ -81,3 +91,67 @@ class UINValidationFNSValueError(UINValidationError):
 class UINValidationFNSValueZeroError(UINValidationFNSValueError):
     msg_template = 'invalid uin: for fns with payer status = "13" and empty inn ' \
                    'uin must be non zero'
+
+
+class UINValidationFNSNotValueZeroError(UINValidationFNSValueError):
+    msg_template = 'invalid uin: for fns with payer status = "02" uin must be zero'
+
+
+class UINValidationLenError(UINValidationError):
+    msg_template = 'invalid uin: len uin for fns payment must be 20 or 25 len'
+
+
+class UINValidationOnlyZeroError(UINValidationError):
+    msg_template = 'invalid uin: uin cannot contains only 0 chars'
+
+
+class PurposeValidationError(PydanticValueError):
+    msg_template = 'invalid purpose: base error'
+
+
+class PurposeValidationCharactersError(PurposeValidationError):
+    msg_template = f'invalid purpose: the purpose can only consist of {CHARS_FOR_PURPOSE}'
+
+
+class PurposeValidationIPNDSError(PurposeValidationError):
+    msg_template = 'invalid purpose: for IP payment purpose must contains "НДС"'
+
+
+class INNValidationError(PydanticValueError):
+    msg_template = 'invalid inn: base error'
+
+
+class INNValidationDigitsOnlyError(INNValidationError):
+    msg_template = 'invalid inn: inn must contains only digits'
+
+
+class INNValidationLenError(INNValidationError):
+    msg_template = 'invalid inn: len inn must be 5, 10 or 12'
+
+
+class INNValidationTMSLenError(INNValidationLenError):
+    msg_template = 'invalid inn: tms len inn base error'
+
+
+class INNValidationTMSLen10Error(INNValidationLenError):
+    msg_template = 'invalid inn: for tms payment and payer status 06, inn must be 10'
+
+
+class INNValidationTMSLen12Error(INNValidationLenError):
+    msg_template = 'invalid inn: for tms payment and payer status 16 or 17, inn must be 12'
+
+
+class INNValidationEmptyNotAllowedError(INNValidationError):
+    msg_template = 'invalid inn: inn cannot be empty'
+
+
+class INNValidationFNSEmptyNotAllowedError(INNValidationEmptyNotAllowedError):
+    pass
+
+
+class INNValidationStartWithZerosError(INNValidationError):
+    msg_template = 'invalid inn: inn cannot start with "00"'
+
+
+class INNValidationFiveOnlyZerosError(INNValidationError):
+    msg_template = 'invalid inn: inn with len 5 cannot be contains only zeros'

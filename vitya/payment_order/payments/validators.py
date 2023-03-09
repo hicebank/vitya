@@ -1,14 +1,24 @@
+import re
 from _decimal import Decimal
 from datetime import date
 from typing import Any, Optional
 
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
-    OperationKindValidationBudgetValueError, OperationKindValidationValueError, PurposeCodeValidationFlError,
-    PurposeCodeValidationNullError,
-    UINValidationBOLenError, UINValidationBOValueError, UINValidationFNSValueZeroError, UINValidationValueZeroError,
+    INNValidationEmptyNotAllowedError, INNValidationFNSEmptyNotAllowedError, INNValidationFiveOnlyZerosError,
+    INNValidationLenError,
+    INNValidationStartWithZerosError, INNValidationTMSLen10Error, INNValidationTMSLen12Error,
+    OperationKindValidationBudgetValueError,
+    OperationKindValidationValueError,
+    PurposeCodeValidationFlError,
+    PurposeCodeValidationNullError, PurposeValidationCharactersError, PurposeValidationIPNDSError,
+    UINValidationBOLenError,
+    UINValidationControlSumError, UINValidationDigitsOnlyError,
+    UINValidationFNSNotValueZeroError, UINValidationFNSValueZeroError, UINValidationLenError,
+    UINValidationOnlyZeroError, UINValidationValueZeroError,
 )
 from vitya.payment_order.fields import Payee, Payer, PaymentOrder
+from vitya.payment_order.payments.helpers import CHARS_FOR_PURPOSE, REPLACE_CHARS_FOR_SPACE
 from vitya.pydantic_fields import Bic
 
 
@@ -84,14 +94,53 @@ def validate_purpose_code(
     return value
 
 
+def validate_uin_control_sum(
+    value: str
+) -> None:
+    if not value.isdigit():
+        raise UINValidationDigitsOnlyError
+    if len(value) != 20 and len(value) != 25:
+        return
+
+    count = 1
+    sum_ = 0
+    for c in value[:-1:]:
+        if count > 10:
+            count = 1
+        sum_ += int(c) * count
+        count += 1
+
+    if sum_ == 0:
+        raise UINValidationOnlyZeroError
+
+    mod_11 = sum_ % 11
+    if mod_11 != 10:
+        if mod_11 != int(value[-1]):
+            raise UINValidationControlSumError
+
+    count = 3
+    sum_ = 0
+    for c in value[:-1:]:
+        if count > 10:
+            count = 1
+        sum_ += int(c) * count
+        count += 1
+    mod_11 = sum_ % 11
+    mod_11 = 0 if mod_11 == 10 else mod_11
+    if mod_11 != int(value[-1]):
+        raise UINValidationControlSumError
+
+
 def validate_uin(
     _type: PaymentType,
     value: Optional[str],
-    payee_account: str,
     payer_status: str,
     payer_inn: str,
 ) -> str:
     value = value or '0'
+    if not value.isdigit():
+        raise UINValidationDigitsOnlyError
+
     len_value = len(value)
     if not _type.is_budget:
         return '0'
@@ -102,9 +151,80 @@ def validate_uin(
     if _type == PaymentType.bo:
         if not (len_value == 4 or len_value == 20 or len_value == 25):
             raise UINValidationBOLenError
-        if payee_account.startswith(('03212', '03222', '03232', '03242', '03252', '03262', '03272')):
-            if value == '0':
-                raise UINValidationBOValueError
+        validate_uin_control_sum(value)
+        return value
 
-    if _type == PaymentType.fns and payer_status == '13' and payer_inn == '' and value == '0':
-        raise UINValidationFNSValueZeroError
+    if _type == PaymentType.fns:
+        if payer_status == '13' and payer_inn == '' and value == '0':
+            raise UINValidationFNSValueZeroError
+        if payer_status == '02':
+            if value != '0':
+                raise UINValidationFNSNotValueZeroError
+            return value
+
+    if not (len_value == 20 or len_value == 25):
+        raise UINValidationLenError
+
+    validate_uin_control_sum(value)
+    return value
+
+
+def validate_purpose(
+    _type: PaymentType,
+    value: str,
+) -> str:
+    value = value or '0'
+    spaces_set = set(REPLACE_CHARS_FOR_SPACE)
+    allowed_chars_set = set(CHARS_FOR_PURPOSE)
+    replaced_space_value = ''.join(
+        list(map(lambda x: x if x not in spaces_set else ' ', value))
+    )
+    for c in replaced_space_value:
+        if c not in allowed_chars_set:
+            raise PurposeValidationCharactersError
+
+    if _type == PaymentType.ip:
+        if not re.search(r'(?i)\bНДС\b', replaced_space_value):
+            raise PurposeValidationIPNDSError
+    return value
+
+
+def payer_inn(
+    _type: PaymentType,
+    payer_status: str,
+    value: str,
+) -> str:
+    if not _type.is_budget:
+        if not value.isdigit():
+            raise UINValidationDigitsOnlyError
+        return value
+
+    if value == '':
+        if _type == PaymentType.bo:
+            return ''
+        elif _type == PaymentType.fns and payer_status == '13':
+            return ''
+        elif _type == PaymentType.tms and payer_status == '30':
+            return ''
+        raise INNValidationEmptyNotAllowedError
+
+    if not value.isdigit():
+        raise UINValidationDigitsOnlyError
+
+    if len(value) not in {5, 10, 12}:
+        raise INNValidationLenError
+
+    if _type == PaymentType.tms:
+        if payer_status == '06' and len(value) != 10:
+            raise INNValidationTMSLen10Error
+
+        if payer_status in {'16', '17'} and len(value) != 12:
+            raise INNValidationTMSLen12Error
+
+    if value.startswith('00'):
+        raise INNValidationStartWithZerosError
+
+    if len(value) == 5 and all(c == '0' for c in value):
+        raise INNValidationFiveOnlyZerosError
+
+    return value
