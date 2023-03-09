@@ -31,6 +31,10 @@ class PayeeValidationNameError(CustomerValidationError):
     msg_template = 'invalid payee: account in name'
 
 
+class NumberValidationLenError(PydanticValueError):
+    msg_template = 'invalid number: number cannot be more 6'
+
+
 class PaymentOrderValidationError(PayerValidationError):
     msg_template = 'invalid payment order: value must be in {1, 2, 3, 4, 5}'
 
@@ -129,29 +133,29 @@ class INNValidationLenError(INNValidationError):
     msg_template = 'invalid inn: len inn must be 5, 10 or 12'
 
 
-class INNValidationTMSLenError(INNValidationLenError):
+class PayerINNValidationTMSLenError(INNValidationLenError):
     msg_template = 'invalid inn: tms len inn base error'
 
 
-class INNValidationTMSLen10Error(INNValidationLenError):
+class PayerINNValidationTMSLen10Error(INNValidationLenError):
     msg_template = 'invalid inn: for tms payment and payer status 06, inn must be 10'
 
 
-class INNValidationTMSLen12Error(INNValidationLenError):
+class PayerINNValidationTMSLen12Error(INNValidationLenError):
     msg_template = 'invalid inn: for tms payment and payer status 16 or 17, inn must be 12'
 
 
-class INNValidationEmptyNotAllowedError(INNValidationError):
+class PayerINNValidationEmptyNotAllowedError(INNValidationError):
     msg_template = 'invalid inn: inn cannot be empty'
 
 
-class INNValidationFNSEmptyNotAllowedError(INNValidationEmptyNotAllowedError):
-    pass
-
-
-class INNValidationStartWithZerosError(INNValidationError):
+class PayerINNValidationStartWithZerosError(INNValidationError):
     msg_template = 'invalid inn: inn cannot start with "00"'
 
 
-class INNValidationFiveOnlyZerosError(INNValidationError):
+class PayerINNValidationFiveOnlyZerosError(INNValidationError):
     msg_template = 'invalid inn: inn with len 5 cannot be contains only zeros'
+
+
+class PayeeINNValidationFLenError(INNValidationLenError):
+    msg_template = 'invalid inn: for fl payee inn must be 12'

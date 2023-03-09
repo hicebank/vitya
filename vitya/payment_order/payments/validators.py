@@ -5,9 +5,10 @@ from typing import Any, Optional
 
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
-    INNValidationEmptyNotAllowedError, INNValidationFNSEmptyNotAllowedError, INNValidationFiveOnlyZerosError,
+    NumberValidationLenError, PayeeINNValidationFLenError, PayerINNValidationEmptyNotAllowedError,
+    PayerINNValidationFiveOnlyZerosError,
     INNValidationLenError,
-    INNValidationStartWithZerosError, INNValidationTMSLen10Error, INNValidationTMSLen12Error,
+    PayerINNValidationStartWithZerosError, PayerINNValidationTMSLen10Error, PayerINNValidationTMSLen12Error,
     OperationKindValidationBudgetValueError,
     OperationKindValidationValueError,
     PurposeCodeValidationFlError,
@@ -63,7 +64,64 @@ def validate_payment_data(
     document_number: Optional[str],
     document_date: Optional[date],
 ) -> dict[str, Any]:
-    pass
+    number = validate_number(value=number)
+
+    operation_kind = validate_operation_kind(_type=_type, value=operation_kind)
+    purpose_code = validate_purpose_code(_type=_type, value=purpose_code)
+
+    payer_inn = validate_payer_inn(_type=_type, payer_status=payer_status, value=payer_inn)
+    payee_inn = validate_payee_inn(_type=_type, value=payee_inn)
+    uin = validate_uin(_type=_type, value=uin, payer_status=payer_status, payer_inn=payer_inn)
+
+    purpose = validate_purpose(_type=_type, value=purpose)
+    return {
+        '_type': _type,
+        'name': name,
+        'form': form,
+        'number': number,
+        'date': date,
+        'kind': kind,
+        'amount': amount,
+        'amount_str': amount_str,
+        'payer_name': payer_name,
+        'payer_account': payer_account,
+        'payer_bank_name': payer_bank_name,
+        'payer_bank_bic': payer_bank_bic,
+        'payer_bank_account': payer_bank_account,
+        'payee_bank_name': payee_bank_name,
+        'payee_bank_bic': payee_bank_bic,
+        'payee_bank_account': payee_bank_account,
+        'payee_name': payee_name,
+        'payee_account': payee_account,
+        'operation_kind': operation_kind,
+        'payment_expire_days': payment_expire_days,
+        'purpose_code': purpose_code,
+        'payment_order': payment_order,
+        'uin': uin,
+        'reserve_field': reserve_field,
+        'purpose': purpose,
+        'payer_inn': payer_inn,
+        'payee_inn': payee_inn,
+        'bank_income_date': bank_income_date,
+        'bank_outcome_date': bank_outcome_date,
+        'payer_status': payer_status,
+        'payer_kpp': payer_kpp,
+        'payee_kpp': payee_kpp,
+        'cbc': cbc,
+        'oktmo': oktmo,
+        'reason': reason,
+        'tax_period': tax_period,
+        'document_number': document_number,
+        'document_date': document_date,
+    }
+
+
+def validate_number(
+    value: str,
+) -> str:
+    if len(value) > 6:
+        raise NumberValidationLenError
+    return value
 
 
 def validate_operation_kind(
@@ -189,7 +247,7 @@ def validate_purpose(
     return value
 
 
-def payer_inn(
+def validate_payer_inn(
     _type: PaymentType,
     payer_status: str,
     value: str,
@@ -206,7 +264,7 @@ def payer_inn(
             return ''
         elif _type == PaymentType.tms and payer_status == '30':
             return ''
-        raise INNValidationEmptyNotAllowedError
+        raise PayerINNValidationEmptyNotAllowedError
 
     if not value.isdigit():
         raise UINValidationDigitsOnlyError
@@ -216,15 +274,27 @@ def payer_inn(
 
     if _type == PaymentType.tms:
         if payer_status == '06' and len(value) != 10:
-            raise INNValidationTMSLen10Error
+            raise PayerINNValidationTMSLen10Error
 
         if payer_status in {'16', '17'} and len(value) != 12:
-            raise INNValidationTMSLen12Error
+            raise PayerINNValidationTMSLen12Error
 
     if value.startswith('00'):
-        raise INNValidationStartWithZerosError
+        raise PayerINNValidationStartWithZerosError
 
     if len(value) == 5 and all(c == '0' for c in value):
-        raise INNValidationFiveOnlyZerosError
+        raise PayerINNValidationFiveOnlyZerosError
 
     return value
+
+
+def validate_payee_inn(
+    _type: PaymentType,
+    value: str,
+) -> str:
+    if _type.fl:
+        if value == '':
+            return ''
+        if len(value) != 12:
+            raise PayeeINNValidationFLenError
+    # TODO: add flow

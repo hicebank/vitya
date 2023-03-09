@@ -63,7 +63,7 @@ class Payment(BaseModel):
     uin: str
     # Резервное поле (23)
     reserve_field: Optional[str]
-    # Назначение платежа
+    # Назначение платежа (25)
     # в каждом типе платежа (_type) проверяется по своему
     purpose: Optional[str]
     # Место для печати (43)
