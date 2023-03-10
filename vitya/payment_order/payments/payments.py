@@ -1,5 +1,5 @@
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 from typing import Any, Optional
 
 from pydantic import BaseModel, Field, validator
@@ -21,13 +21,13 @@ class Payment(BaseModel):
     # Номер платёжного поручения (3)
     number: str
     # Дата составления и оформления (4)
-    date: date
+    creation_date: date
     # Вид платежа (5)
     kind: str
     # Сумма (7)
     amount: Decimal
     # Сумма прописью (6)
-    amount_str: str = property(fget=lambda self: self.amount)
+    amount_str: str = property(fget=lambda self: self.amount)  # type: ignore
     # Плательщик (8)
     payer_name: Payer
     # Счёт плательщика (9)
@@ -37,7 +37,7 @@ class Payment(BaseModel):
     # БИК плательщика (11)
     payer_bank_bic: Bic
     # Счёт банка плательщика (12)
-    payer_bank_account: Optional[str]
+    payer_bank_account: str = Field(max_length=20, min_length=20)
     # Наименование банка получателя (13)
     payee_bank_name: Optional[str]
     # БИК банка получателя (14)
@@ -57,7 +57,7 @@ class Payment(BaseModel):
     # в каждом типе платежа (_type) проверяется по своему
     purpose_code: Optional[int]
     # Очерёдность платежа (21)
-    payment_order: PaymentOrder = 5
+    payment_order: PaymentOrder = PaymentOrder(5)
     # Код (УИН) (22)
     # в каждом типе платежа (_type) проверяется по своему
     uin: str
@@ -111,13 +111,13 @@ class Payment(BaseModel):
     document_date: Optional[date]
 
     @validator('*', pre=True)
-    def validate(cls, values: dict[str, Any]) -> dict[str, Any]:
+    def validate_data(cls, values: dict[str, Any]) -> dict[str, Any]:
         return validate_payment_data(
             _type=values['_type'],
             name=values['name'],
             form=values['form'],
             number=values['number'],
-            date=values['date'],
+            creation_date=values['creation_date'],
             kind=values['kind'],
             amount=values['amount'],
             amount_str=values['amount_str'],

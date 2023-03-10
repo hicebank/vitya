@@ -113,6 +113,10 @@ class PurposeValidationError(PydanticValueError):
     msg_template = 'invalid purpose: base error'
 
 
+class PurposeValidationMaxLenError(PydanticValueError):
+    msg_template = 'invalid purpose: purpose can be from 1 to 210 chars'
+
+
 class PurposeValidationCharactersError(PurposeValidationError):
     msg_template = f'invalid purpose: the purpose can only consist of {CHARS_FOR_PURPOSE}'
 
@@ -159,3 +163,19 @@ class PayerINNValidationFiveOnlyZerosError(INNValidationError):
 
 class PayeeINNValidationFLenError(INNValidationLenError):
     msg_template = 'invalid inn: for fl payee inn must be 12'
+
+
+class PayeeAccountValidationError(PydanticValueError):
+    msg_template = 'invalid payee account: base error'
+
+
+class PayeeAccountValidationNonEmptyError(PayeeAccountValidationError):
+    msg_template = 'invalid payee account: account cannot be empty'
+
+
+class PayeeAccountValidationLenError(PayeeAccountValidationError):
+    msg_template = 'invalid payee account: account must be 20 digits'
+
+
+class PayeeAccountValidationFNSValueError(PayeeAccountValidationError):
+    msg_template = 'invalid payee account: for fns payment account must be "03100643000000018500"'

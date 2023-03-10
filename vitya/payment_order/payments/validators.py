@@ -1,25 +1,43 @@
 import re
-from _decimal import Decimal
 from datetime import date
 from typing import Any, Optional
 
+from _decimal import Decimal
+
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
-    NumberValidationLenError, PayeeINNValidationFLenError, PayerINNValidationEmptyNotAllowedError,
-    PayerINNValidationFiveOnlyZerosError,
     INNValidationLenError,
-    PayerINNValidationStartWithZerosError, PayerINNValidationTMSLen10Error, PayerINNValidationTMSLen12Error,
+    NumberValidationLenError,
     OperationKindValidationBudgetValueError,
     OperationKindValidationValueError,
+    PayeeAccountValidationFNSValueError,
+    PayeeAccountValidationLenError,
+    PayeeAccountValidationNonEmptyError,
+    PayeeINNValidationFLenError,
+    PayerINNValidationEmptyNotAllowedError,
+    PayerINNValidationFiveOnlyZerosError,
+    PayerINNValidationStartWithZerosError,
+    PayerINNValidationTMSLen10Error,
+    PayerINNValidationTMSLen12Error,
     PurposeCodeValidationFlError,
-    PurposeCodeValidationNullError, PurposeValidationCharactersError, PurposeValidationIPNDSError,
+    PurposeCodeValidationNullError,
+    PurposeValidationCharactersError,
+    PurposeValidationIPNDSError,
+    PurposeValidationMaxLenError,
     UINValidationBOLenError,
-    UINValidationControlSumError, UINValidationDigitsOnlyError,
-    UINValidationFNSNotValueZeroError, UINValidationFNSValueZeroError, UINValidationLenError,
-    UINValidationOnlyZeroError, UINValidationValueZeroError,
+    UINValidationControlSumError,
+    UINValidationDigitsOnlyError,
+    UINValidationFNSNotValueZeroError,
+    UINValidationFNSValueZeroError,
+    UINValidationLenError,
+    UINValidationOnlyZeroError,
+    UINValidationValueZeroError,
 )
 from vitya.payment_order.fields import Payee, Payer, PaymentOrder
-from vitya.payment_order.payments.helpers import CHARS_FOR_PURPOSE, REPLACE_CHARS_FOR_SPACE
+from vitya.payment_order.payments.helpers import (
+    CHARS_FOR_PURPOSE,
+    REPLACE_CHARS_FOR_SPACE,
+)
 from vitya.pydantic_fields import Bic
 
 
@@ -29,7 +47,7 @@ def validate_payment_data(
     name: str,
     form: str,
     number: str,
-    date: date,
+    creation_date: date,
     kind: str,
     amount: Decimal,
     amount_str: str,
@@ -66,11 +84,11 @@ def validate_payment_data(
 ) -> dict[str, Any]:
     number = validate_number(value=number)
 
+    payee_account = validate_payee_account(_type=_type, value=payee_account)
     operation_kind = validate_operation_kind(_type=_type, value=operation_kind)
     purpose_code = validate_purpose_code(_type=_type, value=purpose_code)
 
     payer_inn = validate_payer_inn(_type=_type, payer_status=payer_status, value=payer_inn)
-    payee_inn = validate_payee_inn(_type=_type, value=payee_inn)
     uin = validate_uin(_type=_type, value=uin, payer_status=payer_status, payer_inn=payer_inn)
 
     purpose = validate_purpose(_type=_type, value=purpose)
@@ -79,7 +97,7 @@ def validate_payment_data(
         'name': name,
         'form': form,
         'number': number,
-        'date': date,
+        'creation_date': creation_date,
         'kind': kind,
         'amount': amount,
         'amount_str': amount_str,
@@ -121,6 +139,20 @@ def validate_number(
 ) -> str:
     if len(value) > 6:
         raise NumberValidationLenError
+    return value
+
+
+def validate_payee_account(
+    value: str,
+    _type: PaymentType,
+) -> str:
+    if value is None:
+        raise PayeeAccountValidationNonEmptyError
+    if len(value) != 20:
+        raise PayeeAccountValidationLenError
+    if _type == PaymentType.fns:
+        if value != '03100643000000018500':
+            raise PayeeAccountValidationFNSValueError
     return value
 
 
@@ -175,6 +207,7 @@ def validate_uin_control_sum(
     if mod_11 != 10:
         if mod_11 != int(value[-1]):
             raise UINValidationControlSumError
+        return
 
     count = 3
     sum_ = 0
@@ -229,9 +262,11 @@ def validate_uin(
 
 def validate_purpose(
     _type: PaymentType,
-    value: str,
+    value: Optional[str],
 ) -> str:
     value = value or '0'
+    if len(value) > 210:
+        raise PurposeValidationMaxLenError
     spaces_set = set(REPLACE_CHARS_FOR_SPACE)
     allowed_chars_set = set(CHARS_FOR_PURPOSE)
     replaced_space_value = ''.join(
@@ -282,19 +317,4 @@ def validate_payer_inn(
     if value.startswith('00'):
         raise PayerINNValidationStartWithZerosError
 
-    if len(value) == 5 and all(c == '0' for c in value):
-        raise PayerINNValidationFiveOnlyZerosError
-
     return value
-
-
-def validate_payee_inn(
-    _type: PaymentType,
-    value: str,
-) -> str:
-    if _type.fl:
-        if value == '':
-            return ''
-        if len(value) != 12:
-            raise PayeeINNValidationFLenError
-    # TODO: add flow

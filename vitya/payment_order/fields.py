@@ -1,8 +1,12 @@
 from decimal import Decimal
 from typing import Any, Callable, Generator
 
-from vitya.payment_order.validators import validate_amount, validate_payee, validate_payer, validate_payment_order
-
+from vitya.payment_order.validators import (
+    validate_amount,
+    validate_payee,
+    validate_payer,
+    validate_payment_order,
+)
 
 CallableGenerator = Generator[Callable[..., Any], None, None]
 
