@@ -1,6 +1,6 @@
 from datetime import date
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field, validator
 
@@ -111,7 +111,7 @@ class Payment(BaseModel):
     document_date: Optional[date]
 
     @validator('*', pre=True)
-    def validate_data(cls, values: dict[str, Any]) -> dict[str, Any]:
+    def validate_data(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         return validate_payment_data(
             _type=values['_type'],
             name=values['name'],

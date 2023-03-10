@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import List
 
 
 class PaymentType(str, Enum):
@@ -10,7 +11,7 @@ class PaymentType(str, Enum):
     le = 'le'  # платеж на ЮР
 
     @classmethod
-    def budget_types(cls) -> list['PaymentType']:
+    def budget_types(cls) -> List['PaymentType']:
         return [PaymentType.fns, PaymentType.tms, PaymentType.bo]
 
     @property

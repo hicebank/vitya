@@ -1,6 +1,6 @@
 import re
 from datetime import date
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from _decimal import Decimal
 
@@ -81,7 +81,7 @@ def validate_payment_data(
     tax_period: Optional[str],
     document_number: Optional[str],
     document_date: Optional[date],
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     number = validate_number(value=number)
 
     payee_account = validate_payee_account(_type=_type, value=payee_account)
