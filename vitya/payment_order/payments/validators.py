@@ -439,14 +439,17 @@ def validate_payer_status(
     _type: PaymentType,
     for_third_face: bool,
 ) -> Optional[str]:
-    if _type.is_budget:
-        if value is None or value == '' or value == '0':
-            raise PayerStatusValidationNullNotAllowedError
+    is_empty = value is None or value in {'', '0'}
+    if not _type.is_budget:
+        return None
 
-        if _type == PaymentType.tms and for_third_face and value == '06':
-            raise PayerStatusValidationTMS05NotAllowedError
+    if is_empty:
+        raise PayerStatusValidationNullNotAllowedError
 
-    if value is not None and value not in PAYER_STATUSES:
+    if _type == PaymentType.tms and for_third_face and value == '06':
+        raise PayerStatusValidationTMS05NotAllowedError
+
+    if value not in PAYER_STATUSES:
         raise PayerStatusValidationValueError
     return value
 
