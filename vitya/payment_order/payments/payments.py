@@ -110,6 +110,9 @@ class Payment(BaseModel):
     # в каждом типе платежа (_type) проверяется по своему
     document_date: Optional[date]
 
+    # Указывает являться ли это платеж за 3-е лицо
+    _for_third_face: bool = False
+
     @validator('*', pre=True)
     def validate_data(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         return validate_payment_data(
@@ -151,4 +154,5 @@ class Payment(BaseModel):
             tax_period=values['tax_period'],
             document_number=values['document_number'],
             document_date=values['document_date'],
+            for_third_face=values['_for_third_face'],
         )

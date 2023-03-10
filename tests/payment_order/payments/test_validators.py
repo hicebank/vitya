@@ -377,12 +377,13 @@ def test_validate_purpose(
 
 
 @pytest.mark.parametrize(
-    'value, _type, payer_status, exception, expected_value',
+    'value, _type, payer_status, for_third_face, exception, expected_value',
     [
         (
             INN,
             PaymentType.fl,
             '',
+            False,
             None,
             INN,
         ),
@@ -390,6 +391,7 @@ def test_validate_purpose(
             'a',
             PaymentType.fl,
             '',
+            False,
             UINValidationDigitsOnlyError,
             None,
         ),
@@ -397,6 +399,7 @@ def test_validate_purpose(
             '',
             PaymentType.bo,
             '',
+            False,
             None,
             '',
         ),
@@ -404,6 +407,7 @@ def test_validate_purpose(
             '',
             PaymentType.fns,
             '13',
+            False,
             None,
             '',
         ),
@@ -411,6 +415,7 @@ def test_validate_purpose(
             '',
             PaymentType.tms,
             '30',
+            False,
             None,
             '',
         ),
@@ -418,6 +423,7 @@ def test_validate_purpose(
             '',
             PaymentType.tms,
             '',
+            False,
             PayerINNValidationEmptyNotAllowedError,
             None,
         ),
@@ -425,6 +431,7 @@ def test_validate_purpose(
             '5',
             PaymentType.tms,
             '',
+            False,
             INNValidationLenError,
             None,
         ),
@@ -432,6 +439,7 @@ def test_validate_purpose(
             '12345',
             PaymentType.tms,
             '06',
+            True,
             PayerINNValidationTMSLen10Error,
             None,
         ),
@@ -439,6 +447,7 @@ def test_validate_purpose(
             '12345',
             PaymentType.tms,
             '16',
+            False,
             PayerINNValidationTMSLen12Error,
             None,
         ),
@@ -446,6 +455,7 @@ def test_validate_purpose(
             '00123',
             PaymentType.tms,
             '',
+            False,
             PayerINNValidationStartWithZerosError,
             None,
         ),
@@ -453,6 +463,7 @@ def test_validate_purpose(
             INN,
             PaymentType.tms,
             '',
+            False,
             None,
             INN,
         ),
@@ -462,11 +473,14 @@ def test_validate_payer_inn(
     value: Optional[str],
     _type: PaymentType,
     payer_status: str,
+    for_third_face: bool,
     exception: Optional[Type[Exception]],
     expected_value: str
 ) -> None:
     if exception:
         with pytest.raises(exception):
-            validate_payer_inn(_type=_type, payer_status=payer_status, value=value)
+            validate_payer_inn(_type=_type, payer_status=payer_status, value=value, for_third_face=for_third_face)
     else:
-        assert expected_value == validate_payer_inn(_type=_type, payer_status=payer_status, value=value)
+        assert expected_value == validate_payer_inn(
+            _type=_type, payer_status=payer_status, value=value, for_third_face=for_third_face,
+        )

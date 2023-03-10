@@ -81,6 +81,7 @@ def validate_payment_data(
     tax_period: Optional[str],
     document_number: Optional[str],
     document_date: Optional[date],
+    for_third_face: bool = False,
 ) -> Dict[str, Any]:
     number = validate_number(value=number)
 
@@ -88,7 +89,12 @@ def validate_payment_data(
     operation_kind = validate_operation_kind(_type=_type, value=operation_kind)
     purpose_code = validate_purpose_code(_type=_type, value=purpose_code)
 
-    payer_inn = validate_payer_inn(_type=_type, payer_status=payer_status, value=payer_inn)
+    payer_inn = validate_payer_inn(
+        _type=_type,
+        payer_status=payer_status,
+        value=payer_inn,
+        for_third_face=for_third_face,
+    )
     uin = validate_uin(_type=_type, value=uin, payer_status=payer_status, payer_inn=payer_inn)
 
     purpose = validate_purpose(_type=_type, value=purpose)
@@ -286,6 +292,7 @@ def validate_payer_inn(
     _type: PaymentType,
     payer_status: str,
     value: str,
+    for_third_face: bool = False,
 ) -> str:
     if not _type.is_budget:
         if not value.isdigit():
@@ -308,7 +315,7 @@ def validate_payer_inn(
         raise INNValidationLenError
 
     if _type == PaymentType.tms:
-        if payer_status == '06' and len(value) != 10:
+        if payer_status == '06' and for_third_face and len(value) != 10:
             raise PayerINNValidationTMSLen10Error
 
         if payer_status in {'16', '17'} and len(value) != 12:
