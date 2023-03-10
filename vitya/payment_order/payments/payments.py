@@ -84,7 +84,7 @@ class Payment(BaseModel):
     bank_outcome_date: date
     # Статус плательщика (101)
     # в каждом типе платежа (_type) проверяется по своему
-    payer_status: str
+    payer_status: Optional[str]
     # КПП плательщика (102)
     # в каждом типе платежа (_type) проверяется по своему
     payer_kpp: str

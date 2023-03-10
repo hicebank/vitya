@@ -1,6 +1,10 @@
 from pydantic.errors import PydanticValueError
 
-from vitya.payment_order.payments.helpers import CHARS_FOR_PURPOSE
+from vitya.payment_order.payments.helpers import (
+    CHARS_FOR_PURPOSE,
+    PAYER_STATUSES,
+    REASONS,
+)
 
 
 class AmountValidationError(PydanticValueError):
@@ -161,8 +165,20 @@ class PayerINNValidationFiveOnlyZerosError(INNValidationError):
     msg_template = 'invalid inn: inn with len 5 cannot be contains only zeros'
 
 
-class PayeeINNValidationFLenError(INNValidationLenError):
-    msg_template = 'invalid inn: for fl payee inn must be 12'
+class PayeeINNValidationFLLenError(INNValidationLenError):
+    msg_template = 'invalid inn: for fl payee inn must be 0 or 12'
+
+
+class PayeeINNValidationIPLenError(INNValidationError):
+    msg_template = 'invalid inn: for ip payee inn must be 12'
+
+
+class PayeeINNValidationLELenError(INNValidationError):
+    msg_template = 'invalid inn: for fns, tms, bo and le inn must be 10'
+
+
+class PayeeINNValidationControlSumError(INNValidationError):
+    msg_template = 'invalid inn: inn control sum error'
 
 
 class PayeeAccountValidationError(PydanticValueError):
@@ -179,3 +195,155 @@ class PayeeAccountValidationLenError(PayeeAccountValidationError):
 
 class PayeeAccountValidationFNSValueError(PayeeAccountValidationError):
     msg_template = 'invalid payee account: for fns payment account must be "03100643000000018500"'
+
+
+class PayerStatusValidationError(PydanticValueError):
+    msg_template = 'invalid payer status: base error'
+
+
+class PayerStatusValidationNullNotAllowedError(PayerStatusValidationError):
+    msg_template = 'invalid payer status: for budget payments empty value is not allowed'
+
+
+class PayerStatusValidationTMS05NotAllowedError(PayerStatusValidationError):
+    msg_template = 'invalid payer status: for tms payment and for_third_face = true value "06" not allowed'
+
+
+class PayerStatusValidationValueError(PayerStatusValidationError):
+    msg_template = f'invalid payer status: value can be only {PAYER_STATUSES}'
+
+
+class KPPValidationError(PydanticValueError):
+    msg_template = 'invalid kpp: base error'
+
+
+class KPPValidationValueLenError(KPPValidationError):
+    msg_template = 'invalid kpp: kpp must be 9'
+
+
+class KPPValidationValueDigitsOnlyError(KPPValidationError):
+    msg_template = 'invalid kpp: only digits allowed'
+
+
+class KPPValidationValueCannotZerosStarts(KPPValidationError):
+    msg_template = 'invalid kpp: cannot starts with "00"'
+
+
+class KPPValidationOnlyEmptyError(KPPValidationError):
+    msg_template = 'invalid kpp: only empty allowed'
+
+
+class KPPValidationEmptyNotAllowed(KPPValidationError):
+    msg_template = 'invalid kpp: empty value is not allowed'
+
+
+class PayerKPPValidationError(KPPValidationError):
+    msg_template = 'invalid payer kpp: base error'
+
+
+class PayerKPPValidationOnlyEmptyError(PayerKPPValidationError, KPPValidationOnlyEmptyError):
+    msg_template = 'invalid payer kpp: for ip, fl or le allowed empty value'
+
+
+class PayerKPPValidationINN10EmptyNotAllowed(PayerKPPValidationError, KPPValidationEmptyNotAllowed):
+    msg_template = 'invalid payer kpp: for tns, tms or bo with inn = 10 inn empty value is not allowed'
+
+
+class PayerKPPValidationINN12OnlyEmptyError(PayerKPPValidationOnlyEmptyError):
+    msg_template = 'invalid payer kpp: for fns, tms or bo with inn = 12 only empty allowed'
+
+
+class PayerKPPValidationValueLenError(PayerKPPValidationError, KPPValidationValueLenError):
+    msg_template = 'invalid payer kpp: kpp must be 9'
+
+
+class PayerKPPValidationValueDigitsOnlyError(PayerKPPValidationError, KPPValidationValueDigitsOnlyError):
+    msg_template = 'invalid payer kpp: only digits allowed'
+
+
+class PayerKPPValidationValueCannotZerosStarts(PayerKPPValidationError, KPPValidationValueCannotZerosStarts):
+    msg_template = 'invalid payer kpp: cannot starts with "00" '
+
+
+class PayeeKPPValidationError(KPPValidationError):
+    msg_template = 'invalid payee kpp: base error'
+
+
+class PayeeKPPValidationOnlyEmptyError(PayeeKPPValidationError, KPPValidationOnlyEmptyError):
+    msg_template = 'invalid payee kpp: for ip or fl only empty allowed'
+
+
+class PayeeKPPValidationValueLenError(PayeeKPPValidationError, KPPValidationValueLenError):
+    msg_template = 'invalid payer kpp: kpp must be 9'
+
+
+class PayeeKPPValidationValueDigitsOnlyError(PayeeKPPValidationError, KPPValidationValueDigitsOnlyError):
+    msg_template = 'invalid payer kpp: only digits allowed'
+
+
+class PayeeKPPValidationEmptyNotAllowed(PayeeKPPValidationError, KPPValidationEmptyNotAllowed):
+    msg_template = 'invalid payee kpp: for fns, tms, bo or le empty value is not allowed'
+
+
+class PayeeKPPValidationValueCannotZerosStarts(PayeeKPPValidationError, KPPValidationValueCannotZerosStarts):
+    msg_template = 'invalid payee kpp: cannot starts with "00"'
+
+
+class CBCValidationError(PydanticValueError):
+    msg_template = 'invalid cbc: base error'
+
+
+class CBCValidationEmptyNotAllowed(CBCValidationError):
+    msg_template = 'invalid cbc: for fns or tms empty value is not allowed'
+
+
+class CBCValidationValueLenError(CBCValidationError):
+    msg_template = 'invalid cbc: cbc must be 20'
+
+
+class CBCValidationValueDigitsOnlyError(CBCValidationError):
+    msg_template = 'invalid cbc: only digits allowed'
+
+
+class CBCValidationValueCannotZerosStarts(CBCValidationError):
+    msg_template = 'invalid cbc: cannot starts with "00"'
+
+
+class OKTMOValidationError(PydanticValueError):
+    msg_template = 'invalid oktmo: base error'
+
+
+class OKTMOValidationEmptyNotAllowed(OKTMOValidationError):
+    msg_template = 'invalid oktmo: empty value is not allowed'
+
+
+class OKTMOValidationFNSEmptyNotAllowed(OKTMOValidationEmptyNotAllowed):
+    msg_template = 'invalid oktmo: for fns with payer status = "02" empty value is not allowed'
+
+
+class OKTMOValidationValueLenError(OKTMOValidationError):
+    msg_template = 'invalid oktmo: oktmo must be 8 or 11'
+
+
+class OKTMOValidationZerosNotAllowed(OKTMOValidationError):
+    msg_template = 'invalid oktmo: cannot be all zeros'
+
+
+class ReasonValidationError(PydanticValueError):
+    msg_template = 'invalid reason: base error'
+
+
+class ReasonValidationFNSOnlyEmptyError(ReasonValidationError):
+    msg_template = 'invalid reason: for fns only empty allowed'
+
+
+class ReasonValidationEmptyNotAllowed(ReasonValidationError):
+    msg_template = 'invalid reason: empty value is not allowed'
+
+
+class ReasonValidationValueLenError(ReasonValidationError):
+    msg_template = 'invalid reason: reason must be 2'
+
+
+class ReasonValidationValueError(ReasonValidationError):
+    msg_template = f'invalid reason: value must be in {REASONS}'

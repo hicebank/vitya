@@ -4,23 +4,49 @@ import pytest
 
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
+    CBCValidationEmptyNotAllowed,
+    CBCValidationValueCannotZerosStarts,
+    CBCValidationValueDigitsOnlyError,
+    CBCValidationValueLenError,
     INNValidationLenError,
     NumberValidationLenError,
+    OKTMOValidationFNSEmptyNotAllowed,
+    OKTMOValidationValueLenError,
+    OKTMOValidationZerosNotAllowed,
     OperationKindValidationBudgetValueError,
     OperationKindValidationValueError,
     PayeeAccountValidationFNSValueError,
     PayeeAccountValidationLenError,
     PayeeAccountValidationNonEmptyError,
+    PayeeINNValidationControlSumError,
+    PayeeINNValidationIPLenError,
+    PayeeINNValidationLELenError,
+    PayeeKPPValidationEmptyNotAllowed,
+    PayeeKPPValidationOnlyEmptyError,
+    PayeeKPPValidationValueCannotZerosStarts,
+    PayeeKPPValidationValueDigitsOnlyError,
+    PayeeKPPValidationValueLenError,
     PayerINNValidationEmptyNotAllowedError,
     PayerINNValidationFiveOnlyZerosError,
     PayerINNValidationStartWithZerosError,
     PayerINNValidationTMSLen10Error,
     PayerINNValidationTMSLen12Error,
+    PayerKPPValidationINN10EmptyNotAllowed,
+    PayerKPPValidationINN12OnlyEmptyError,
+    PayerKPPValidationOnlyEmptyError,
+    PayerKPPValidationValueCannotZerosStarts,
+    PayerKPPValidationValueDigitsOnlyError,
+    PayerKPPValidationValueLenError,
+    PayerStatusValidationNullNotAllowedError,
+    PayerStatusValidationTMS05NotAllowedError,
+    PayerStatusValidationValueError,
     PurposeCodeValidationFlError,
     PurposeCodeValidationNullError,
     PurposeValidationCharactersError,
     PurposeValidationIPNDSError,
     PurposeValidationMaxLenError,
+    ReasonValidationValueError,
+    ReasonValidationValueLenError,
     UINValidationBOLenError,
     UINValidationControlSumError,
     UINValidationDigitsOnlyError,
@@ -30,18 +56,36 @@ from vitya.payment_order.errors import (
     UINValidationValueZeroError,
 )
 from vitya.payment_order.payments.validators import (
+    validate_cbc,
     validate_number,
+    validate_oktmo,
     validate_operation_kind,
     validate_payee_account,
+    validate_payee_inn,
+    validate_payee_kpp,
     validate_payer_inn,
+    validate_payer_kpp,
+    validate_payer_status,
     validate_purpose,
     validate_purpose_code,
+    validate_reason,
     validate_uin,
 )
 
 VALID_UIN = '18209965144380684245'
 INVALID_UIN = '18209965144380684246'
 INN = '773605950159'
+
+FL_INN = '848839660257'
+INVALID_FL_INN = '848839660258'
+IP_INN = '598092767948'
+INVALID_IP_INN = '598092767949'
+LE_INN = '1840493716'
+INVALID_LE_INN = '1840493717'
+
+KPP = '352643608'
+CBC = '18201061201010000510'
+OKTMO = '25600000'
 
 
 @pytest.mark.parametrize(
@@ -484,3 +528,459 @@ def test_validate_payer_inn(
         assert expected_value == validate_payer_inn(
             _type=_type, payer_status=payer_status, value=value, for_third_face=for_third_face,
         )
+
+
+@pytest.mark.parametrize(
+    'value, _type, exception, expected_value',
+    [
+        (
+            IP_INN,
+            PaymentType.ip,
+            None,
+            IP_INN,
+        ),
+        (
+            '1',
+            PaymentType.ip,
+            PayeeINNValidationIPLenError,
+            None,
+        ),
+        (
+            INVALID_IP_INN,
+            PaymentType.ip,
+            PayeeINNValidationControlSumError,
+            None,
+        ),
+        (
+            None,
+            PaymentType.fl,
+            None,
+            '0',
+        ),
+        (
+            '0',
+            PaymentType.fl,
+            None,
+            '0',
+        ),
+        (
+            FL_INN,
+            PaymentType.fl,
+            None,
+            FL_INN,
+        ),
+        (
+            INVALID_FL_INN,
+            PaymentType.fl,
+            PayeeINNValidationControlSumError,
+            None,
+        ),
+        (
+            INVALID_FL_INN,
+            PaymentType.fl,
+            PayeeINNValidationControlSumError,
+            None,
+        ),
+        (
+            LE_INN,
+            PaymentType.bo,
+            None,
+            LE_INN,
+        ),
+        (
+            '1',
+            PaymentType.bo,
+            PayeeINNValidationLELenError,
+            None,
+        ),
+        (
+            INVALID_LE_INN,
+            PaymentType.bo,
+            PayeeINNValidationControlSumError,
+            None,
+        ),
+    ]
+)
+def test_validate_payee_inn(
+    value: Optional[str],
+    _type: PaymentType,
+    exception: Optional[Type[Exception]],
+    expected_value: str
+) -> None:
+    if exception:
+        with pytest.raises(exception):
+            validate_payee_inn(_type=_type, value=value)
+    else:
+        assert expected_value == validate_payee_inn(_type=_type, value=value)
+
+
+@pytest.mark.parametrize(
+    'value, _type, for_third_face, exception, expected_value',
+    [
+        (
+            None,
+            PaymentType.fl,
+            False,
+            None,
+            None,
+        ),
+        (
+            None,
+            PaymentType.fns,
+            False,
+            PayerStatusValidationNullNotAllowedError,
+            None,
+        ),
+        (
+            '06',
+            PaymentType.tms,
+            True,
+            PayerStatusValidationTMS05NotAllowedError,
+            None,
+        ),
+        (
+            '99',
+            PaymentType.fns,
+            True,
+            PayerStatusValidationValueError,
+            None,
+        ),
+    ]
+)
+def test_validate_payer_status(
+    value: Optional[str],
+    _type: PaymentType,
+    for_third_face: bool,
+    exception: Optional[Type[Exception]],
+    expected_value: str
+):
+    if exception:
+        with pytest.raises(exception):
+            validate_payer_status(_type=_type, value=value, for_third_face=for_third_face)
+    else:
+        assert expected_value == validate_payer_status(_type=_type, value=value, for_third_face=for_third_face)
+
+
+@pytest.mark.parametrize(
+    'value, _type, payer_inn, exception, expected_value',
+    [
+        (
+            '',
+            PaymentType.fl,
+            INN,
+            None,
+            '0',
+        ),
+        (
+            KPP,
+            PaymentType.fl,
+            INN,
+            PayerKPPValidationOnlyEmptyError,
+            None,
+        ),
+        (
+            '',
+            PaymentType.fns,
+            LE_INN,
+            PayerKPPValidationINN10EmptyNotAllowed,
+            None,
+        ),
+        (
+            KPP,
+            PaymentType.fns,
+            IP_INN,
+            PayerKPPValidationINN12OnlyEmptyError,
+            None,
+        ),
+        (
+            '0123456780',
+            PaymentType.fns,
+            LE_INN,
+            PayerKPPValidationValueLenError,
+            None,
+        ),
+        (
+            '01234567a',
+            PaymentType.fns,
+            LE_INN,
+            PayerKPPValidationValueDigitsOnlyError,
+            None,
+        ),
+        (
+            KPP,
+            PaymentType.fns,
+            LE_INN,
+            None,
+            KPP,
+        ),
+        (
+            '001234567',
+            PaymentType.bo,
+            LE_INN,
+            PayerKPPValidationValueCannotZerosStarts,
+            None,
+        )
+    ]
+)
+def test_validate_payer_kpp(
+    value: str,
+    _type: PaymentType,
+    payer_inn: str,
+    exception: Optional[Type[Exception]],
+    expected_value: str
+):
+    if exception:
+        with pytest.raises(exception):
+            validate_payer_kpp(_type=_type, value=value, payer_inn=payer_inn)
+    else:
+        assert expected_value == validate_payer_kpp(_type=_type, value=value, payer_inn=payer_inn)
+
+
+@pytest.mark.parametrize(
+    'value, _type, exception, expected_value',
+    [
+        (
+            '',
+            PaymentType.fl,
+            None,
+            '0',
+        ),
+        (
+            KPP,
+            PaymentType.fl,
+            PayeeKPPValidationOnlyEmptyError,
+            None,
+        ),
+        (
+            '0123456780',
+            PaymentType.fns,
+            PayeeKPPValidationValueLenError,
+            None,
+        ),
+        (
+            '01234567a',
+            PaymentType.fns,
+            PayeeKPPValidationValueDigitsOnlyError,
+            None,
+        ),
+        (
+            KPP,
+            PaymentType.fns,
+            None,
+            KPP,
+        ),
+        (
+            '',
+            PaymentType.fns,
+            PayeeKPPValidationEmptyNotAllowed,
+            None
+        ),
+        (
+            '001234567',
+            PaymentType.bo,
+            PayeeKPPValidationValueCannotZerosStarts,
+            None,
+        )
+    ]
+)
+def test_validate_payee_kpp(
+    value: str,
+    _type: PaymentType,
+    exception: Optional[Type[Exception]],
+    expected_value: str
+):
+    if exception:
+        with pytest.raises(exception):
+            validate_payee_kpp(_type=_type, value=value)
+    else:
+        assert expected_value == validate_payee_kpp(_type=_type, value=value)
+
+
+@pytest.mark.parametrize(
+    'value, _type, exception, expected_value',
+    [
+        (
+            '',
+            PaymentType.fl,
+            None,
+            None,
+        ),
+        (
+            '',
+            PaymentType.bo,
+            None,
+            None,
+        ),
+        (
+            '',
+            PaymentType.fns,
+            CBCValidationEmptyNotAllowed,
+            None,
+        ),
+        (
+            '',
+            PaymentType.tms,
+            CBCValidationEmptyNotAllowed,
+            None,
+        ),
+        (
+            '01',
+            PaymentType.tms,
+            CBCValidationValueLenError,
+            None,
+        ),
+        (
+            'a' * 20,
+            PaymentType.tms,
+            CBCValidationValueDigitsOnlyError,
+            None,
+        ),
+        (
+            '00' + '1' * 18,
+            PaymentType.tms,
+            CBCValidationValueCannotZerosStarts,
+            None,
+        ),
+        (
+            CBC,
+            PaymentType.tms,
+            None,
+            CBC,
+        )
+
+    ]
+)
+def test_validate_payee_kpp(
+    value: str,
+    _type: PaymentType,
+    exception: Optional[Type[Exception]],
+    expected_value: str
+):
+    if exception:
+        with pytest.raises(exception):
+            validate_cbc(_type=_type, value=value)
+    else:
+        assert expected_value == validate_cbc(_type=_type, value=value)
+
+
+@pytest.mark.parametrize(
+    'value, _type, payer_status, exception, expected_value',
+    [
+        (
+            None,
+            PaymentType.fl,
+            None,
+            None,
+            None,
+        ),
+        (
+            None,
+            PaymentType.fns,
+            '01',
+            None,
+            None,
+        ),
+        (
+            None,
+            PaymentType.fns,
+            '13',
+            None,
+            None,
+        ),
+        (
+            None,
+            PaymentType.tms,
+            None,
+            None,
+            None,
+        ),
+        (
+            None,
+            PaymentType.bo,
+            None,
+            None,
+            None,
+        ),
+        (
+            '0123456',
+            PaymentType.fns,
+            None,
+            OKTMOValidationValueLenError,
+            None,
+        ),
+        (
+            '00000000',
+            PaymentType.fns,
+            None,
+            OKTMOValidationZerosNotAllowed,
+            None,
+        ),
+        (
+            OKTMO,
+            PaymentType.fns,
+            None,
+            None,
+            OKTMO,
+        )
+    ]
+)
+def test_validate_payee_kpp(
+    value: str,
+    _type: PaymentType,
+    payer_status: str,
+    exception: Optional[Type[Exception]],
+    expected_value: str
+):
+    if exception:
+        with pytest.raises(exception):
+            validate_oktmo(_type=_type, value=value, payer_status=payer_status)
+    else:
+        assert expected_value == validate_oktmo(_type=_type, value=value, payer_status=payer_status)
+
+
+@pytest.mark.parametrize(
+    'value, _type, exception, expected_value',
+    [
+        (
+            None,
+            PaymentType.fl,
+            None,
+            None,
+        ),
+        (
+            None,
+            PaymentType.bo,
+            None,
+            None,
+        ),
+        (
+            None,
+            PaymentType.tms,
+            None,
+            None,
+        ),
+        (
+            '031',
+            PaymentType.tms,
+            ReasonValidationValueLenError,
+            None,
+        ),
+        (
+            'AD',
+            PaymentType.tms,
+            ReasonValidationValueError,
+            None,
+        ),
+    ]
+)
+def test_validate_reason(
+    value: str,
+    _type: PaymentType,
+    exception: Optional[Type[Exception]],
+    expected_value: str
+):
+    if exception:
+        with pytest.raises(exception):
+            validate_reason(_type=_type, value=value)
+    else:
+        assert expected_value == validate_reason(_type=_type, value=value)
