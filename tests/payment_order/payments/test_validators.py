@@ -47,6 +47,13 @@ from vitya.payment_order.errors import (
     PurposeValidationMaxLenError,
     ReasonValidationValueError,
     ReasonValidationValueLenError,
+    TaxPeriodValidationBOValueLenError,
+    TaxPeriodValidationFNS01OnlyEmpty,
+    TaxPeriodValidationFNS02EmptyNotAllowed,
+    TaxPeriodValidationFNSEmptyNotAllowed,
+    TaxPeriodValidationFNSValueLenError,
+    TaxPeriodValidationTMSEmptyNotAllowed,
+    TaxPeriodValidationTMSValueLenError,
     UINValidationBOLenError,
     UINValidationControlSumError,
     UINValidationDigitsOnlyError,
@@ -69,6 +76,7 @@ from vitya.payment_order.payments.validators import (
     validate_purpose,
     validate_purpose_code,
     validate_reason,
+    validate_tax_period,
     validate_uin,
 )
 
@@ -984,3 +992,113 @@ def test_validate_reason(
             validate_reason(_type=_type, value=value)
     else:
         assert expected_value == validate_reason(_type=_type, value=value)
+
+
+@pytest.mark.parametrize(
+    'value, _type, payer_status, exception, expected_value',
+    [
+        (
+            None,
+            PaymentType.fl,
+            None,
+            None,
+            None,
+        ),
+        (
+            None,
+            PaymentType.bo,
+            None,
+            None,
+            '0',
+        ),
+        (
+            '01',
+            PaymentType.bo,
+            None,
+            TaxPeriodValidationBOValueLenError,
+            None,
+        ),
+        (
+            '0123456789',
+            PaymentType.bo,
+            None,
+            None,
+            '0123456789',
+        ),
+        (
+            None,
+            PaymentType.tms,
+            None,
+            TaxPeriodValidationTMSEmptyNotAllowed,
+            None,
+        ),
+        (
+            '1',
+            PaymentType.tms,
+            None,
+            TaxPeriodValidationTMSValueLenError,
+            None,
+        ),
+        (
+            '01234567',
+            PaymentType.tms,
+            None,
+            None,
+            '01234567',
+        ),
+        (
+            None,
+            PaymentType.fns,
+            '02',
+            TaxPeriodValidationFNS02EmptyNotAllowed,
+            None,
+        ),
+        (
+            '1',
+            PaymentType.fns,
+            '13',
+            TaxPeriodValidationFNS01OnlyEmpty,
+            None,
+        ),
+        (
+            '0',
+            PaymentType.fns,
+            '13',
+            None,
+            '0',
+        ),
+        (
+            None,
+            PaymentType.fns,
+            None,
+            TaxPeriodValidationFNSEmptyNotAllowed,
+            None,
+        ),
+        (
+            '12',
+            PaymentType.fns,
+            None,
+            TaxPeriodValidationFNSValueLenError,
+            None,
+        ),
+        (
+            '0123456789',
+            PaymentType.fns,
+            None,
+            None,
+            '0123456789',
+        ),
+    ]
+)
+def test_validate_reason(
+    value: str,
+    _type: PaymentType,
+    payer_status: Optional[str],
+    exception: Optional[Type[Exception]],
+    expected_value: str
+):
+    if exception:
+        with pytest.raises(exception):
+            validate_tax_period(_type=_type, value=value, payer_status=payer_status)
+    else:
+        assert expected_value == validate_tax_period(_type=_type, value=value, payer_status=payer_status)

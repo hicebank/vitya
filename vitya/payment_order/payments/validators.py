@@ -55,6 +55,13 @@ from vitya.payment_order.errors import (
     ReasonValidationFNSOnlyEmptyError,
     ReasonValidationValueError,
     ReasonValidationValueLenError,
+    TaxPeriodValidationBOValueLenError,
+    TaxPeriodValidationFNS01OnlyEmpty,
+    TaxPeriodValidationFNS02EmptyNotAllowed,
+    TaxPeriodValidationFNSEmptyNotAllowed,
+    TaxPeriodValidationFNSValueLenError,
+    TaxPeriodValidationTMSEmptyNotAllowed,
+    TaxPeriodValidationTMSValueLenError,
     UINValidationBOLenError,
     UINValidationControlSumError,
     UINValidationDigitsOnlyError,
@@ -142,9 +149,12 @@ def validate_payment_data(
 
     payer_kpp = validate_payer_kpp(_type=_type, payer_inn=payer_inn, value=payer_kpp)
     payee_kpp = validate_payee_kpp(_type=_type, value=payee_kpp)
+
+    # budget fields
     cbc = validate_cbc(_type=_type, value=cbc)
     oktmo = validate_oktmo(value=oktmo, _type=_type, payer_status=payer_status)
     reason = validate_reason(_type=_type, value=reason)
+    tax_period = validate_tax_period(_type=_type, value=tax_period, payer_status=payer_status)
 
     return {
         '_type': _type,
@@ -588,4 +598,42 @@ def validate_reason(
         raise ReasonValidationValueLenError
     if value not in REASONS:
         raise ReasonValidationValueError
+    return value
+
+
+def validate_tax_period(
+    value: Optional[str],
+    _type: PaymentType,
+    payer_status: Optional[str],
+) -> Optional[str]:
+    is_empty = value is None or value in {'', '0'}
+    if not _type.is_budget:
+        return None
+
+    if _type == PaymentType.bo:
+        if is_empty:
+            return '0'
+        assert value is not None
+        if len(value) != 10:
+            raise TaxPeriodValidationBOValueLenError
+        return value
+    elif _type == PaymentType.tms:
+        if is_empty:
+            raise TaxPeriodValidationTMSEmptyNotAllowed
+        assert value is not None
+        if len(value) != 8:
+            raise TaxPeriodValidationTMSValueLenError
+        return value
+
+    if payer_status == '02' and is_empty:
+        raise TaxPeriodValidationFNS02EmptyNotAllowed
+    if payer_status in {'01', '13'}:
+        if not is_empty:
+            raise TaxPeriodValidationFNS01OnlyEmpty
+        return '0'
+
+    if value is None:
+        raise TaxPeriodValidationFNSEmptyNotAllowed
+    if len(value) != 10:
+        raise TaxPeriodValidationFNSValueLenError
     return value
