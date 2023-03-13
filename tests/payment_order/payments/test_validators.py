@@ -8,6 +8,14 @@ from vitya.payment_order.errors import (
     CBCValidationValueCannotZerosStarts,
     CBCValidationValueDigitsOnlyError,
     CBCValidationValueLenError,
+    DocumentNumberValidationBOEmptyNotAllowed,
+    DocumentNumberValidationBOOnlyEmptyError,
+    DocumentNumberValidationBOValueError,
+    DocumentNumberValidationBOValueLenError,
+    DocumentNumberValidationFNSOnlyEmptyError,
+    DocumentNumberValidationTMS00ValueError,
+    DocumentNumberValidationTMSValueLen7Error,
+    DocumentNumberValidationTMSValueLen15Error,
     INNValidationLenError,
     NumberValidationLenError,
     OKTMOValidationFNSEmptyNotAllowed,
@@ -64,6 +72,7 @@ from vitya.payment_order.errors import (
 )
 from vitya.payment_order.payments.validators import (
     validate_cbc,
+    validate_document_number,
     validate_number,
     validate_oktmo,
     validate_operation_kind,
@@ -858,7 +867,7 @@ def test_validate_payee_kpp(
 
     ]
 )
-def test_validate_payee_kpp(
+def test_validate_cbc(
     value: str,
     _type: PaymentType,
     exception: Optional[Type[Exception]],
@@ -932,7 +941,7 @@ def test_validate_payee_kpp(
         )
     ]
 )
-def test_validate_payee_kpp(
+def test_validate_oktmo(
     value: str,
     _type: PaymentType,
     payer_status: str,
@@ -1090,7 +1099,7 @@ def test_validate_reason(
         ),
     ]
 )
-def test_validate_reason(
+def test_validate_tax_period(
     value: str,
     _type: PaymentType,
     payer_status: Optional[str],
@@ -1102,3 +1111,219 @@ def test_validate_reason(
             validate_tax_period(_type=_type, value=value, payer_status=payer_status)
     else:
         assert expected_value == validate_tax_period(_type=_type, value=value, payer_status=payer_status)
+
+
+@pytest.mark.parametrize(
+    'value, _type, payer_status, payee_account, payer_inn, uin, '
+    'reason, exception, expected_value',
+    [
+        (
+            None,
+            PaymentType.fl,
+            None,
+            '',
+            '',
+            '',
+            '',
+            None,
+            None,
+        ),
+        (
+            None,
+            PaymentType.fns,
+            None,
+            '',
+            '',
+            '',
+            '',
+            None,
+            '0',
+        ),
+        (
+            '02',
+            PaymentType.fns,
+            None,
+            '',
+            '',
+            '',
+            '',
+            DocumentNumberValidationFNSOnlyEmptyError,
+            None,
+        ),
+        (
+            '02',
+            PaymentType.bo,
+            '31',
+            '03212',
+            '',
+            '1',
+            '',
+            DocumentNumberValidationBOOnlyEmptyError,
+            None,
+        ),
+        (
+            None,
+            PaymentType.bo,
+            '31',
+            '03212',
+            '',
+            '1',
+            '',
+            None,
+            '0',
+        ),
+        (
+            None,
+            PaymentType.bo,
+            '24',
+            '',
+            None,
+            None,
+            '',
+            DocumentNumberValidationBOEmptyNotAllowed,
+            None,
+        ),
+        (
+            '1' * 16,
+            PaymentType.bo,
+            '24',
+            '',
+            None,
+            None,
+            '',
+            DocumentNumberValidationBOValueLenError,
+            None,
+        ),
+        (
+            '02',
+            PaymentType.bo,
+            '24',
+            '',
+            None,
+            None,
+            '',
+            DocumentNumberValidationBOValueError,
+            None,
+        ),
+        (
+            '02;',
+            PaymentType.bo,
+            '24',
+            '',
+            None,
+            None,
+            '',
+            None,
+            '02;',
+        ),
+        (
+            None,
+            PaymentType.bo,
+            '00',
+            '',
+            None,
+            None,
+            '',
+            None,
+            None,
+        ),
+        (
+            None,
+            PaymentType.tms,
+            '',
+            '',
+            None,
+            None,
+            '00',
+            DocumentNumberValidationTMS00ValueError,
+            None,
+        ),
+        (
+            '1',
+            PaymentType.tms,
+            '',
+            '',
+            None,
+            None,
+            '00',
+            DocumentNumberValidationTMS00ValueError,
+            None,
+        ),
+        (
+            '1' * 8,
+            PaymentType.tms,
+            '',
+            '',
+            None,
+            None,
+            'ПК',
+            DocumentNumberValidationTMSValueLen7Error,
+            None,
+        ),
+        (
+            '',
+            PaymentType.tms,
+            '',
+            '',
+            None,
+            None,
+            'ИЛ',
+            DocumentNumberValidationTMSValueLen15Error,
+            None,
+        ),
+        (
+            '1' * 16,
+            PaymentType.tms,
+            '',
+            '',
+            None,
+            None,
+            'ИЛ',
+            DocumentNumberValidationTMSValueLen15Error,
+            None,
+        ),
+        (
+            '02',
+            PaymentType.tms,
+            '',
+            '',
+            None,
+            None,
+            'ИЛ',
+            None,
+            '02',
+        ),
+    ]
+)
+def test_validate_document_number(
+    value: str,
+    _type: PaymentType,
+    payer_status: Optional[str],
+    payee_account: str,
+    payer_inn: Optional[str],
+    uin: Optional[str],
+    reason: Optional[str],
+    exception: Optional[Type[Exception]],
+    expected_value: str
+):
+    if exception:
+        with pytest.raises(exception):
+            validate_document_number(
+                value=value,
+                _type=_type,
+                payer_status=payer_status,
+                payee_account=payee_account,
+                payer_inn=payer_inn,
+                uin=uin,
+                reason=reason,
+            )
+    else:
+        assert expected_value == validate_document_number(
+            value=value,
+            _type=_type,
+            payer_status=payer_status,
+            payee_account=payee_account,
+            payer_inn=payer_inn,
+            uin=uin,
+            reason=reason,
+        )

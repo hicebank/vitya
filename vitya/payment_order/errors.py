@@ -1,10 +1,22 @@
+from typing import Any
+
 from pydantic.errors import PydanticValueError
 
+from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.payments.helpers import (
     CHARS_FOR_PURPOSE,
+    DOCUMENT_NUMBERS,
     PAYER_STATUSES,
     REASONS,
 )
+
+
+class PaymentTypeValueError(PydanticValueError):
+    msg_template = 'invalid payment type: unknown payment type = '
+
+    def __init__(self, _type: str, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.msg_template += _type
 
 
 class AmountValidationError(PydanticValueError):
@@ -387,3 +399,52 @@ class TaxPeriodValidationFNSEmptyNotAllowed(TaxPeriodValidationEmptyNotAllowed):
 
 class TaxPeriodValidationFNSValueLenError(TaxPeriodValidationValueLenError):
     msg_template = 'invalid tax period: for fns must be 10'
+
+
+class DocumentNumberValidationError(PydanticValueError):
+    msg_template = 'invalid document number: base error'
+
+
+class DocumentNumberValidationOnlyEmptyError(DocumentNumberValidationError):
+    msg_template = 'invalid document number: only empty allowed'
+
+
+class DocumentNumberValidationEmptyNotAllowed(DocumentNumberValidationError):
+    msg_template = 'invalid document number: empty is not allowed'
+
+
+class DocumentNumberValidationFNSOnlyEmptyError(DocumentNumberValidationOnlyEmptyError):
+    msg_template = 'invalid document number: for fns only empty allowed'
+
+
+class DocumentNumberValidationBOEmptyNotAllowed(DocumentNumberValidationEmptyNotAllowed):
+    msg_template = 'invalid document number: for bo with payer status = "24", empty payer inn and empty uin ' \
+                   'empty is not allowed'
+
+
+class DocumentNumberValidationBOOnlyEmptyError(DocumentNumberValidationOnlyEmptyError):
+    msg_template = 'invalid document number: for bo with payee account starts with "03212", ' \
+                   'payer status = "31", uin is not empty - empty value is not allowed'
+
+
+class DocumentNumberValidationBOValueLenError(DocumentNumberValidationError):
+    msg_template = 'invalid document number: for bo value len max 15'
+
+
+class DocumentNumberValidationBOValueError(DocumentNumberValidationError):
+    msg_template = f'invalid document number: for bo first two chars should be in {DOCUMENT_NUMBERS}, ' \
+                   f'and third is equal to ";"'
+
+
+class DocumentNumberValidationTMS00ValueError(DocumentNumberValidationError):
+    msg_template = 'invalid document number: for tms with reason = "00" value must starts with "00"'
+
+
+class DocumentNumberValidationTMSValueLen7Error(DocumentNumberValidationError):
+    msg_template = 'invalid document number: for tms with reason in {"ПК", "УВ", "ТГ", "ТБ", "ТД", "ПВ"} ' \
+                   'value len max 7'
+
+
+class DocumentNumberValidationTMSValueLen15Error(DocumentNumberValidationError):
+    msg_template = 'invalid document number: for tms with reason in {"ИЛ", "ИН", "ПБ", "КЭ"} ' \
+                   'value len from 1 to 15 chars'

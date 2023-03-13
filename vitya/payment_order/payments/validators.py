@@ -10,6 +10,14 @@ from vitya.payment_order.errors import (
     CBCValidationValueCannotZerosStarts,
     CBCValidationValueDigitsOnlyError,
     CBCValidationValueLenError,
+    DocumentNumberValidationBOEmptyNotAllowed,
+    DocumentNumberValidationBOOnlyEmptyError,
+    DocumentNumberValidationBOValueError,
+    DocumentNumberValidationBOValueLenError,
+    DocumentNumberValidationFNSOnlyEmptyError,
+    DocumentNumberValidationTMS00ValueError,
+    DocumentNumberValidationTMSValueLen7Error,
+    DocumentNumberValidationTMSValueLen15Error,
     INNValidationLenError,
     KPPValidationValueCannotZerosStarts,
     KPPValidationValueDigitsOnlyError,
@@ -46,6 +54,7 @@ from vitya.payment_order.errors import (
     PayerStatusValidationNullNotAllowedError,
     PayerStatusValidationTMS05NotAllowedError,
     PayerStatusValidationValueError,
+    PaymentTypeValueError,
     PurposeCodeValidationFlError,
     PurposeCodeValidationNullError,
     PurposeValidationCharactersError,
@@ -74,6 +83,7 @@ from vitya.payment_order.errors import (
 from vitya.payment_order.fields import Payee, Payer, PaymentOrder
 from vitya.payment_order.payments.helpers import (
     CHARS_FOR_PURPOSE,
+    DOCUMENT_NUMBERS,
     PAYER_STATUSES,
     REASONS,
     REPLACE_CHARS_FOR_SPACE,
@@ -155,7 +165,15 @@ def validate_payment_data(
     oktmo = validate_oktmo(value=oktmo, _type=_type, payer_status=payer_status)
     reason = validate_reason(_type=_type, value=reason)
     tax_period = validate_tax_period(_type=_type, value=tax_period, payer_status=payer_status)
-
+    document_number = validate_document_number(
+        value=document_number,
+        _type=_type,
+        payee_account=payee_account,
+        payer_status=payer_status,
+        payer_inn=payer_inn,
+        uin=uin,
+        reason=reason,
+    )
     return {
         '_type': _type,
         'name': name,
@@ -637,3 +655,55 @@ def validate_tax_period(
     if len(value) != 10:
         raise TaxPeriodValidationFNSValueLenError
     return value
+
+
+def validate_document_number(
+    value: Optional[str],
+    _type: PaymentType,
+    reason: Optional[str],
+    payer_status: Optional[str],
+    payee_account: str,
+    uin: Optional[str],
+    payer_inn: Optional[str],
+) -> Optional[str]:
+    is_empty = value is None or value in {'', '0'}
+    if not _type.is_budget:
+        return None
+
+    if _type == PaymentType.fns:
+        if not is_empty:
+            raise DocumentNumberValidationFNSOnlyEmptyError
+        return '0'
+    elif _type == PaymentType.bo:
+        if payee_account.startswith('03212') and payer_status == '31' and uin is not None:
+            if not is_empty:
+                raise DocumentNumberValidationBOOnlyEmptyError
+            return '0'
+
+        if payer_status == '24' and payer_inn is None and uin is None and is_empty:
+            raise DocumentNumberValidationBOEmptyNotAllowed
+        if not is_empty:
+            assert value is not None
+            if len(value) > 15:
+                raise DocumentNumberValidationBOValueLenError
+            if len(value) < 3 or value[2] != ";" or value[:2] not in DOCUMENT_NUMBERS:
+                raise DocumentNumberValidationBOValueError
+        return value
+    elif _type == PaymentType.tms:
+        if reason == '00' and (value is None or not value.startswith('00')):
+            raise DocumentNumberValidationTMS00ValueError
+        if reason in {'ПК', 'УВ', 'ТГ', 'ТБ', 'ТД', 'ПВ'} and value and len(value) > 7:
+            raise DocumentNumberValidationTMSValueLen7Error
+        if reason in {'ИЛ', 'ИН', 'ПБ', 'КЭ'} and (
+            value is not None and (len(value) < 1 or len(value) > 15) or is_empty):
+            raise DocumentNumberValidationTMSValueLen15Error
+        return value
+    raise PaymentTypeValueError(_type=str(_type))
+
+
+def validate_document_date(
+    value: Optional[str],
+    _type: PaymentType,
+) -> Optional[str]:
+    if not _type.is_budget:
+        return None
