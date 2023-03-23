@@ -22,12 +22,12 @@ class BaseChecker(ABC):
 
 
 class BaseModelChecker(BaseModel):
-    __checkers__: ClassVar[List[Tuple[Type[BaseChecker], str, ...]]] = []  # type: ignore
+    __checkers__: ClassVar[List[Tuple[Type[BaseChecker], List[str]]]] = []
 
     @root_validator(pre=False)
     def run_checkers(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         errors = []
-        for checker, *fields_names in cls.__checkers__:
+        for checker, fields_names in cls.__checkers__:
             try:
                 args = [values[field_name] for field_name in fields_names]
             except KeyError:

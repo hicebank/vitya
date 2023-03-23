@@ -150,10 +150,10 @@ class Payment(BaseModelChecker):
         return replace_zero_to_none(value=value)
 
     __checkers__ = [
-        (OperationKindChecker, 'operation_kind', 'type'),
-        (AccountBicChecker, 'payer_account', 'payer_bic'),
-        (PayeeAccountChecker, 'payee_account', 'payee_bic', 'type'),  # type: ignore
-        (PayerInnChecker, 'payer_inn', 'payer_status', 'for_third_face', 'type'),  # type: ignore
-        (UinChecker, 'uin', 'payer_inn', 'payer_status', 'type'),  # type: ignore
-        (PurposeChecker, 'purpose', 'type'),
+        (OperationKindChecker, ['operation_kind', 'type']),
+        (AccountBicChecker, ['payer_account', 'payer_bic']),
+        (PayeeAccountChecker, ['payee_account', 'payee_bic', 'type']),
+        (PayerInnChecker, ['payer_inn', 'payer_status', 'for_third_face', 'type']),
+        (UinChecker, ['uin', 'payer_inn', 'payer_status', 'type']),
+        (PurposeChecker, ['purpose', 'type']),
     ]
