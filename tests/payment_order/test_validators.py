@@ -1,5 +1,6 @@
+from contextlib import nullcontext
 from decimal import Decimal
-from typing import Optional, Type
+from typing import ContextManager, Optional
 
 import pytest
 
@@ -41,212 +42,182 @@ from vitya.payment_order.validators import (
 
 
 @pytest.mark.parametrize(
-    'value, exception, expected_value',
+    'value, exception_handler, expected_value',
     [
-        ('000001', None, Decimal('000001')),
-        ('1' * 19, AmountValidationLengthError, None),
-        ('0', AmountValidationLessOrEqualZeroError, None),
-        ('-0.01', AmountValidationLessOrEqualZeroError, None),
+        ('000001', nullcontext(), Decimal('000001')),
+        ('1' * 19, pytest.raises(AmountValidationLengthError), None),
+        ('0', pytest.raises(AmountValidationLessOrEqualZeroError), None),
+        ('-0.01', pytest.raises(AmountValidationLessOrEqualZeroError), None),
     ]
 )
 def test_validate_amount(
     value: str,
-    exception: Optional[Type[Exception]],
+    exception_handler: ContextManager,
     expected_value: Optional[str]
 ) -> None:
-    if exception:
-        with pytest.raises(exception):
-            validate_amount(amount=value)
-    else:
+    with exception_handler:
         assert validate_amount(amount=value) == expected_value
 
 
 @pytest.mark.parametrize(
-    'value, exception, expected_value',
+    'value, exception_handler, expected_value',
     [
-        ('Ashot Ashot', None, 'Ashot Ashot'),
-        ('', PayerValidationSizeError, None),
-        ('0' * 161, PayerValidationSizeError, None),
+        ('Ashot Ashot', nullcontext(), 'Ashot Ashot'),
+        ('', pytest.raises(PayerValidationSizeError), None),
+        ('0' * 161, pytest.raises(PayerValidationSizeError), None),
     ]
 )
 def test_validate_payer(
     value: str,
-    exception: Optional[Type[Exception]],
+    exception_handler: ContextManager,
     expected_value: Optional[str]
 ) -> None:
-    if exception:
-        with pytest.raises(exception):
-            validate_payer(value=value)
-    else:
+    with exception_handler:
         assert validate_payer(value=value) == expected_value
 
 
 @pytest.mark.parametrize(
-    'value, exception, expected_value',
+    'value, exception_handler, expected_value',
     [
-        ('Ashot Ashot', None, 'Ashot Ashot'),
-        ('', PayeeValidationSizeError, None),
-        ('0' * 161, PayeeValidationSizeError, None),
-        ('with 40802810722200035222', PayeeValidationNameError, None),
+        ('Ashot Ashot', nullcontext(), 'Ashot Ashot'),
+        ('', pytest.raises(PayeeValidationSizeError), None),
+        ('0' * 161, pytest.raises(PayeeValidationSizeError), None),
+        ('with 40802810722200035222', pytest.raises(PayeeValidationNameError), None),
     ]
 )
 def test_validate_payee(
     value: str,
-    exception: Optional[Type[Exception]],
+    exception_handler: ContextManager,
     expected_value: Optional[str]
 ) -> None:
-    if exception:
-        with pytest.raises(exception):
-            validate_payee(value=value)
-    else:
+    with exception_handler:
         assert validate_payee(value=value) == expected_value
 
 
 @pytest.mark.parametrize(
-    'value, exception, expected_value',
+    'value, exception_handler, expected_value',
     [
-        ('1', None, 1),
-        ('', None, 5),
-        (None, None, 5),
-        ('a', PaymentOrderValidationError, None),
-        ('6', PaymentOrderValidationError, None),
+        ('1', nullcontext(), 1),
+        ('', nullcontext(), 5),
+        (None, nullcontext(), 5),
+        ('a', pytest.raises(PaymentOrderValidationError), None),
+        ('6', pytest.raises(PaymentOrderValidationError), None),
     ]
 )
 def test_validate_payment_order(
     value: str,
-    exception: Optional[Type[Exception]],
+    exception_handler: ContextManager,
     expected_value: Optional[int]
 ) -> None:
-    if exception:
-        with pytest.raises(exception):
-            validate_payment_order(value=value)
-    else:
+    with exception_handler:
         assert validate_payment_order(value=value) == expected_value
 
 
 @pytest.mark.parametrize(
-    'value, exception, expected_value',
+    'value, exception_handler, expected_value',
     [
-        (1, AccountNumberValidationTypeError, None),
-        ('', AccountNumberValidationSizeError, None),
-        ('1' * 21, AccountNumberValidationSizeError, None),
-        (IP_ACCOUNT, None, IP_ACCOUNT),
+        (1, pytest.raises(AccountNumberValidationTypeError), None),
+        ('', pytest.raises(AccountNumberValidationSizeError), None),
+        ('1' * 21, pytest.raises(AccountNumberValidationSizeError), None),
+        (IP_ACCOUNT, nullcontext(), IP_ACCOUNT),
     ]
 )
 def test_validate_account_number(
     value: str,
-    exception: Optional[Type[Exception]],
+    exception_handler: ContextManager,
     expected_value: Optional[int]
 ) -> None:
-    if exception:
-        with pytest.raises(exception):
-            validate_account_number(value=value)
-    else:
+    with exception_handler:
         assert validate_account_number(value=value) == expected_value
 
 
 @pytest.mark.parametrize(
-    'value, exception, expected_value',
+    'value, exception_handler, expected_value',
     [
-        (None, OperationKindValidationTypeError, None),
-        (1, OperationKindValidationTypeError, None),
-        ('', OperationKindValidationValueError, None),
-        ('1' * 3, OperationKindValidationValueError, None),
-        ('02', None, '02'),
+        (None, pytest.raises(OperationKindValidationTypeError), None),
+        (1, pytest.raises(OperationKindValidationTypeError), None),
+        ('', pytest.raises(OperationKindValidationValueError), None),
+        ('1' * 3, pytest.raises(OperationKindValidationValueError), None),
+        ('02', nullcontext(), '02'),
     ]
 )
 def test_validate_operation_kind(
     value: str,
-    exception: Optional[Type[Exception]],
+    exception_handler: ContextManager,
     expected_value: Optional[int]
 ) -> None:
-    if exception:
-        with pytest.raises(exception):
-            validate_operation_kind(value=value)
-    else:
+    with exception_handler:
         assert validate_operation_kind(value=value) == expected_value
 
 
 @pytest.mark.parametrize(
-    'value, exception, expected_value',
+    'value, exception_handler, expected_value',
     [
-        (None, UINValidationTypeError, None),
-        (1, UINValidationTypeError, None),
-        ('', None, None),
-        ('111', UINValidationLenError, None),
-        ('0000', UINValidationOnlyZeroError, None),
-        ('aaaa', UINValidationDigitsOnlyError, None),
-        (INVALID_UIN, UINValidationControlSumError, None),
-        (VALID_UIN, None, VALID_UIN),
+        (None, pytest.raises(UINValidationTypeError), None),
+        (1, pytest.raises(UINValidationTypeError), None),
+        ('', nullcontext(), None),
+        ('111', pytest.raises(UINValidationLenError), None),
+        ('0000', pytest.raises(UINValidationOnlyZeroError), None),
+        ('aaaa', pytest.raises(UINValidationDigitsOnlyError), None),
+        (INVALID_UIN, pytest.raises(UINValidationControlSumError), None),
+        (VALID_UIN, nullcontext(), VALID_UIN),
     ]
 )
 def test_validate_uin(
     value: str,
-    exception: Optional[Type[Exception]],
+    exception_handler: ContextManager,
     expected_value: Optional[int]
 ) -> None:
-    if exception:
-        with pytest.raises(exception):
-            validate_uin(value=value)
-    else:
+    with exception_handler:
         assert validate_uin(value=value) == expected_value
 
 
 @pytest.mark.parametrize(
-    'value, exception, expected_value',
+    'value, exception_handler, expected_value',
     [
-        ('a', PurposeCodeValidationTypeError, None),
-        (1, None, 1)
+        ('a', pytest.raises(PurposeCodeValidationTypeError), None),
+        (1, nullcontext(), 1)
     ]
 )
 def test_validate_purpose_code(
     value: int,
-    exception: Optional[Type[Exception]],
+    exception_handler: ContextManager,
     expected_value: Optional[int]
 ) -> None:
-    if exception:
-        with pytest.raises(exception):
-            validate_purpose_code(value=value)
-    else:
+    with exception_handler:
         assert validate_purpose_code(value=value) == expected_value
 
 
 @pytest.mark.parametrize(
-    'value, exception, expected_value',
+    'value, exception_handler, expected_value',
     [
-        (None, PurposeValidationTypeError, None),
-        ('', None, '0'),
-        ('1' * 211, PurposeValidationMaxLenError, None),
-        ('的', PurposeValidationCharactersError, None),
-        ('some', None, 'some'),
+        (None, pytest.raises(PurposeValidationTypeError), None),
+        ('', nullcontext(), '0'),
+        ('1' * 211, pytest.raises(PurposeValidationMaxLenError), None),
+        ('的', pytest.raises(PurposeValidationCharactersError), None),
+        ('some', nullcontext(), 'some'),
     ]
 )
 def test_validate_purpose(
     value: str,
-    exception: Optional[Type[Exception]],
+    exception_handler: ContextManager,
     expected_value: Optional[int]
 ) -> None:
-    if exception:
-        with pytest.raises(exception):
-            validate_purpose(value=value)
-    else:
+    with exception_handler:
         assert validate_purpose(value=value) == expected_value
 
 
 @pytest.mark.parametrize(
-    'value, exception, expected_value',
+    'value, exception_handler, expected_value',
     [
-        ('000001', None, '000001'),
-        ('0000011', NumberValidationLenError, None),
+        ('000001', nullcontext(), '000001'),
+        ('0000011', pytest.raises(NumberValidationLenError), None),
     ]
 )
 def test_validate_number(
     value: str,
-    exception: Optional[Type[Exception]],
+    exception_handler: ContextManager,
     expected_value: str
 ) -> None:
-    if exception:
-        with pytest.raises(exception):
-            validate_number(value=value)
-    else:
+    with exception_handler:
         assert validate_number(value=value) == expected_value

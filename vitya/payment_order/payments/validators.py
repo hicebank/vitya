@@ -8,11 +8,8 @@ from vitya.payment_order.errors import (
     INNValidationDigitsOnlyError,
     INNValidationLenError,
     OperationKindValidationBudgetValueError,
-    OperationKindValidationValueError,
     PayeeAccountValidationBICValueError,
     PayeeAccountValidationFNSValueError,
-    PayeeAccountValidationLenError,
-    PayeeAccountValidationNonEmptyError,
     PayerINNValidationEmptyNotAllowedError,
     PayerINNValidationStartWithZerosError,
     PayerINNValidationTMSLen10Error,
@@ -22,18 +19,17 @@ from vitya.payment_order.errors import (
     PurposeValidationCharactersError,
     PurposeValidationIPNDSError,
     PurposeValidationMaxLenError,
-    UINValidationBOLenError,
-    UINValidationFNSLenError,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
     UINValidationValueZeroError,
 )
+from vitya.payment_order.fields import UIN, AccountNumber, OperationKind, PayerStatus
 from vitya.payment_order.payments.helpers import (
     CHARS_FOR_PURPOSE,
+    FNS_PAYEE_ACCOUNT_NUMBER,
     REPLACE_CHARS_FOR_SPACE,
 )
-from vitya.payment_order.validators import only_digits, validate_uin_control_sum
-from vitya.pydantic_fields import Bic
+from vitya.pydantic_fields import Bic, Inn
 
 
 def replace_zero_to_none(value: Optional[str]) -> Optional[str]:
@@ -41,7 +37,7 @@ def replace_zero_to_none(value: Optional[str]) -> Optional[str]:
 
 
 def validate_account_by_bic(
-    account_number: str,
+    account_number: AccountNumber,
     bic: Bic,
 ) -> None:
     _sum = 0
@@ -52,16 +48,12 @@ def validate_account_by_bic(
 
 
 def validate_payee_account(
-    value: str,
+    value: AccountNumber,
     _type: PaymentType,
     payee_bic: Bic,
 ) -> str:
-    if value is None:
-        raise PayeeAccountValidationNonEmptyError
-    if len(value) != 20:
-        raise PayeeAccountValidationLenError
     if _type == PaymentType.FNS:
-        if value != '03100643000000018500':
+        if value != FNS_PAYEE_ACCOUNT_NUMBER:
             raise PayeeAccountValidationFNSValueError
     elif not _type.is_budget:
         try:
@@ -72,14 +64,12 @@ def validate_payee_account(
 
 
 def validate_operation_kind(
-    value: str,
+    value: OperationKind,
     _type: PaymentType
-) -> str:
+) -> OperationKind:
     if _type.is_budget:
         if value not in {'01', '02', '06'}:
             raise OperationKindValidationBudgetValueError
-    if len(value) != 2:
-        raise OperationKindValidationValueError
     return value
 
 
@@ -97,23 +87,18 @@ def validate_purpose_code(
 
 
 def validate_uin(
-    value: Optional[str],
+    value: Optional[UIN],
     _type: PaymentType,
-    payer_status: str,
+    payer_status: PayerStatus,
     payer_inn: Optional[str],
 ) -> Optional[str]:
     if not _type.is_budget:
         return None
-    value = replace_zero_to_none(value=value)
+
     if payer_status == '31' and value is None:
         raise UINValidationValueZeroError
 
     if _type == PaymentType.BUDGET_OTHER:
-        if value is None:
-            return None
-        elif not (len(value) == 4 or len(value) == 20 or len(value) == 25):
-            raise UINValidationBOLenError
-        validate_uin_control_sum(value)
         return value
 
     if _type == PaymentType.FNS:
@@ -123,13 +108,6 @@ def validate_uin(
             if value is not None:
                 raise UINValidationFNSNotValueZeroError
             return value
-
-    if value is None:
-        return None
-    elif not (len(value) == 20 or len(value) == 25):
-        raise UINValidationFNSLenError
-
-    validate_uin_control_sum(value)
     return value
 
 
@@ -198,18 +176,12 @@ def validate_inn_check_sum(value: str) -> None:
 
 
 def validate_payer_inn(
-    value: Optional[str],
+    value: Optional[Inn],
     _type: PaymentType,
-    payer_status: str,
+    payer_status: PayerStatus,
     for_third_face: bool = False,
 ) -> Optional[str]:
-    value = replace_zero_to_none(value=value)
     if not _type.is_budget:
-        if value is None:
-            return None
-        elif not only_digits(value):
-            raise INNValidationDigitsOnlyError
-        validate_inn_check_sum(value=value)
         return value
 
     if value is None:
@@ -220,12 +192,6 @@ def validate_payer_inn(
         elif _type == PaymentType.CUSTOMS and payer_status == '30':
             return None
         raise PayerINNValidationEmptyNotAllowedError
-
-    if not only_digits(value):
-        raise INNValidationDigitsOnlyError
-
-    if len(value) not in {5, 10, 12}:
-        raise INNValidationLenError
 
     if _type == PaymentType.CUSTOMS:
         if payer_status == '06' and for_third_face and len(value) != 10:

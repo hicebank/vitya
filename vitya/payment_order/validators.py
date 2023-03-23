@@ -186,3 +186,8 @@ def validate_purpose(value: str) -> str:
         if c not in CHARS_FOR_PURPOSE:
             raise PurposeValidationCharactersError
     return value
+
+
+def validate_payer_status(value: str) -> str:
+    # TODO: on next pr (from 61 to 109 fields)
+    return value

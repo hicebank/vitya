@@ -47,7 +47,10 @@ def validate_inn(inn: str, is_ip: Optional[bool] = None) -> None:
             raise ValidationError(f'wrong checksum on last digit: {inn[11]}; expected: {n12}')
         return
 
-    raise ValidationError('wrong size of inn, it can be 10 or 12 chars only')
+    if len(inn) == 5:
+        return
+
+    raise ValidationError('wrong size of inn, it can be 5, 10 or 12 chars only')
 
 
 def validate_inn_ip(inn: str) -> None:

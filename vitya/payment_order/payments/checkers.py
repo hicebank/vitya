@@ -4,6 +4,7 @@ from typing import Any, ClassVar, Dict, List, Tuple, Type
 from pydantic import BaseModel, root_validator
 
 from vitya.payment_order.enums import PaymentType
+from vitya.payment_order.fields import UIN, AccountNumber, OperationKind, PayerStatus
 from vitya.payment_order.payments.validators import (
     validate_account_by_bic,
     validate_operation_kind,
@@ -43,7 +44,7 @@ class BaseModelChecker(BaseModel):
 
 
 class AccountBicChecker(BaseChecker):
-    def __init__(self, account_number: str, bic: Bic) -> None:
+    def __init__(self, account_number: AccountNumber, bic: Bic) -> None:
         self.account_number = account_number
         self.bic = bic
 
@@ -52,7 +53,7 @@ class AccountBicChecker(BaseChecker):
 
 
 class PayeeAccountChecker(BaseChecker):
-    def __init__(self, account_number: str, bic: Bic, _type: PaymentType) -> None:
+    def __init__(self, account_number: AccountNumber, bic: Bic, _type: PaymentType) -> None:
         self.account_number = account_number
         self.bic = bic
         self.type = _type
@@ -62,7 +63,7 @@ class PayeeAccountChecker(BaseChecker):
 
 
 class OperationKindChecker(BaseChecker):
-    def __init__(self, operation_kind: str, _type: PaymentType) -> None:
+    def __init__(self, operation_kind: OperationKind, _type: PaymentType) -> None:
         self.operation_kind = operation_kind
         self.type = _type
 
@@ -71,7 +72,7 @@ class OperationKindChecker(BaseChecker):
 
 
 class PayerInnChecker(BaseChecker):
-    def __init__(self, payer_inn: Inn, payer_status: str, for_third_face: bool, _type: PaymentType) -> None:
+    def __init__(self, payer_inn: Inn, payer_status: PayerStatus, for_third_face: bool, _type: PaymentType) -> None:
         self.payer_inn = payer_inn
         self.payer_status = payer_status
         self.for_third_face = for_third_face
@@ -87,7 +88,7 @@ class PayerInnChecker(BaseChecker):
 
 
 class UinChecker(BaseChecker):
-    def __init__(self, uin: str, payer_inn: Inn, payer_status: str, _type: PaymentType) -> None:
+    def __init__(self, uin: UIN, payer_inn: Inn, payer_status: PayerStatus, _type: PaymentType) -> None:
         self.uin = uin
         self.payer_inn = payer_inn
         self.payer_status = payer_status

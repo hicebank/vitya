@@ -8,6 +8,7 @@ from vitya.payment_order.validators import (
     validate_operation_kind,
     validate_payee,
     validate_payer,
+    validate_payer_status,
     validate_payment_order,
     validate_purpose,
     validate_purpose_code,
@@ -18,6 +19,8 @@ CallableGenerator = Generator[Callable[..., Any], None, None]
 
 
 class Number(str):
+    """Номер платёжного поручения (3)"""
+
     @classmethod
     def __get_validators__(cls) -> CallableGenerator:
         yield cls.validate
@@ -28,6 +31,8 @@ class Number(str):
 
 
 class Amount(Decimal):
+    """Сумма (7)"""
+
     @classmethod
     def __get_validators__(cls) -> CallableGenerator:
         yield cls.validate
@@ -50,11 +55,11 @@ class Customer(str):
 
 
 class Payer(Customer):
-    """Плательщик"""
+    """Плательщик (8)"""
 
 
 class Payee(Customer):
-    """Получатель (в названии должен содержать счета)"""
+    """Наименование получателя (16)"""
 
     @classmethod
     def validate(cls, value: str) -> str:
@@ -62,6 +67,8 @@ class Payee(Customer):
 
 
 class PaymentOrder(int):
+    """Очерёдность платежа (21)"""
+
     @classmethod
     def __get_validators__(cls) -> CallableGenerator:
         yield cls.validate
@@ -72,6 +79,8 @@ class PaymentOrder(int):
 
 
 class AccountNumber(str):
+    """Счёт"""
+
     @classmethod
     def __get_validators__(cls) -> CallableGenerator:
         yield cls.validate
@@ -82,6 +91,8 @@ class AccountNumber(str):
 
 
 class OperationKind(str):
+    """Вид операции (18)"""
+
     @classmethod
     def __get_validators__(cls) -> CallableGenerator:
         yield cls.validate
@@ -92,6 +103,8 @@ class OperationKind(str):
 
 
 class UIN(str):
+    """Код (УИН) (22)"""
+
     @classmethod
     def __get_validators__(cls) -> CallableGenerator:
         yield cls.validate
@@ -102,6 +115,8 @@ class UIN(str):
 
 
 class PurposeCode(int):
+    """Назначение платежа кодовое (20)"""
+
     @classmethod
     def __get_validators__(cls) -> CallableGenerator:
         yield cls.validate
@@ -112,6 +127,8 @@ class PurposeCode(int):
 
 
 class Purpose(str):
+    """Назначение платежа (24)"""
+
     @classmethod
     def __get_validators__(cls) -> CallableGenerator:
         yield cls.validate
@@ -119,3 +136,15 @@ class Purpose(str):
     @classmethod
     def validate(cls, value: str) -> str:
         return validate_purpose(value)
+
+
+class PayerStatus(str):
+    """Статус плательщика (101)"""
+
+    @classmethod
+    def __get_validators__(cls) -> CallableGenerator:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: str) -> str:
+        return validate_payer_status(value)

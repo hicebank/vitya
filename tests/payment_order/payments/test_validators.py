@@ -1,19 +1,14 @@
-from typing import Optional, Type
+from contextlib import nullcontext
+from typing import ContextManager, Optional, Type
 
 import pytest
 
-from tests.payment_order.testdata import BIC, INN, INVALID_UIN, IP_ACCOUNT, VALID_UIN
+from tests.payment_order.testdata import BIC, INN, IP_ACCOUNT, VALID_UIN
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
-    INNValidationDigitsOnlyError,
-    INNValidationLenError,
+    AccountValidationBICValueError,
     OperationKindValidationBudgetValueError,
-    OperationKindValidationValueError,
-    PayeeAccountValidationBICValueError,
     PayeeAccountValidationFNSValueError,
-    PayeeAccountValidationLenError,
-    PayeeAccountValidationNonEmptyError,
-    PayerINNValidationEmptyNotAllowedError,
     PayerINNValidationStartWithZerosError,
     PayerINNValidationTMSLen10Error,
     PayerINNValidationTMSLen12Error,
@@ -22,12 +17,12 @@ from vitya.payment_order.errors import (
     PurposeValidationCharactersError,
     PurposeValidationIPNDSError,
     PurposeValidationMaxLenError,
-    UINValidationControlSumError,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
-    UINValidationLenError,
     UINValidationValueZeroError,
 )
+from vitya.payment_order.fields import AccountNumber, OperationKind, PayerStatus
+from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
 from vitya.payment_order.payments.validators import (
     validate_account_by_bic,
     validate_operation_kind,
@@ -41,179 +36,86 @@ from vitya.pydantic_fields import Bic
 
 
 @pytest.mark.parametrize(
-    'value, _type, payee_bic, exception, expected_value',
+    'value, _type, payee_bic, exception_handler, expected_value',
     [
-        (
-            IP_ACCOUNT,
-            PaymentType.IP,
-            BIC,
-            None,
-            IP_ACCOUNT,
-        ),
-        (
-            None,
-            PaymentType.IP,
-            '',
-            PayeeAccountValidationNonEmptyError,
-            None,
-        ),
-        (
-            IP_ACCOUNT[:-1],
-            PaymentType.IP,
-            '',
-            PayeeAccountValidationLenError,
-            None,
-        ),
-        (
-            '03100643000000018500',
-            PaymentType.FNS,
-            '',
-            None,
-            '03100643000000018500',
-        ),
-        (
-            '03100643000000018501',
-            PaymentType.FNS,
-            '',
-            PayeeAccountValidationFNSValueError,
-            None,
-        ),
+        (IP_ACCOUNT, PaymentType.IP, BIC, nullcontext(), IP_ACCOUNT),
+        (FNS_PAYEE_ACCOUNT_NUMBER, PaymentType.FNS, '', nullcontext(), FNS_PAYEE_ACCOUNT_NUMBER),
+        (FNS_PAYEE_ACCOUNT_NUMBER[:-1], PaymentType.FNS, '', pytest.raises(PayeeAccountValidationFNSValueError), None),
     ]
 )
 def test_validate_payee_account(
-    value: str,
+    value: AccountNumber,
     _type: PaymentType,
     payee_bic: Bic,
-    exception: Optional[Type[Exception]],
+    exception_handler: ContextManager,
     expected_value: str
 ) -> None:
-    if exception:
-        with pytest.raises(exception):
-            validate_payee_account(value=value, _type=_type, payee_bic=payee_bic)
-    else:
+    with exception_handler:
         assert validate_payee_account(value=value, _type=_type, payee_bic=payee_bic) == expected_value
 
 
 @pytest.mark.parametrize(
-    'account_number, bic, exception',
+    'account_number, bic, exception_handler',
     [
-        (
-            IP_ACCOUNT,
-            BIC,
-            None,
-        ),
-        (
-            IP_ACCOUNT[:-1] + '0',
-            BIC,
-            PayeeAccountValidationBICValueError,
-        ),
+        (IP_ACCOUNT, BIC, nullcontext()),
+        (IP_ACCOUNT[:-1] + '0', BIC, pytest.raises(AccountValidationBICValueError)),
     ]
 )
 def test_validate_account_by_bic(
-    account_number: str,
+    account_number: AccountNumber,
     bic: Bic,
-    exception: Optional[Type[Exception]],
+    exception_handler: ContextManager,
 ) -> None:
-    if exception:
-        with pytest.raises(Exception):
-            validate_account_by_bic(account_number=account_number, bic=bic)
-    else:
+    with exception_handler:
         validate_account_by_bic(account_number=account_number, bic=bic)
 
 
 @pytest.mark.parametrize(
-    'value, _type, exception, expected_value',
+    'value, _type, exception_handler, expected_value',
     [
-        (
-            '02',
-            PaymentType.IP,
-            None,
-            '02',
-        ),
-        (
-            '02',
-            PaymentType.BUDGET_OTHER,
-            None,
-            '02',
-        ),
-        (
-            '03',
-            PaymentType.BUDGET_OTHER,
-            OperationKindValidationBudgetValueError,
-            None,
-        ),
-        (
-            '031',
-            PaymentType.FL,
-            OperationKindValidationValueError,
-            None,
-        ),
+        ('02', PaymentType.IP, nullcontext(), '02'),
+        ('02', PaymentType.BUDGET_OTHER, nullcontext(), '02'),
+        ('03', PaymentType.BUDGET_OTHER, pytest.raises(OperationKindValidationBudgetValueError), None),
     ]
 )
 def test_validate_operation_kind(
-    value: str,
+    value: OperationKind,
     _type: PaymentType,
-    exception: Optional[Type[Exception]],
+    exception_handler: ContextManager,
     expected_value: str
 ) -> None:
-    if exception:
-        with pytest.raises(exception):
-            validate_operation_kind(value=value, _type=_type)
-    else:
+    with exception_handler:
         assert validate_operation_kind(value=value, _type=_type) == expected_value
 
 
 @pytest.mark.parametrize(
-    'value, _type, exception, expected_value',
+    'value, _type, exception_handler, expected_value',
     [
-        (
-            1,
-            PaymentType.FL,
-            None,
-            1,
-        ),
-        (
-            6,
-            PaymentType.FL,
-            PurposeCodeValidationFlError,
-            None,
-        ),
-        (
-            None,
-            PaymentType.IP,
-            None,
-            None,
-        ),
-        (
-            1,
-            PaymentType.IP,
-            PurposeCodeValidationNullError,
-            None,
-        ),
+        (1, PaymentType.FL, nullcontext(), 1),
+        (6, PaymentType.FL, pytest.raises(PurposeCodeValidationFlError), None),
+        (None, PaymentType.IP, nullcontext(), None),
+        (1, PaymentType.IP, pytest.raises(PurposeCodeValidationNullError), None),
     ]
 )
 def test_validate_purpose_code(
     value: int,
     _type: PaymentType,
-    exception: Optional[Type[Exception]],
+    exception_handler: ContextManager,
     expected_value: int
 ) -> None:
-    if exception:
-        with pytest.raises(exception):
-            validate_purpose_code(value=value, _type=_type)
-    else:
+    with exception_handler:
         assert validate_purpose_code(value=value, _type=_type) == expected_value
 
 
 @pytest.mark.parametrize(
-    'value, _type, payer_status, payer_inn, exception, expected_value',
+    'value, _type, payer_status, payer_inn, exception_handler, expected_value',
     [
         (
             '',
             PaymentType.FL,
             '',
             '',
-            None,
+            nullcontext(),
             None,
         ),
         (
@@ -221,7 +123,7 @@ def test_validate_purpose_code(
             PaymentType.FL,
             '',
             '',
-            None,
+            nullcontext(),
             None,
         ),
         (
@@ -229,15 +131,7 @@ def test_validate_purpose_code(
             PaymentType.FNS,
             '31',
             '',
-            UINValidationValueZeroError,
-            None,
-        ),
-        (
-            '0',
-            PaymentType.BUDGET_OTHER,
-            '',
-            '',
-            None,
+            pytest.raises(UINValidationValueZeroError),
             None,
         ),
         (
@@ -245,24 +139,15 @@ def test_validate_purpose_code(
             PaymentType.BUDGET_OTHER,
             '',
             '',
-            None,
+            nullcontext(),
             VALID_UIN,
-        ),
-        # invalid uin control sum
-        (
-            INVALID_UIN,
-            PaymentType.BUDGET_OTHER,
-            '',
-            '',
-            UINValidationControlSumError,
-            None,
         ),
         (
             None,
             PaymentType.FNS,
             '13',
             None,
-            UINValidationFNSValueZeroError,
+            pytest.raises(UINValidationFNSValueZeroError),
             None,
         ),
         (
@@ -270,7 +155,7 @@ def test_validate_purpose_code(
             PaymentType.FNS,
             '13',
             '',
-            None,
+            nullcontext(),
             VALID_UIN,
         ),
         (
@@ -278,15 +163,7 @@ def test_validate_purpose_code(
             PaymentType.FNS,
             '02',
             '',
-            UINValidationFNSNotValueZeroError,
-            None,
-        ),
-        (
-            '',
-            PaymentType.FNS,
-            '02',
-            '',
-            None,
+            pytest.raises(UINValidationFNSNotValueZeroError),
             None,
         ),
         (
@@ -294,15 +171,7 @@ def test_validate_purpose_code(
             PaymentType.FNS,
             '02',
             '',
-            None,
-            None,
-        ),
-        (
-            VALID_UIN + '1',
-            PaymentType.FNS,
-            '',
-            '',
-            UINValidationLenError,
+            nullcontext(),
             None,
         ),
     ]
@@ -310,97 +179,53 @@ def test_validate_purpose_code(
 def test_validate_uin(
     value: Optional[str],
     _type: PaymentType,
-    payer_status: str,
+    payer_status: PayerStatus,
     payer_inn: str,
-    exception: Optional[Type[Exception]],
+    exception_handler: Optional[Type[Exception]],
     expected_value: str
 ) -> None:
-    if exception:
-        with pytest.raises(exception):
-            validate_uin(_type=_type, payer_inn=payer_inn, payer_status=payer_status, value=value)
-    else:
+    with exception_handler:
         assert validate_uin(_type=_type, payer_inn=payer_inn, payer_status=payer_status, value=value) == expected_value
 
 
 @pytest.mark.parametrize(
-    'value, _type, exception, expected_value',
+    'value, _type, exception_handler, expected_value',
     [
-        (
-            '',
-            PaymentType.FNS,
-            None,
-            None,
-        ),
-        (
-            None,
-            PaymentType.FNS,
-            None,
-            None,
-        ),
-        (
-            '1' * 211,
-            PaymentType.FNS,
-            PurposeValidationMaxLenError,
-            None,
-        ),
-        (
-            '的',
-            PaymentType.FNS,
-            PurposeValidationCharactersError,
-            None,
-        ),
-        (
-            'some',
-            PaymentType.IP,
-            PurposeValidationIPNDSError,
-            None,
-        ),
-        (
-            'some with НДС',
-            PaymentType.IP,
-            None,
-            'some with НДС',
-        ),
+        ('', PaymentType.FNS, nullcontext(), None),
+        (None, PaymentType.FNS, nullcontext(), None),
+        ('1' * 211, PaymentType.FNS, pytest.raises(PurposeValidationMaxLenError), None),
+        ('的', PaymentType.FNS, pytest.raises(PurposeValidationCharactersError), None),
+        ('some', PaymentType.IP, pytest.raises(PurposeValidationIPNDSError), None),
+        ('some with НДС', PaymentType.IP, nullcontext(), 'some with НДС'),
     ]
 )
 def test_validate_purpose(
     value: Optional[str],
     _type: PaymentType,
-    exception: Optional[Type[Exception]],
+    exception_handler: ContextManager,
     expected_value: str
 ) -> None:
-    if exception:
-        with pytest.raises(exception):
-            validate_purpose(_type=_type, value=value)
-    else:
+    with exception_handler:
         assert validate_purpose(_type=_type, value=value) == expected_value
 
 
 @pytest.mark.parametrize(
-    'value, _type, payer_status, for_third_face, exception, expected_value',
+    'value, _type, payer_status, for_third_face, exception_handler, expected_value',
     [
         (
             INN,
             PaymentType.FL,
             '',
             False,
-            None,
+            nullcontext(),
             INN,
-        ),
-        (
-            'a',
-            PaymentType.FL,
-            '',
-            False,
-            INNValidationDigitsOnlyError,
-            None,
         ),
         (
             None,
             PaymentType.BUDGET_OTHER,
             '',
             False,
-            None,
+            nullcontext(),
             None,
         ),
         (
@@ -408,7 +233,7 @@ def test_validate_purpose(
             PaymentType.FNS,
             '13',
             False,
-            None,
+            nullcontext(),
             None,
         ),
         (
@@ -416,23 +241,7 @@ def test_validate_purpose(
             PaymentType.CUSTOMS,
             '30',
             False,
-            None,
-            None,
-        ),
-        (
-            '',
-            PaymentType.CUSTOMS,
-            '',
-            False,
-            PayerINNValidationEmptyNotAllowedError,
-            None,
-        ),
-        (
-            '5',
-            PaymentType.CUSTOMS,
-            '',
-            False,
-            INNValidationLenError,
+            nullcontext(),
             None,
         ),
         (
@@ -440,7 +249,7 @@ def test_validate_purpose(
             PaymentType.CUSTOMS,
             '06',
             True,
-            PayerINNValidationTMSLen10Error,
+            pytest.raises(PayerINNValidationTMSLen10Error),
             None,
         ),
         (
@@ -448,7 +257,7 @@ def test_validate_purpose(
             PaymentType.CUSTOMS,
             '16',
             False,
-            PayerINNValidationTMSLen12Error,
+            pytest.raises(PayerINNValidationTMSLen12Error),
             None,
         ),
         (
@@ -456,7 +265,7 @@ def test_validate_purpose(
             PaymentType.CUSTOMS,
             '',
             False,
-            PayerINNValidationStartWithZerosError,
+            pytest.raises(PayerINNValidationStartWithZerosError),
             None,
         ),
         (
@@ -464,7 +273,7 @@ def test_validate_purpose(
             PaymentType.CUSTOMS,
             '',
             False,
-            PayerINNValidationStartWithZerosError,
+            pytest.raises(PayerINNValidationStartWithZerosError),
             None,
         ),
         (
@@ -472,7 +281,7 @@ def test_validate_purpose(
             PaymentType.CUSTOMS,
             '',
             False,
-            None,
+            nullcontext(),
             INN,
         ),
     ]
@@ -480,15 +289,12 @@ def test_validate_purpose(
 def test_validate_payer_inn(
     value: Optional[str],
     _type: PaymentType,
-    payer_status: str,
+    payer_status: PayerStatus,
     for_third_face: bool,
-    exception: Optional[Type[Exception]],
+    exception_handler: ContextManager,
     expected_value: str
 ) -> None:
-    if exception:
-        with pytest.raises(exception):
-            validate_payer_inn(_type=_type, payer_status=payer_status, value=value, for_third_face=for_third_face)
-    else:
+    with exception_handler:
         assert expected_value == validate_payer_inn(
-            _type=_type, payer_status=payer_status, value=value, for_third_face=for_third_face,
+            value=value, _type=_type, payer_status=payer_status, for_third_face=for_third_face
         )
