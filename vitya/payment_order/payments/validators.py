@@ -16,19 +16,19 @@ from vitya.payment_order.errors import (
     PayerINNValidationTMSLen12Error,
     PurposeCodeValidationFlError,
     PurposeCodeValidationNullError,
-    PurposeValidationCharactersError,
     PurposeValidationIPNDSError,
-    PurposeValidationMaxLenError,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
     UINValidationValueZeroError,
 )
-from vitya.payment_order.fields import UIN, AccountNumber, OperationKind, PayerStatus
-from vitya.payment_order.payments.helpers import (
-    CHARS_FOR_PURPOSE,
-    FNS_PAYEE_ACCOUNT_NUMBER,
-    REPLACE_CHARS_FOR_SPACE,
+from vitya.payment_order.fields import (
+    UIN,
+    AccountNumber,
+    OperationKind,
+    PayerStatus,
+    Purpose,
 )
+from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
 from vitya.pydantic_fields import Bic, Inn
 
 
@@ -112,23 +112,14 @@ def validate_uin(
 
 
 def validate_purpose(
-    value: Optional[str],
+    value: Optional[Purpose],
     payment_type: PaymentType,
 ) -> Optional[str]:
-    value = replace_zero_to_none(value=value)
     if value is None:
         return None
 
-    if len(value) > 210:
-        raise PurposeValidationMaxLenError
-
-    replaced_space_value = ''.join(map(lambda x: x if x not in REPLACE_CHARS_FOR_SPACE else ' ', value))
-    for c in replaced_space_value:
-        if c not in CHARS_FOR_PURPOSE:
-            raise PurposeValidationCharactersError
-
     if payment_type == PaymentType.IP:
-        if not re.search(r'(?i)\bНДС\b', replaced_space_value):
+        if not re.search(r'(?i)\bНДС\b', value):
             raise PurposeValidationIPNDSError
     return value
 

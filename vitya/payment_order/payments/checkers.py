@@ -4,7 +4,13 @@ from typing import Any, ClassVar, Dict, List, Tuple, Type
 from pydantic import BaseModel, root_validator
 
 from vitya.payment_order.enums import PaymentType
-from vitya.payment_order.fields import UIN, AccountNumber, OperationKind, PayerStatus
+from vitya.payment_order.fields import (
+    UIN,
+    AccountNumber,
+    OperationKind,
+    PayerStatus,
+    Purpose,
+)
 from vitya.payment_order.payments.validators import (
     validate_account_by_bic,
     validate_operation_kind,
@@ -110,7 +116,7 @@ class UinChecker(BaseChecker):
 
 
 class PurposeChecker(BaseChecker):
-    def __init__(self, purpose: str, payment_type: PaymentType) -> None:
+    def __init__(self, purpose: Purpose, payment_type: PaymentType) -> None:
         self.purpose = purpose
         self.payment_type = payment_type
 

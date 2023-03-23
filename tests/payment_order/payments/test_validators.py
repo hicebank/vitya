@@ -14,9 +14,7 @@ from vitya.payment_order.errors import (
     PayerINNValidationTMSLen12Error,
     PurposeCodeValidationFlError,
     PurposeCodeValidationNullError,
-    PurposeValidationCharactersError,
     PurposeValidationIPNDSError,
-    PurposeValidationMaxLenError,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
     UINValidationValueZeroError,
@@ -196,10 +194,7 @@ def test_validate_uin(
 @pytest.mark.parametrize(
     'value, payment_type, exception_handler, expected_value',
     [
-        ('', PaymentType.FNS, nullcontext(), None),
         (None, PaymentType.FNS, nullcontext(), None),
-        ('1' * 211, PaymentType.FNS, pytest.raises(PurposeValidationMaxLenError), None),
-        ('的', PaymentType.FNS, pytest.raises(PurposeValidationCharactersError), None),
         ('some', PaymentType.IP, pytest.raises(PurposeValidationIPNDSError), None),
         ('some with НДС', PaymentType.IP, nullcontext(), 'some with НДС'),
     ]
