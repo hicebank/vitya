@@ -49,13 +49,13 @@ def validate_account_by_bic(
 
 def validate_payee_account(
     value: AccountNumber,
-    _type: PaymentType,
+    payment_type: PaymentType,
     payee_bic: Bic,
 ) -> str:
-    if _type == PaymentType.FNS:
+    if payment_type == PaymentType.FNS:
         if value != FNS_PAYEE_ACCOUNT_NUMBER:
             raise PayeeAccountValidationFNSValueError
-    elif not _type.is_budget:
+    elif not payment_type.is_budget:
         try:
             validate_account_by_bic(account_number=value, bic=payee_bic)
         except AccountValidationBICValueError as e:
@@ -65,9 +65,9 @@ def validate_payee_account(
 
 def validate_operation_kind(
     value: OperationKind,
-    _type: PaymentType
+    payment_type: PaymentType
 ) -> OperationKind:
-    if _type.is_budget:
+    if payment_type.is_budget:
         if value not in {'01', '02', '06'}:
             raise OperationKindValidationBudgetValueError
     return value
@@ -75,9 +75,9 @@ def validate_operation_kind(
 
 def validate_purpose_code(
     value: Optional[int],
-    _type: PaymentType,
+    payment_type: PaymentType,
 ) -> Optional[int]:
-    if _type != PaymentType.FL:
+    if payment_type != PaymentType.FL:
         if value is not None:
             raise PurposeCodeValidationNullError
         return None
@@ -88,20 +88,20 @@ def validate_purpose_code(
 
 def validate_uin(
     value: Optional[UIN],
-    _type: PaymentType,
+    payment_type: PaymentType,
     payer_status: PayerStatus,
     payer_inn: Optional[str],
 ) -> Optional[str]:
-    if not _type.is_budget:
+    if not payment_type.is_budget:
         return None
 
     if payer_status == '31' and value is None:
         raise UINValidationValueZeroError
 
-    if _type == PaymentType.BUDGET_OTHER:
+    if payment_type == PaymentType.BUDGET_OTHER:
         return value
 
-    if _type == PaymentType.FNS:
+    if payment_type == PaymentType.FNS:
         if payer_status == '13' and payer_inn is None and value is None:
             raise UINValidationFNSValueZeroError
         if payer_status == '02':
@@ -113,7 +113,7 @@ def validate_uin(
 
 def validate_purpose(
     value: Optional[str],
-    _type: PaymentType,
+    payment_type: PaymentType,
 ) -> Optional[str]:
     value = replace_zero_to_none(value=value)
     if value is None:
@@ -127,7 +127,7 @@ def validate_purpose(
         if c not in CHARS_FOR_PURPOSE:
             raise PurposeValidationCharactersError
 
-    if _type == PaymentType.IP:
+    if payment_type == PaymentType.IP:
         if not re.search(r'(?i)\bНДС\b', replaced_space_value):
             raise PurposeValidationIPNDSError
     return value
@@ -177,23 +177,23 @@ def validate_inn_check_sum(value: str) -> None:
 
 def validate_payer_inn(
     value: Optional[Inn],
-    _type: PaymentType,
+    payment_type: PaymentType,
     payer_status: PayerStatus,
     for_third_face: bool = False,
 ) -> Optional[str]:
-    if not _type.is_budget:
+    if not payment_type.is_budget:
         return value
 
     if value is None:
-        if _type == PaymentType.BUDGET_OTHER:
+        if payment_type == PaymentType.BUDGET_OTHER:
             return None
-        elif _type == PaymentType.FNS and payer_status == '13':
+        elif payment_type == PaymentType.FNS and payer_status == '13':
             return None
-        elif _type == PaymentType.CUSTOMS and payer_status == '30':
+        elif payment_type == PaymentType.CUSTOMS and payer_status == '30':
             return None
         raise PayerINNValidationEmptyNotAllowedError
 
-    if _type == PaymentType.CUSTOMS:
+    if payment_type == PaymentType.CUSTOMS:
         if payer_status == '06' and for_third_face and len(value) != 10:
             raise PayerINNValidationTMSLen10Error
 

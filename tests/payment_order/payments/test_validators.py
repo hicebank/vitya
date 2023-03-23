@@ -36,7 +36,7 @@ from vitya.pydantic_fields import Bic
 
 
 @pytest.mark.parametrize(
-    'value, _type, payee_bic, exception_handler, expected_value',
+    'value, payment_type, payee_bic, exception_handler, expected_value',
     [
         (IP_ACCOUNT, PaymentType.IP, BIC, nullcontext(), IP_ACCOUNT),
         (FNS_PAYEE_ACCOUNT_NUMBER, PaymentType.FNS, '', nullcontext(), FNS_PAYEE_ACCOUNT_NUMBER),
@@ -45,13 +45,13 @@ from vitya.pydantic_fields import Bic
 )
 def test_validate_payee_account(
     value: AccountNumber,
-    _type: PaymentType,
+    payment_type: PaymentType,
     payee_bic: Bic,
     exception_handler: ContextManager,
     expected_value: str
 ) -> None:
     with exception_handler:
-        assert validate_payee_account(value=value, _type=_type, payee_bic=payee_bic) == expected_value
+        assert validate_payee_account(value=value, payment_type=payment_type, payee_bic=payee_bic) == expected_value
 
 
 @pytest.mark.parametrize(
@@ -71,7 +71,7 @@ def test_validate_account_by_bic(
 
 
 @pytest.mark.parametrize(
-    'value, _type, exception_handler, expected_value',
+    'value, payment_type, exception_handler, expected_value',
     [
         ('02', PaymentType.IP, nullcontext(), '02'),
         ('02', PaymentType.BUDGET_OTHER, nullcontext(), '02'),
@@ -80,16 +80,16 @@ def test_validate_account_by_bic(
 )
 def test_validate_operation_kind(
     value: OperationKind,
-    _type: PaymentType,
+    payment_type: PaymentType,
     exception_handler: ContextManager,
     expected_value: str
 ) -> None:
     with exception_handler:
-        assert validate_operation_kind(value=value, _type=_type) == expected_value
+        assert validate_operation_kind(value=value, payment_type=payment_type) == expected_value
 
 
 @pytest.mark.parametrize(
-    'value, _type, exception_handler, expected_value',
+    'value, payment_type, exception_handler, expected_value',
     [
         (1, PaymentType.FL, nullcontext(), 1),
         (6, PaymentType.FL, pytest.raises(PurposeCodeValidationFlError), None),
@@ -99,16 +99,16 @@ def test_validate_operation_kind(
 )
 def test_validate_purpose_code(
     value: int,
-    _type: PaymentType,
+    payment_type: PaymentType,
     exception_handler: ContextManager,
     expected_value: int
 ) -> None:
     with exception_handler:
-        assert validate_purpose_code(value=value, _type=_type) == expected_value
+        assert validate_purpose_code(value=value, payment_type=payment_type) == expected_value
 
 
 @pytest.mark.parametrize(
-    'value, _type, payer_status, payer_inn, exception_handler, expected_value',
+    'value, payment_type, payer_status, payer_inn, exception_handler, expected_value',
     [
         (
             '',
@@ -178,18 +178,23 @@ def test_validate_purpose_code(
 )
 def test_validate_uin(
     value: Optional[str],
-    _type: PaymentType,
+    payment_type: PaymentType,
     payer_status: PayerStatus,
     payer_inn: str,
     exception_handler: Optional[Type[Exception]],
     expected_value: str
 ) -> None:
     with exception_handler:
-        assert validate_uin(_type=_type, payer_inn=payer_inn, payer_status=payer_status, value=value) == expected_value
+        assert validate_uin(
+            value=value,
+            payment_type=payment_type,
+            payer_inn=payer_inn,
+            payer_status=payer_status,
+        ) == expected_value
 
 
 @pytest.mark.parametrize(
-    'value, _type, exception_handler, expected_value',
+    'value, payment_type, exception_handler, expected_value',
     [
         ('', PaymentType.FNS, nullcontext(), None),
         (None, PaymentType.FNS, nullcontext(), None),
@@ -201,16 +206,16 @@ def test_validate_uin(
 )
 def test_validate_purpose(
     value: Optional[str],
-    _type: PaymentType,
+    payment_type: PaymentType,
     exception_handler: ContextManager,
     expected_value: str
 ) -> None:
     with exception_handler:
-        assert validate_purpose(_type=_type, value=value) == expected_value
+        assert validate_purpose(payment_type=payment_type, value=value) == expected_value
 
 
 @pytest.mark.parametrize(
-    'value, _type, payer_status, for_third_face, exception_handler, expected_value',
+    'value, payment_type, payer_status, for_third_face, exception_handler, expected_value',
     [
         (
             INN,
@@ -288,7 +293,7 @@ def test_validate_purpose(
 )
 def test_validate_payer_inn(
     value: Optional[str],
-    _type: PaymentType,
+    payment_type: PaymentType,
     payer_status: PayerStatus,
     for_third_face: bool,
     exception_handler: ContextManager,
@@ -296,5 +301,5 @@ def test_validate_payer_inn(
 ) -> None:
     with exception_handler:
         assert expected_value == validate_payer_inn(
-            value=value, _type=_type, payer_status=payer_status, for_third_face=for_third_face
+            value=value, payment_type=payment_type, payer_status=payer_status, for_third_face=for_third_face
         )
