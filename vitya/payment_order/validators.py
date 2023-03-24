@@ -93,7 +93,7 @@ def validate_payment_order(value: Optional[str]) -> int:
 def validate_account_number(value: str) -> str:
     if not isinstance(value, str):
         raise AccountNumberValidationTypeError
-    if len(value) < 1 or len(value) > 20:
+    if len(value) != 20:
         raise AccountNumberValidationSizeError
     if not only_digits(value):
         raise AccountNumberValidationDigitsOnlyError

@@ -6,6 +6,7 @@ import pytest
 
 from tests.payment_order.testdata import INVALID_UIN, IP_ACCOUNT, VALID_UIN
 from vitya.payment_order.errors import (
+    AccountNumberValidationDigitsOnlyError,
     AccountNumberValidationSizeError,
     AccountNumberValidationTypeError,
     AmountValidationLengthError,
@@ -38,6 +39,7 @@ from vitya.payment_order.validators import (
     validate_purpose,
     validate_purpose_code,
     validate_uin,
+    validate_uin_control_sum,
 )
 
 
@@ -119,6 +121,7 @@ def test_validate_payment_order(
         (1, pytest.raises(AccountNumberValidationTypeError), None),
         ('', pytest.raises(AccountNumberValidationSizeError), None),
         ('1' * 21, pytest.raises(AccountNumberValidationSizeError), None),
+        ('a' * 20, pytest.raises(AccountNumberValidationDigitsOnlyError), None),
         (IP_ACCOUNT, nullcontext(), IP_ACCOUNT),
     ]
 )
@@ -221,3 +224,22 @@ def test_validate_number(
 ) -> None:
     with exception_handler:
         assert validate_number(value=value) == expected_value
+
+
+@pytest.mark.parametrize(
+    'value, exception_handler',
+    [
+        ('a', pytest.raises(UINValidationDigitsOnlyError)),
+        ('11111', nullcontext()),
+        ('0' * 20, pytest.raises(UINValidationOnlyZeroError)),
+        (INVALID_UIN, pytest.raises(UINValidationControlSumError)),
+        (INVALID_UIN, pytest.raises(UINValidationControlSumError)),
+        ('0' * 9 + '1' + '0' * 10, pytest.raises(UINValidationControlSumError)),
+    ]
+)
+def test_validate_uin_control_sum(
+    value: str,
+    exception_handler: ContextManager
+):
+    with exception_handler:
+        validate_uin_control_sum(value=value)

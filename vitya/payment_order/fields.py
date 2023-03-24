@@ -102,7 +102,7 @@ class OperationKind(str):
         return validate_operation_kind(value)
 
 
-class UIN(str):
+class Uin(str):
     """Код (УИН) (22)"""
 
     @classmethod

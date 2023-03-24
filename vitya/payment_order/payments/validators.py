@@ -1,12 +1,9 @@
 import re
-from typing import List, Optional
+from typing import Optional
 
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
-    INNValidationControlSumError,
-    INNValidationDigitsOnlyError,
-    INNValidationLenError,
     OperationKindValidationBudgetValueError,
     PayeeAccountValidationBICValueError,
     PayeeAccountValidationFNSValueError,
@@ -22,18 +19,14 @@ from vitya.payment_order.errors import (
     UINValidationValueZeroError,
 )
 from vitya.payment_order.fields import (
-    UIN,
     AccountNumber,
     OperationKind,
     PayerStatus,
     Purpose,
+    Uin,
 )
 from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
 from vitya.pydantic_fields import Bic, Inn
-
-
-def replace_zero_to_none(value: Optional[str]) -> Optional[str]:
-    return None if value in {'', '0'} else value
 
 
 def validate_account_by_bic(
@@ -87,7 +80,7 @@ def validate_purpose_code(
 
 
 def validate_uin(
-    value: Optional[UIN],
+    value: Optional[Uin],
     payment_type: PaymentType,
     payer_status: PayerStatus,
     payer_inn: Optional[str],
@@ -122,48 +115,6 @@ def validate_purpose(
         if not re.search(r'(?i)\bНДС\b', value):
             raise PurposeValidationIPNDSError
     return value
-
-
-def count_inn_checksum(inn: str, coefficients: List[int]) -> int:
-    assert len(inn) == len(coefficients)
-    n = sum([int(digit) * coef for digit, coef in zip(inn, coefficients)])
-    return n % 11 % 10
-
-
-def validate_ip_and_fl_inn(inn: str) -> None:
-    if not inn.isdigit():
-        raise INNValidationDigitsOnlyError
-
-    coefs10 = [2, 4, 10, 3, 5, 9, 4, 6, 8]
-    coefs11 = [7] + coefs10
-    coefs12 = [3] + coefs11
-    n11 = count_inn_checksum(inn[:10], coefs11)
-    if n11 != int(inn[10]):
-        raise INNValidationControlSumError
-
-    n12 = count_inn_checksum(inn[:11], coefs12)
-    if n12 != int(inn[11]):
-        raise INNValidationControlSumError
-
-
-def validate_le_inn(inn: str) -> None:
-    if not inn.isdigit():
-        raise INNValidationDigitsOnlyError
-
-    coefs10 = [2, 4, 10, 3, 5, 9, 4, 6, 8]
-    n10 = count_inn_checksum(inn[:9], coefs10)
-    if n10 != int(inn[9]):
-        raise INNValidationControlSumError
-
-
-def validate_inn_check_sum(value: str) -> None:
-    if len(value) == 12:
-        return validate_ip_and_fl_inn(inn=value)
-    elif len(value) == 10:
-        return validate_le_inn(inn=value)
-    elif len(value) == 5:
-        return
-    raise INNValidationLenError
 
 
 def validate_payer_inn(

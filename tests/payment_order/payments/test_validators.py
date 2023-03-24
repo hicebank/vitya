@@ -8,7 +8,9 @@ from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
     OperationKindValidationBudgetValueError,
+    PayeeAccountValidationBICValueError,
     PayeeAccountValidationFNSValueError,
+    PayerINNValidationEmptyNotAllowedError,
     PayerINNValidationStartWithZerosError,
     PayerINNValidationTMSLen10Error,
     PayerINNValidationTMSLen12Error,
@@ -39,6 +41,7 @@ from vitya.pydantic_fields import Bic
         (IP_ACCOUNT, PaymentType.IP, BIC, nullcontext(), IP_ACCOUNT),
         (FNS_PAYEE_ACCOUNT_NUMBER, PaymentType.FNS, '', nullcontext(), FNS_PAYEE_ACCOUNT_NUMBER),
         (FNS_PAYEE_ACCOUNT_NUMBER[:-1], PaymentType.FNS, '', pytest.raises(PayeeAccountValidationFNSValueError), None),
+        (IP_ACCOUNT, PaymentType.IP, BIC[:-1] + '1', pytest.raises(PayeeAccountValidationBICValueError), None),
     ]
 )
 def test_validate_payee_account(
@@ -242,6 +245,22 @@ def test_validate_purpose(
             '30',
             False,
             nullcontext(),
+            None,
+        ),
+        (
+            None,
+            PaymentType.FNS,
+            '14',
+            False,
+            pytest.raises(PayerINNValidationEmptyNotAllowedError),
+            None,
+        ),
+        (
+            None,
+            PaymentType.CUSTOMS,
+            '31',
+            False,
+            pytest.raises(PayerINNValidationEmptyNotAllowedError),
             None,
         ),
         (

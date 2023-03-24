@@ -1,15 +1,16 @@
 from abc import ABC, abstractmethod
-from typing import Any, ClassVar, Dict, List, Tuple, Type
+from typing import Any, ClassVar, Dict, List, Tuple, Type, cast
 
 from pydantic import BaseModel, root_validator
+from pydantic.errors import PydanticValueError
 
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.fields import (
-    UIN,
     AccountNumber,
     OperationKind,
     PayerStatus,
     Purpose,
+    Uin,
 )
 from vitya.payment_order.payments.validators import (
     validate_account_by_bic,
@@ -20,6 +21,12 @@ from vitya.payment_order.payments.validators import (
     validate_uin,
 )
 from vitya.pydantic_fields import Bic, Inn
+
+
+class CheckerError(ValueError):
+    @property
+    def errors(self) -> List[Type[PydanticValueError]]:
+        return cast(List[Type[PydanticValueError]], self.args[0])
 
 
 class BaseChecker(ABC):
@@ -45,7 +52,7 @@ class BaseModelChecker(BaseModel):
                 except Exception as e:
                     errors.append(e)
         if errors:
-            raise ValueError(errors)
+            raise CheckerError(errors)
         return values
 
 
@@ -100,7 +107,7 @@ class PayerInnChecker(BaseChecker):
 
 
 class UinChecker(BaseChecker):
-    def __init__(self, uin: UIN, payer_inn: Inn, payer_status: PayerStatus, payment_type: PaymentType) -> None:
+    def __init__(self, uin: Uin, payer_inn: Inn, payer_status: PayerStatus, payment_type: PaymentType) -> None:
         self.uin = uin
         self.payer_inn = payer_inn
         self.payer_status = payer_status
