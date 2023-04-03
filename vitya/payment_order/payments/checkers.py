@@ -16,11 +16,14 @@ from vitya.payment_order.payments.validators import (
     validate_account_by_bic,
     validate_operation_kind,
     validate_payee_account,
+    validate_payee_inn,
     validate_payer_inn,
+    validate_payer_kpp,
+    validate_payer_status,
     validate_purpose,
     validate_uin,
 )
-from vitya.pydantic_fields import Bic, Inn
+from vitya.pydantic_fields import Bic, Inn, Kpp
 
 
 class CheckerError(ValueError):
@@ -129,3 +132,54 @@ class PurposeChecker(BaseChecker):
 
     def check(self) -> None:
         validate_purpose(value=self.purpose, payment_type=self.payment_type)
+
+
+class PayeeInnChecker(BaseChecker):
+    def __init__(
+        self,
+        payee_inn: Inn,
+        payment_type: PaymentType
+    ) -> None:
+        self.payee_inn = payee_inn
+        self.payment_type = payment_type
+
+    def check(self) -> None:
+        validate_payee_inn(value=self.payee_inn, payment_type=self.payment_type)
+
+
+class PayerStatusChecker(BaseChecker):
+    def __init__(
+        self,
+        payer_status: PayerStatus,
+        payment_type: PaymentType,
+        for_third_face: bool,
+    ) -> None:
+        self.payer_status = payer_status
+        self.payment_type = payment_type
+        self.for_third_face = for_third_face
+
+    def check(self) -> None:
+        validate_payer_status(
+            value=self.payer_status,
+            payment_type=self.payment_type,
+            for_third_face=self.for_third_face
+        )
+
+
+class PayerKppChecker(BaseChecker):
+    def __init__(
+        self,
+        payer_kpp: Kpp,
+        payment_type: PaymentType,
+        payer_inn: Inn,
+    ) -> None:
+        self.payer_kpp = payer_kpp
+        self.payment_type = payment_type
+        self.payer_inn = payer_inn
+
+    def check(self) -> None:
+        validate_payer_kpp(
+            value=self.payer_kpp,
+            payment_type=self.payment_type,
+            payer_inn=self.payer_inn
+        )

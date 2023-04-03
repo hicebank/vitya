@@ -1,6 +1,6 @@
 from pydantic.errors import PydanticValueError
 
-from vitya.payment_order.payments.helpers import CHARS_FOR_PURPOSE
+from vitya.payment_order.payments.helpers import CHARS_FOR_PURPOSE, PAYER_STATUSES
 
 
 class AmountValidationError(PydanticValueError):
@@ -176,16 +176,16 @@ class INNValidationLenError(INNValidationError):
     msg_template = 'invalid inn: len inn must be 5, 10 or 12'
 
 
-class PayerINNValidationTMSLenError(INNValidationLenError):
-    msg_template = 'invalid inn: tms len inn base error'
+class PayerINNValidationCustomsLenError(INNValidationLenError):
+    msg_template = 'invalid inn: customs len inn base error'
 
 
-class PayerINNValidationTMSLen10Error(INNValidationLenError):
-    msg_template = 'invalid inn: for tms payment and payer status 06, inn must be 10'
+class PayerINNValidationCustomsLen10Error(INNValidationLenError):
+    msg_template = 'invalid inn: for customs payment and payer status 06, inn must be 10'
 
 
-class PayerINNValidationTMSLen12Error(INNValidationLenError):
-    msg_template = 'invalid inn: for tms payment and payer status 16 or 17, inn must be 12'
+class PayerINNValidationCustomsLen12Error(INNValidationLenError):
+    msg_template = 'invalid inn: for customs payment and payer status 16 or 17, inn must be 12'
 
 
 class PayerINNValidationEmptyNotAllowedError(INNValidationError):
@@ -200,8 +200,24 @@ class PayerINNValidationFiveOnlyZerosError(INNValidationError):
     msg_template = 'invalid inn: inn with len 5 cannot be contains only zeros'
 
 
+class PayeeINNValidationNonEmptyError(INNValidationError):
+    msg_template = 'invalid payee inn: payee inn cannot be empty'
+
+
 class PayeeINNValidationFLenError(INNValidationLenError):
-    msg_template = 'invalid inn: for fl payee inn must be 12'
+    msg_template = 'invalid payee inn: for fl payee inn must be 12'
+
+
+class PayeeINNValidationFLLenError(INNValidationLenError):
+    msg_template = 'invalid payee inn: for fl payee inn must be empty or 12 chars'
+
+
+class PayeeINNValidationIPLenError(INNValidationError):
+    msg_template = 'invalid payee inn: for ip payee inn must be 12'
+
+
+class PayeeINNValidationLELenError(INNValidationError):
+    msg_template = 'invalid inn: for fns, customs, bo and le inn must be 10'
 
 
 class PayerAccountValidationError(PydanticValueError):
@@ -250,3 +266,63 @@ class PayerAccountValidationBICValueError(PayerAccountValidationError, AccountVa
 
 class PayeeAccountValidationBICValueError(PayeeAccountValidationError, AccountValidationBICValueError):
     msg_template = 'invalid payee account: value is invalid for received bic'
+
+
+class PayerStatusValidationError(PydanticValueError):
+    msg_template = 'invalid payer status: base error'
+
+
+class PayerStatusValidationTypeError(PayerStatusValidationError):
+    msg_template = 'invalid payer status: payer status must be str'
+
+
+class PayerStatusValidationValueError(PayerStatusValidationError):
+    msg_template = f'invalid payer status: value can be only {PAYER_STATUSES}'
+
+
+class PayerStatusValidationNullNotAllowedError(PayerStatusValidationError):
+    msg_template = 'invalid payer status: for budget payments empty value is not allowed'
+
+
+class PayerStatusValidationCustoms05NotAllowedError(PayerStatusValidationError):
+    msg_template = 'invalid payer status: for customs payment and for_third_face = true value "06" not allowed'
+
+
+class KPPValidationError(PydanticValueError):
+    msg_template = 'invalid kpp: base error'
+
+
+class KPPValidationValueLenError(KPPValidationError):
+    msg_template = 'invalid kpp: kpp must be 9'
+
+
+class KPPValidationValueDigitsOnlyError(KPPValidationError):
+    msg_template = 'invalid kpp: only digits allowed'
+
+
+class KPPValidationValueCannotZerosStarts(KPPValidationError):
+    msg_template = 'invalid kpp: cannot starts with "00"'
+
+
+class KPPValidationOnlyEmptyError(KPPValidationError):
+    msg_template = 'invalid kpp: only empty allowed'
+
+
+class KPPValidationEmptyNotAllowed(KPPValidationError):
+    msg_template = 'invalid kpp: empty value is not allowed'
+
+
+class PayerKPPValidationError(KPPValidationError):
+    msg_template = 'invalid payer kpp: base error'
+
+
+class PayerKPPValidationOnlyEmptyError(PayerKPPValidationError, KPPValidationOnlyEmptyError):
+    msg_template = 'invalid payer kpp: for ip, fl or le allowed empty value'
+
+
+class PayerKPPValidationINN10EmptyNotAllowed(PayerKPPValidationError, KPPValidationEmptyNotAllowed):
+    msg_template = 'invalid payer kpp: for tns, tms or bo with inn = 10 inn empty value is not allowed'
+
+
+class PayerKPPValidationINN12OnlyEmptyError(PayerKPPValidationOnlyEmptyError):
+    msg_template = 'invalid payer kpp: for fns, tms or bo with inn = 12 only empty allowed'

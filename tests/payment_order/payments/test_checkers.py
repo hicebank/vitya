@@ -3,14 +3,30 @@ from typing import Optional, Tuple, Type
 import pytest
 from pydantic import ValidationError
 
-from tests.payment_order.testdata import BIC, INN, IP_ACCOUNT, VALID_UIN
+from tests.payment_order.testdata import (
+    BIC,
+    INN,
+    IP_ACCOUNT,
+    IP_INN,
+    KPP,
+    LE_INN,
+    VALID_UIN,
+)
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
     OperationKindValidationBudgetValueError,
     PayeeAccountValidationBICValueError,
     PayeeAccountValidationFNSValueError,
+    PayeeINNValidationFLLenError,
+    PayeeINNValidationIPLenError,
+    PayeeINNValidationLELenError,
+    PayeeINNValidationNonEmptyError,
     PayerINNValidationEmptyNotAllowedError,
+    PayerKPPValidationINN10EmptyNotAllowed,
+    PayerKPPValidationINN12OnlyEmptyError,
+    PayerStatusValidationCustoms05NotAllowedError,
+    PayerStatusValidationNullNotAllowedError,
     PurposeValidationIPNDSError,
     UINValidationValueZeroError,
 )
@@ -26,12 +42,15 @@ from vitya.payment_order.payments.checkers import (
     BaseModelChecker,
     OperationKindChecker,
     PayeeAccountChecker,
+    PayeeInnChecker,
     PayerInnChecker,
+    PayerKppChecker,
+    PayerStatusChecker,
     PurposeChecker,
     UinChecker,
 )
 from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
-from vitya.pydantic_fields import Bic, Inn
+from vitya.pydantic_fields import Bic, Inn, Kpp
 
 
 class TestAccountBicModelChecker(BaseModelChecker):
@@ -135,7 +154,7 @@ class TestPayerInnChecker(BaseModelChecker):
     'payer_inn, payer_status, for_third_face, payment_type, exception',
     [
         (INN, '01', False, PaymentType.IP, None),
-        (None, '11', False, PaymentType.FNS, PayerINNValidationEmptyNotAllowedError)
+        (None, '13', False, PaymentType.FNS, PayerINNValidationEmptyNotAllowedError)
     ]
 )
 def test_payer_inn_checker(
@@ -170,7 +189,7 @@ class TestUinChecker(BaseModelChecker):
 @pytest.mark.parametrize(
     'uin, payer_inn, payer_status, payment_type, exception',
     [
-        (VALID_UIN, INN, '11', PaymentType.IP, None),
+        (VALID_UIN, INN, '13', PaymentType.IP, None),
         (None, INN, '31', PaymentType.FNS, UINValidationValueZeroError)
     ]
 )
@@ -247,3 +266,93 @@ def test_several_checker(
     except ValidationError as e:
         errors = [e for e in e.raw_errors[0].exc.errors]
         assert all(isinstance(error, exceptions) for error in errors)
+
+
+class TestPayeeInnChecker(BaseModelChecker):
+    payee_inn: Optional[Inn]
+    payment_type: PaymentType
+
+    __checkers__ = [
+        (PayeeInnChecker, ['payee_inn', 'payment_type']),
+    ]
+
+
+@pytest.mark.parametrize(
+    'payee_inn, payment_type, exception',
+    [
+        (LE_INN, PaymentType.IP, PayeeINNValidationIPLenError),
+        (None, PaymentType.IP, PayeeINNValidationIPLenError),
+        (LE_INN, PaymentType.FL, PayeeINNValidationFLLenError),
+        (None, PaymentType.CUSTOMS, PayeeINNValidationNonEmptyError),
+        (IP_INN, PaymentType.CUSTOMS, PayeeINNValidationLELenError),
+    ]
+)
+def test_payee_inn_checker(
+    payee_inn: Inn,
+    payment_type: PaymentType,
+    exception: Type[Exception]
+) -> None:
+    try:
+        TestPayeeInnChecker(payee_inn=payee_inn, payment_type=payment_type)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+
+
+class TestPayerStatusChecker(BaseModelChecker):
+    payer_status: Optional[PayerStatus]
+    payment_type: PaymentType
+    for_third_face: bool
+
+    __checkers__ = [
+        (PayerStatusChecker, ['payer_status', 'payment_type', 'for_third_face']),
+    ]
+
+
+@pytest.mark.parametrize(
+    'payer_status, payment_type, for_third_face, exception',
+    [
+        (None, PaymentType.CUSTOMS, False, PayerStatusValidationNullNotAllowedError),
+        ('06', PaymentType.CUSTOMS, True, PayerStatusValidationCustoms05NotAllowedError),
+    ]
+)
+def test_payer_status_checker(
+    payer_status: PayerStatus,
+    payment_type: PaymentType,
+    for_third_face: bool,
+    exception: Type[Exception]
+) -> None:
+    try:
+        TestPayerStatusChecker(payer_status=payer_status, payment_type=payment_type, for_third_face=for_third_face)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+
+
+class TestPayerKppChecker(BaseModelChecker):
+    payer_kpp: Optional[Kpp]
+    payment_type: PaymentType
+    payer_inn: Inn
+
+    __checkers__ = [
+        (PayerKppChecker, ['payer_kpp', 'payment_type', 'payer_inn']),
+    ]
+
+
+@pytest.mark.parametrize(
+    'payer_kpp, payment_type, payer_inn, exception',
+    [
+        (KPP, PaymentType.FL, INN, None),
+        (None, PaymentType.CUSTOMS, LE_INN, PayerKPPValidationINN10EmptyNotAllowed),
+        (KPP, PaymentType.CUSTOMS, IP_INN, PayerKPPValidationINN12OnlyEmptyError),
+        (KPP, PaymentType.CUSTOMS, LE_INN, None),
+    ]
+)
+def test_payer_kpp_checker(
+    payer_kpp: PayerStatus,
+    payment_type: PaymentType,
+    payer_inn: Inn,
+    exception: Type[Exception]
+) -> None:
+    try:
+        TestPayerKppChecker(payer_kpp=payer_kpp, payment_type=payment_type, payer_inn=payer_inn)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)

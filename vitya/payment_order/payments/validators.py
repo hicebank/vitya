@@ -7,10 +7,18 @@ from vitya.payment_order.errors import (
     OperationKindValidationBudgetValueError,
     PayeeAccountValidationBICValueError,
     PayeeAccountValidationFNSValueError,
+    PayeeINNValidationFLLenError,
+    PayeeINNValidationIPLenError,
+    PayeeINNValidationLELenError,
+    PayeeINNValidationNonEmptyError,
+    PayerINNValidationCustomsLen10Error,
+    PayerINNValidationCustomsLen12Error,
     PayerINNValidationEmptyNotAllowedError,
     PayerINNValidationStartWithZerosError,
-    PayerINNValidationTMSLen10Error,
-    PayerINNValidationTMSLen12Error,
+    PayerKPPValidationINN10EmptyNotAllowed,
+    PayerKPPValidationINN12OnlyEmptyError,
+    PayerStatusValidationCustoms05NotAllowedError,
+    PayerStatusValidationNullNotAllowedError,
     PurposeCodeValidationFlError,
     PurposeCodeValidationNullError,
     PurposeValidationIPNDSError,
@@ -26,7 +34,7 @@ from vitya.payment_order.fields import (
     Uin,
 )
 from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
-from vitya.pydantic_fields import Bic, Inn
+from vitya.pydantic_fields import Bic, Inn, Kpp
 
 
 def validate_account_by_bic(
@@ -137,12 +145,63 @@ def validate_payer_inn(
 
     if payment_type == PaymentType.CUSTOMS:
         if payer_status == '06' and for_third_face and len(value) != 10:
-            raise PayerINNValidationTMSLen10Error
+            raise PayerINNValidationCustomsLen10Error
 
         if payer_status in {'16', '17'} and len(value) != 12:
-            raise PayerINNValidationTMSLen12Error
+            raise PayerINNValidationCustomsLen12Error
 
     if value.startswith('00'):
         raise PayerINNValidationStartWithZerosError
 
+    return value
+
+
+def validate_payee_inn(
+    value: Optional[Inn],
+    payment_type: PaymentType,
+) -> Optional[str]:
+    if payment_type == PaymentType.IP:
+        if value is None or len(value) != 12:
+            raise PayeeINNValidationIPLenError
+        return value
+    elif payment_type == PaymentType.FL:
+        if value is not None and len(value) != 12:
+            raise PayeeINNValidationFLLenError
+        return value
+    if value is None:
+        raise PayeeINNValidationNonEmptyError
+    elif len(value) != 10:
+        raise PayeeINNValidationLELenError
+    return value
+
+
+def validate_payer_status(
+    value: Optional[PayerStatus],
+    payment_type: PaymentType,
+    for_third_face: bool,
+) -> Optional[str]:
+    if not payment_type.is_budget:
+        return None
+
+    if value is None:
+        raise PayerStatusValidationNullNotAllowedError
+
+    if payment_type == PaymentType.CUSTOMS and for_third_face and value == '06':
+        raise PayerStatusValidationCustoms05NotAllowedError
+
+    return value
+
+
+def validate_payer_kpp(
+    value: Optional[Kpp],
+    payment_type: PaymentType,
+    payer_inn: str,
+) -> Optional[Kpp]:
+    if not payment_type.is_budget:
+        return None
+
+    if len(payer_inn) == 10 and value is None:
+        raise PayerKPPValidationINN10EmptyNotAllowed
+    elif len(payer_inn) == 12 and value is not None:
+        raise PayerKPPValidationINN12OnlyEmptyError
     return value

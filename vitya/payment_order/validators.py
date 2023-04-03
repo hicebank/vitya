@@ -14,6 +14,8 @@ from vitya.payment_order.errors import (
     OperationKindValidationValueError,
     PayeeValidationNameError,
     PayeeValidationSizeError,
+    PayerStatusValidationTypeError,
+    PayerStatusValidationValueError,
     PayerValidationSizeError,
     PaymentOrderValidationError,
     PurposeCodeValidationTypeError,
@@ -28,6 +30,7 @@ from vitya.payment_order.errors import (
 )
 from vitya.payment_order.payments.helpers import (
     CHARS_FOR_PURPOSE,
+    PAYER_STATUSES,
     REPLACE_CHARS_FOR_SPACE,
 )
 
@@ -189,5 +192,8 @@ def validate_purpose(value: str) -> str:
 
 
 def validate_payer_status(value: str) -> str:
-    # TODO: on next pr (from 61 to 109 fields)
+    if not isinstance(value, str):
+        raise PayerStatusValidationTypeError
+    elif value not in PAYER_STATUSES:
+        raise PayerStatusValidationValueError
     return value

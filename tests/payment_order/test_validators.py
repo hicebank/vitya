@@ -16,6 +16,8 @@ from vitya.payment_order.errors import (
     OperationKindValidationValueError,
     PayeeValidationNameError,
     PayeeValidationSizeError,
+    PayerStatusValidationTypeError,
+    PayerStatusValidationValueError,
     PayerValidationSizeError,
     PaymentOrderValidationError,
     PurposeCodeValidationTypeError,
@@ -35,6 +37,7 @@ from vitya.payment_order.validators import (
     validate_operation_kind,
     validate_payee,
     validate_payer,
+    validate_payer_status,
     validate_payment_order,
     validate_purpose,
     validate_purpose_code,
@@ -243,3 +246,20 @@ def test_validate_uin_control_sum(
 ):
     with exception_handler:
         validate_uin_control_sum(value=value)
+
+
+@pytest.mark.parametrize(
+    'value, exception_handler, expected_value',
+    [
+        (None, pytest.raises(PayerStatusValidationTypeError), None),
+        ('00', pytest.raises(PayerStatusValidationValueError), None),
+        ('06', nullcontext(), '06'),
+    ]
+)
+def test_validate_payer_status(
+    value: str,
+    exception_handler: ContextManager,
+    expected_value: Optional[str]
+) -> None:
+    with exception_handler:
+        assert validate_payer_status(value=value) == expected_value
