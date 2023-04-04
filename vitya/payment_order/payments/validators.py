@@ -5,6 +5,9 @@ from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
     CbcValidationEmptyNotAllowed,
+    OktmoValidationEmptyNotAllowed,
+    OktmoValidationFNSEmptyNotAllowed,
+    OktmoValidationZerosNotAllowed,
     OperationKindValidationBudgetValueError,
     PayeeAccountValidationBICValueError,
     PayeeAccountValidationFNSValueError,
@@ -38,7 +41,7 @@ from vitya.payment_order.fields import (
     Uin,
 )
 from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
-from vitya.pydantic_fields import Bic, Inn, Kpp
+from vitya.pydantic_fields import Bic, Inn, Kpp, Oktmo
 
 
 def validate_account_by_bic(
@@ -238,4 +241,29 @@ def validate_cbc(
     if payment_type in {PaymentType.FNS, PaymentType.CUSTOMS} and value is None:
         raise CbcValidationEmptyNotAllowed
 
+    return value
+
+
+def validate_oktmo(
+    value: Optional[Oktmo],
+    payment_type: PaymentType,
+    payer_status: PayerStatus,
+) -> Optional[Oktmo]:
+    if not payment_type.is_budget:
+        return None
+
+    if payment_type == PaymentType.FNS and payer_status in {'01', '13'} and value is None:
+        return None
+
+    if payment_type in {PaymentType.CUSTOMS, PaymentType.BUDGET_OTHER} and value is None:
+        return None
+
+    if payment_type == PaymentType.FNS and payer_status == '02' and value is None:
+        raise OktmoValidationFNSEmptyNotAllowed
+
+    if value is None:
+        raise OktmoValidationEmptyNotAllowed
+
+    if all(c == '0' for c in value):
+        raise OktmoValidationZerosNotAllowed
     return value

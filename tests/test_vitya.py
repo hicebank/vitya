@@ -24,6 +24,11 @@ from vitya.pydantic_fields import (
     Oktmo,
     Snils,
 )
+from vitya.validators import (
+    OktmoValidationTypeError,
+    OktmoValidationValueError,
+    OktmoValidationValueLenError,
+)
 
 
 class InnModel(BaseModel):
@@ -276,24 +281,27 @@ def test_wrong_snils(snils):
     '69701000001',
     '98603170051',
     '78623427116',
-    '66614465117'
+    '66614465117',
 ])
 def test_valid_oktmo(oktmo):
     """No exception raise"""
-    assert validate_oktmo(oktmo) is None
+    assert validate_oktmo(oktmo) == oktmo
 
     oktmo_model = OktmoModel(oktmo=oktmo)
     assert oktmo_model.oktmo == oktmo
 
 
-@pytest.mark.parametrize('oktmo', [
-    None,
-    '',
-    69654000,
-    '69 701 000 001'
-])
-def test_wrong_oktmo(oktmo):
-    with pytest.raises(VityaValidationError):
+@pytest.mark.parametrize(
+    'oktmo, error',
+    [
+        (None, OktmoValidationTypeError),
+        (69654000, OktmoValidationTypeError),
+        ('6965400', OktmoValidationValueLenError),
+        ('69b01000001', OktmoValidationValueError),
+    ]
+)
+def test_wrong_oktmo(oktmo, error):
+    with pytest.raises(error):
         validate_oktmo(oktmo)
 
     with pytest.raises(PydanticValidationError):

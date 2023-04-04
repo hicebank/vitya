@@ -12,12 +12,16 @@ from tests.payment_order.testdata import (
     IP_INN,
     KPP,
     LE_INN,
+    OKTMO,
     VALID_UIN,
 )
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
     CbcValidationEmptyNotAllowed,
+    OktmoValidationEmptyNotAllowed,
+    OktmoValidationFNSEmptyNotAllowed,
+    OktmoValidationZerosNotAllowed,
     OperationKindValidationBudgetValueError,
     PayeeAccountValidationBICValueError,
     PayeeAccountValidationFNSValueError,
@@ -47,6 +51,7 @@ from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
 from vitya.payment_order.payments.validators import (
     validate_account_by_bic,
     validate_cbc,
+    validate_oktmo,
     validate_operation_kind,
     validate_payee_account,
     validate_payee_inn,
@@ -469,4 +474,33 @@ def test_validate_cbc(
         assert expected_value == validate_cbc(
             value=value,
             payment_type=payment_type,
+        )
+
+
+@pytest.mark.parametrize(
+    'value, payment_type, payer_status, exception_handler, expected_value',
+    [
+        (None, PaymentType.FL, '01', nullcontext(), None),
+        (None, PaymentType.FNS, '01', nullcontext(), None),
+        (None, PaymentType.FNS, '13', nullcontext(), None),
+        (None, PaymentType.CUSTOMS, '13', nullcontext(), None),
+        (None, PaymentType.BUDGET_OTHER, '13', nullcontext(), None),
+        (None, PaymentType.FNS, '02', pytest.raises(OktmoValidationFNSEmptyNotAllowed), None),
+        (None, PaymentType.FNS, '06', pytest.raises(OktmoValidationEmptyNotAllowed), None),
+        ('0' * 8, PaymentType.FNS, '06', pytest.raises(OktmoValidationZerosNotAllowed), None),
+        (OKTMO, PaymentType.FNS, '06', nullcontext(), OKTMO),
+    ]
+)
+def test_validate_oktmo(
+    value: Optional[Kpp],
+    payment_type: PaymentType,
+    payer_status: PayerStatus,
+    exception_handler: ContextManager,
+    expected_value: Optional[Kpp],
+) -> None:
+    with exception_handler:
+        assert expected_value == validate_oktmo(
+            value=value,
+            payment_type=payment_type,
+            payer_status=payer_status,
         )

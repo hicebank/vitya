@@ -16,6 +16,7 @@ from vitya.payment_order.fields import (
 from vitya.payment_order.payments.validators import (
     validate_account_by_bic,
     validate_cbc,
+    validate_oktmo,
     validate_operation_kind,
     validate_payee_account,
     validate_payee_inn,
@@ -26,7 +27,7 @@ from vitya.payment_order.payments.validators import (
     validate_purpose,
     validate_uin,
 )
-from vitya.pydantic_fields import Bic, Inn, Kpp
+from vitya.pydantic_fields import Bic, Inn, Kpp, Oktmo
 
 
 class CheckerError(ValueError):
@@ -217,4 +218,23 @@ class CbcChecker(BaseChecker):
         validate_cbc(
             value=self.cbc,
             payment_type=self.payment_type,
+        )
+
+
+class OktmoChecker(BaseChecker):
+    def __init__(
+        self,
+        oktmo: Oktmo,
+        payment_type: PaymentType,
+        payer_status: PayerStatus,
+    ) -> None:
+        self.oktmo = oktmo
+        self.payment_type = payment_type
+        self.payer_status = payer_status
+
+    def check(self) -> None:
+        validate_oktmo(
+            value=self.oktmo,
+            payment_type=self.payment_type,
+            payer_status=self.payer_status,
         )

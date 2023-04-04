@@ -1,4 +1,4 @@
-from typing import Any, Callable, Generator
+from typing import Any, Callable, Generator, Optional
 
 from .validators import (
     ValidationError,
@@ -120,5 +120,5 @@ class Oktmo(str):
         yield cls.validate
 
     @classmethod
-    def validate(cls, value: str) -> str:
-        return _validate_wrapper(validate_oktmo, "oktmo", value)
+    def validate(cls, value: str) -> Optional[str]:
+        return validate_oktmo(value)

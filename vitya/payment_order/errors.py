@@ -1,6 +1,7 @@
 from pydantic.errors import PydanticValueError
 
 from vitya.payment_order.payments.helpers import CHARS_FOR_PURPOSE, PAYER_STATUSES
+from vitya.validators import OktmoValidationError
 
 
 class AmountValidationError(PydanticValueError):
@@ -362,3 +363,15 @@ class CbcValidationValueDigitsOnlyError(CbcValidationError):
 
 class CbcValidationValueCannotZerosOnly(CbcValidationError):
     msg_template = 'invalid cbc: cannot contain only zeros'
+
+
+class OktmoValidationEmptyNotAllowed(OktmoValidationError):
+    msg_template = 'invalid oktmo: empty value is not allowed'
+
+
+class OktmoValidationFNSEmptyNotAllowed(OktmoValidationEmptyNotAllowed):
+    msg_template = 'invalid oktmo: for fns with payer status = "02" empty value is not allowed'
+
+
+class OktmoValidationZerosNotAllowed(OktmoValidationError):
+    msg_template = 'invalid oktmo: cannot be all zeros'

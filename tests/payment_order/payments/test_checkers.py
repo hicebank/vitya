@@ -17,6 +17,9 @@ from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
     CbcValidationEmptyNotAllowed,
+    OktmoValidationEmptyNotAllowed,
+    OktmoValidationFNSEmptyNotAllowed,
+    OktmoValidationZerosNotAllowed,
     OperationKindValidationBudgetValueError,
     PayeeAccountValidationBICValueError,
     PayeeAccountValidationFNSValueError,
@@ -46,6 +49,7 @@ from vitya.payment_order.payments.checkers import (
     AccountBicChecker,
     BaseModelChecker,
     CbcChecker,
+    OktmoChecker,
     OperationKindChecker,
     PayeeAccountChecker,
     PayeeInnChecker,
@@ -57,7 +61,7 @@ from vitya.payment_order.payments.checkers import (
     UinChecker,
 )
 from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
-from vitya.pydantic_fields import Bic, Inn, Kpp
+from vitya.pydantic_fields import Bic, Inn, Kpp, Oktmo
 
 
 class TestAccountBicModelChecker(BaseModelChecker):
@@ -85,6 +89,9 @@ def test_account_bic_checker(
         TestAccountBicModelChecker(account_number=account_number, bic=bic)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        if exception:  # pragma: no cover
+            raise NotImplementedError
 
 
 class TestPayeeAccountModelChecker(BaseModelChecker):
@@ -116,6 +123,9 @@ def test_payee_account_checker(
         TestPayeeAccountModelChecker(account_number=account_number, bic=bic, payment_type=payment_type)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        if exception:  # pragma: no cover
+            raise NotImplementedError
 
 
 class TestOperationKindChecker(BaseModelChecker):
@@ -144,6 +154,9 @@ def test_operation_kind_checker(
         TestOperationKindChecker(operation_kind=operation_kind, payment_type=payment_type)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        if exception:  # pragma: no cover
+            raise NotImplementedError
 
 
 class TestPayerInnChecker(BaseModelChecker):
@@ -161,7 +174,7 @@ class TestPayerInnChecker(BaseModelChecker):
     'payer_inn, payer_status, for_third_face, payment_type, exception',
     [
         (INN, '01', False, PaymentType.IP, None),
-        (None, '13', False, PaymentType.FNS, PayerINNValidationEmptyNotAllowedError)
+        (None, '30', False, PaymentType.FNS, PayerINNValidationEmptyNotAllowedError)
     ]
 )
 def test_payer_inn_checker(
@@ -180,6 +193,9 @@ def test_payer_inn_checker(
         )
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        if exception:  # pragma: no cover
+            raise NotImplementedError
 
 
 class TestUinChecker(BaseModelChecker):
@@ -216,6 +232,9 @@ def test_uin_checker(
         )
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        if exception:  # pragma: no cover
+            raise NotImplementedError
 
 
 class TestPurposeChecker(BaseModelChecker):
@@ -242,6 +261,9 @@ def test_purpose_checker(
         TestPurposeChecker(purpose=purpose, payment_type=payment_type)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        if exception:  # pragma: no cover
+            raise NotImplementedError
 
 
 class TestSeveralChecker(BaseModelChecker):
@@ -273,6 +295,9 @@ def test_several_checker(
     except ValidationError as e:
         errors = [e for e in e.raw_errors[0].exc.errors]
         assert all(isinstance(error, exceptions) for error in errors)
+    else:
+        if exceptions:  # pragma: no cover
+            raise NotImplementedError
 
 
 class TestPayeeInnChecker(BaseModelChecker):
@@ -303,6 +328,9 @@ def test_payee_inn_checker(
         TestPayeeInnChecker(payee_inn=payee_inn, payment_type=payment_type)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        if exception:  # pragma: no cover
+            raise NotImplementedError
 
 
 class TestPayerStatusChecker(BaseModelChecker):
@@ -332,6 +360,9 @@ def test_payer_status_checker(
         TestPayerStatusChecker(payer_status=payer_status, payment_type=payment_type, for_third_face=for_third_face)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        if exception:  # pragma: no cover
+            raise NotImplementedError
 
 
 class TestPayerKppChecker(BaseModelChecker):
@@ -363,6 +394,9 @@ def test_payer_kpp_checker(
         TestPayerKppChecker(payer_kpp=payer_kpp, payment_type=payment_type, payer_inn=payer_inn)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        if exception:  # pragma: no cover
+            raise NotImplementedError
 
 
 class TestPayeeKppChecker(BaseModelChecker):
@@ -393,6 +427,9 @@ def test_payee_kpp_checker(
         TestPayeeKppChecker(payee_kpp=payee_kpp, payment_type=payment_type)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        if exception:  # pragma: no cover
+            raise NotImplementedError
 
 
 class TestCbcChecker(BaseModelChecker):
@@ -400,7 +437,7 @@ class TestCbcChecker(BaseModelChecker):
     payment_type: PaymentType
 
     __checkers__ = [
-        (CbcChecker, ['payee_kpp', 'payment_type']),
+        (CbcChecker, ['cbc', 'payment_type']),
     ]
 
 
@@ -422,3 +459,39 @@ def test_cbc_checker(
         TestCbcChecker(cbc=cbc, payment_type=payment_type)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        if exception:  # pragma: no cover
+            raise NotImplementedError
+
+
+class TestOktmoChecker(BaseModelChecker):
+    oktmo: Optional[Oktmo]
+    payment_type: PaymentType
+    payer_status: PayerStatus
+
+    __checkers__ = [
+        (OktmoChecker, ['oktmo', 'payment_type', 'payer_status']),
+    ]
+
+
+@pytest.mark.parametrize(
+    'oktmo, payment_type, payer_status, exception',
+    [
+        (None, PaymentType.FNS, '02', OktmoValidationFNSEmptyNotAllowed),
+        (None, PaymentType.FNS, '06', OktmoValidationEmptyNotAllowed),
+        ('0' * 8, PaymentType.FNS, '06', OktmoValidationZerosNotAllowed)
+    ]
+)
+def test_oktmo_checker(
+    oktmo: Cbc,
+    payment_type: PaymentType,
+    payer_status: PayerStatus,
+    exception: Type[Exception]
+) -> None:
+    try:
+        TestOktmoChecker(oktmo=oktmo, payment_type=payment_type, payer_status=payer_status)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        if exception:  # pragma: no cover
+            raise NotImplementedError

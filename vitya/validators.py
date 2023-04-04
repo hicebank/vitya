@@ -1,12 +1,30 @@
 import re
 from typing import List, Optional
 
+from pydantic.errors import PydanticValueError
+
 
 class ValidationError(ValueError):
     """
     Exception that raises if passed data is invalid
     """
     pass
+
+
+class OktmoValidationError(PydanticValueError):
+    msg_template = 'invalid oktmo: base error'
+
+
+class OktmoValidationTypeError(PydanticValueError):
+    msg_template = 'invalid oktmo: must be str'
+
+
+class OktmoValidationValueLenError(PydanticValueError):
+    msg_template = 'invalid oktmo: must be match 8 or 11 digits'
+
+
+class OktmoValidationValueError(PydanticValueError):
+    msg_template = 'invalid oktmo: must be match as ([0-9]{11}|[0-9]{8})'
 
 
 def _count_inn_checksum(inn: str, coefficients: List[int]) -> int:
@@ -139,7 +157,7 @@ def validate_snils(snils: str) -> None:
     if not re.fullmatch(r'[0-9]{11}', snils):
         raise ValidationError('wrong snils')
 
-    if int(snils[:9]) < 1001998:     # less than 001-001-998
+    if int(snils[:9]) < 1001998:  # less than 001-001-998
         raise ValidationError('snils must be more than "001-001-998" ')
 
     numbers = []
@@ -162,13 +180,17 @@ def validate_snils(snils: str) -> None:
         raise ValidationError(f'wrong checksum: {snils[-2:]}; expected: {checksum_str}')
 
 
-def validate_oktmo(oktmo: str) -> None:
+def validate_oktmo(oktmo: str) -> Optional[str]:
     """
     Source:
     https://www.consultant.ru/cons/CGI/online.cgi?req=doc;base=LAW;n=149911#fUpVRbSdflobnNc4
     """
     if not isinstance(oktmo, str):
-        raise ValidationError('oktmo should be passed as string')
-
+        raise OktmoValidationTypeError
+    elif oktmo in {'', '0'}:
+        return None
+    elif len(oktmo) not in {8, 11}:
+        raise OktmoValidationValueLenError
     if not re.fullmatch(r'([0-9]{11}|[0-9]{8})', oktmo):
-        raise ValidationError('wrong oktmo')
+        raise OktmoValidationValueError
+    return oktmo
