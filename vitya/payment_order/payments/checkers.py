@@ -11,6 +11,7 @@ from vitya.payment_order.fields import (
     OperationKind,
     PayerStatus,
     Purpose,
+    Reason,
     Uin,
 )
 from vitya.payment_order.payments.validators import (
@@ -25,6 +26,7 @@ from vitya.payment_order.payments.validators import (
     validate_payer_kpp,
     validate_payer_status,
     validate_purpose,
+    validate_reason,
     validate_uin,
 )
 from vitya.pydantic_fields import Bic, Inn, Kpp, Oktmo
@@ -237,4 +239,20 @@ class OktmoChecker(BaseChecker):
             value=self.oktmo,
             payment_type=self.payment_type,
             payer_status=self.payer_status,
+        )
+
+
+class ReasonChecker(BaseChecker):
+    def __init__(
+        self,
+        reason: Reason,
+        payment_type: PaymentType,
+    ) -> None:
+        self.reason = reason
+        self.payment_type = payment_type
+
+    def check(self) -> None:
+        validate_reason(
+            value=self.reason,
+            payment_type=self.payment_type,
         )

@@ -1,6 +1,10 @@
 from pydantic.errors import PydanticValueError
 
-from vitya.payment_order.payments.helpers import CHARS_FOR_PURPOSE, PAYER_STATUSES
+from vitya.payment_order.payments.helpers import (
+    CHARS_FOR_PURPOSE,
+    PAYER_STATUSES,
+    REASONS,
+)
 from vitya.validators import OktmoValidationError
 
 
@@ -375,3 +379,23 @@ class OktmoValidationFNSEmptyNotAllowed(OktmoValidationEmptyNotAllowed):
 
 class OktmoValidationZerosNotAllowed(OktmoValidationError):
     msg_template = 'invalid oktmo: cannot be all zeros'
+
+
+class ReasonValidationError(PydanticValueError):
+    msg_template = 'invalid reason: base error'
+
+
+class ReasonValidationTypeError(ReasonValidationError):
+    msg_template = 'invalid reason: must be str'
+
+
+class ReasonValidationFNSOnlyEmptyError(ReasonValidationError):
+    msg_template = 'invalid reason: for fns only empty allowed'
+
+
+class ReasonValidationValueLenError(ReasonValidationError):
+    msg_template = 'invalid reason: reason must be 2 chars'
+
+
+class ReasonValidationValueError(ReasonValidationError):
+    msg_template = f'invalid reason: value must be in {REASONS}'

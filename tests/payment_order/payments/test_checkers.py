@@ -35,6 +35,7 @@ from vitya.payment_order.errors import (
     PayerStatusValidationCustoms05NotAllowedError,
     PayerStatusValidationNullNotAllowedError,
     PurposeValidationIPNDSError,
+    ReasonValidationFNSOnlyEmptyError,
     UINValidationValueZeroError,
 )
 from vitya.payment_order.fields import (
@@ -43,6 +44,7 @@ from vitya.payment_order.fields import (
     OperationKind,
     PayerStatus,
     Purpose,
+    Reason,
     Uin,
 )
 from vitya.payment_order.payments.checkers import (
@@ -58,6 +60,7 @@ from vitya.payment_order.payments.checkers import (
     PayerKppChecker,
     PayerStatusChecker,
     PurposeChecker,
+    ReasonChecker,
     UinChecker,
 )
 from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
@@ -490,6 +493,35 @@ def test_oktmo_checker(
 ) -> None:
     try:
         TestOktmoChecker(oktmo=oktmo, payment_type=payment_type, payer_status=payer_status)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        if exception:  # pragma: no cover
+            raise NotImplementedError
+
+
+class TestReasonChecker(BaseModelChecker):
+    reason: Optional[Reason]
+    payment_type: PaymentType
+
+    __checkers__ = [
+        (ReasonChecker, ['reason', 'payment_type']),
+    ]
+
+
+@pytest.mark.parametrize(
+    'reason, payment_type, exception',
+    [
+        ('ПК', PaymentType.FNS, ReasonValidationFNSOnlyEmptyError),
+    ]
+)
+def test_reason_checker(
+    reason: Cbc,
+    payment_type: PaymentType,
+    exception: Type[Exception]
+) -> None:
+    try:
+        TestReasonChecker(reason=reason, payment_type=payment_type)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:

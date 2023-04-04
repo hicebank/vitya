@@ -28,6 +28,7 @@ from vitya.payment_order.errors import (
     PurposeCodeValidationFlError,
     PurposeCodeValidationNullError,
     PurposeValidationIPNDSError,
+    ReasonValidationFNSOnlyEmptyError,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
     UINValidationValueZeroError,
@@ -38,6 +39,7 @@ from vitya.payment_order.fields import (
     OperationKind,
     PayerStatus,
     Purpose,
+    Reason,
     Uin,
 )
 from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
@@ -266,4 +268,21 @@ def validate_oktmo(
 
     if all(c == '0' for c in value):
         raise OktmoValidationZerosNotAllowed
+    return value
+
+
+def validate_reason(
+    value: Optional[Reason],
+    payment_type: PaymentType,
+) -> Optional[Reason]:
+    if not payment_type.is_budget:
+        return None
+
+    if payment_type in {PaymentType.CUSTOMS, PaymentType.BUDGET_OTHER} and value is None:
+        return None
+
+    if payment_type == PaymentType.FNS:
+        if value is not None:
+            raise ReasonValidationFNSOnlyEmptyError
+        return None
     return value

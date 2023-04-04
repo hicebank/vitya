@@ -42,11 +42,12 @@ from vitya.payment_order.errors import (
     PurposeCodeValidationFlError,
     PurposeCodeValidationNullError,
     PurposeValidationIPNDSError,
+    ReasonValidationFNSOnlyEmptyError,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
     UINValidationValueZeroError,
 )
-from vitya.payment_order.fields import AccountNumber, OperationKind, PayerStatus
+from vitya.payment_order.fields import AccountNumber, Cbc, OperationKind, PayerStatus
 from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
 from vitya.payment_order.payments.validators import (
     validate_account_by_bic,
@@ -61,9 +62,10 @@ from vitya.payment_order.payments.validators import (
     validate_payer_status,
     validate_purpose,
     validate_purpose_code,
+    validate_reason,
     validate_uin,
 )
-from vitya.pydantic_fields import Bic, Inn, Kpp
+from vitya.pydantic_fields import Bic, Inn, Kpp, Oktmo
 
 
 @pytest.mark.parametrize(
@@ -465,10 +467,10 @@ def test_validate_payee_kpp(
     ]
 )
 def test_validate_cbc(
-    value: Optional[Kpp],
+    value: Optional[Cbc],
     payment_type: PaymentType,
     exception_handler: ContextManager,
-    expected_value: Optional[Kpp],
+    expected_value: Optional[Cbc],
 ) -> None:
     with exception_handler:
         assert expected_value == validate_cbc(
@@ -492,15 +494,40 @@ def test_validate_cbc(
     ]
 )
 def test_validate_oktmo(
-    value: Optional[Kpp],
+    value: Optional[Oktmo],
     payment_type: PaymentType,
     payer_status: PayerStatus,
     exception_handler: ContextManager,
-    expected_value: Optional[Kpp],
+    expected_value: Optional[Oktmo],
 ) -> None:
     with exception_handler:
         assert expected_value == validate_oktmo(
             value=value,
             payment_type=payment_type,
             payer_status=payer_status,
+        )
+
+
+@pytest.mark.parametrize(
+    'value, payment_type, exception_handler, expected_value',
+    [
+        (None, PaymentType.FL, nullcontext(), None),
+        (None, PaymentType.CUSTOMS, nullcontext(), None),
+        (None, PaymentType.BUDGET_OTHER, nullcontext(), None),
+        ('ПК', PaymentType.FNS, pytest.raises(ReasonValidationFNSOnlyEmptyError), None),
+        (None, PaymentType.FNS, nullcontext(), None),
+        ('ПК', PaymentType.BUDGET_OTHER, nullcontext(), 'ПК'),
+    ]
+
+)
+def test_validate_reason(
+    value: Optional[Kpp],
+    payment_type: PaymentType,
+    exception_handler: ContextManager,
+    expected_value: Optional[Kpp],
+) -> None:
+    with exception_handler:
+        assert expected_value == validate_reason(
+            value=value,
+            payment_type=payment_type,
         )

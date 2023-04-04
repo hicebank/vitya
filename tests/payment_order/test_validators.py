@@ -28,6 +28,9 @@ from vitya.payment_order.errors import (
     PurposeValidationCharactersError,
     PurposeValidationMaxLenError,
     PurposeValidationTypeError,
+    ReasonValidationTypeError,
+    ReasonValidationValueError,
+    ReasonValidationValueLenError,
     UINValidationControlSumError,
     UINValidationDigitsOnlyError,
     UINValidationLenError,
@@ -46,6 +49,7 @@ from vitya.payment_order.validators import (
     validate_payment_order,
     validate_purpose,
     validate_purpose_code,
+    validate_reason,
     validate_uin,
     validate_uin_control_sum,
 )
@@ -289,3 +293,23 @@ def test_validate_cbc(
 ) -> None:
     with exception_handler:
         assert validate_cbc(value=value) == expected_value
+
+
+@pytest.mark.parametrize(
+    'value, exception_handler, expected_value',
+    [
+        (None, pytest.raises(ReasonValidationTypeError), None),
+        ('', nullcontext(), None),
+        ('0', nullcontext(), None),
+        ('АИИ', pytest.raises(ReasonValidationValueLenError), None),
+        ('АИ', pytest.raises(ReasonValidationValueError), None),
+        ('ПК', nullcontext(), 'ПК'),
+    ]
+)
+def test_validate_reason(
+    value: str,
+    exception_handler: ContextManager,
+    expected_value: Optional[str]
+) -> None:
+    with exception_handler:
+        assert validate_reason(value=value) == expected_value

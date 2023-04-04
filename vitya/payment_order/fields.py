@@ -13,6 +13,7 @@ from vitya.payment_order.validators import (
     validate_payment_order,
     validate_purpose,
     validate_purpose_code,
+    validate_reason,
     validate_uin,
 )
 
@@ -161,3 +162,15 @@ class Cbc(str):
     @classmethod
     def validate(cls, value: str) -> Optional[str]:
         return validate_cbc(value)
+
+
+class Reason(str):
+    """Основание платежа (106)"""
+
+    @classmethod
+    def __get_validators__(cls) -> CallableGenerator:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: str) -> Optional[str]:
+        return validate_reason(value)
