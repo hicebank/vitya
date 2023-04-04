@@ -326,3 +326,15 @@ class PayerKPPValidationINN10EmptyNotAllowed(PayerKPPValidationError, KPPValidat
 
 class PayerKPPValidationINN12OnlyEmptyError(PayerKPPValidationOnlyEmptyError):
     msg_template = 'invalid payer kpp: for fns, tms or bo with inn = 12 only empty allowed'
+
+
+class PayeeKPPValidationError(KPPValidationError):
+    msg_template = 'invalid payee kpp: base error'
+
+
+class PayeeKPPValidationOnlyEmptyError(PayeeKPPValidationError, KPPValidationOnlyEmptyError):
+    msg_template = 'invalid payee kpp: for ip or fl only empty allowed'
+
+
+class PayeeKPPValidationEmptyNotAllowed(PayeeKPPValidationError, KPPValidationEmptyNotAllowed):
+    msg_template = 'invalid payee kpp: for fns, customs, budget other or le empty value is not allowed'

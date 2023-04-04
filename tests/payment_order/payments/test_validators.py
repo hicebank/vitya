@@ -23,6 +23,8 @@ from vitya.payment_order.errors import (
     PayeeINNValidationIPLenError,
     PayeeINNValidationLELenError,
     PayeeINNValidationNonEmptyError,
+    PayeeKPPValidationEmptyNotAllowed,
+    PayeeKPPValidationOnlyEmptyError,
     PayerINNValidationCustomsLen10Error,
     PayerINNValidationCustomsLen12Error,
     PayerINNValidationEmptyNotAllowedError,
@@ -45,6 +47,7 @@ from vitya.payment_order.payments.validators import (
     validate_operation_kind,
     validate_payee_account,
     validate_payee_inn,
+    validate_payee_kpp,
     validate_payer_inn,
     validate_payer_kpp,
     validate_payer_status,
@@ -416,4 +419,27 @@ def test_validate_payer_kpp(
             value=value,
             payment_type=payment_type,
             payer_inn=payer_inn,
+        )
+
+
+@pytest.mark.parametrize(
+    'value, payment_type, exception_handler, expected_value',
+    [
+        (None, PaymentType.FL, nullcontext(), None),
+        (KPP, PaymentType.FL, pytest.raises(PayeeKPPValidationOnlyEmptyError), None),
+
+        (None, PaymentType.FNS, pytest.raises(PayeeKPPValidationEmptyNotAllowed), None),
+        (KPP, PaymentType.FNS, nullcontext(), KPP),
+    ]
+)
+def test_validate_payee_kpp(
+    value: Optional[Kpp],
+    payment_type: PaymentType,
+    exception_handler: ContextManager,
+    expected_value: Optional[Kpp],
+) -> None:
+    with exception_handler:
+        assert expected_value == validate_payee_kpp(
+            value=value,
+            payment_type=payment_type,
         )

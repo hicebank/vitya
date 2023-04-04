@@ -11,6 +11,8 @@ from vitya.payment_order.errors import (
     PayeeINNValidationIPLenError,
     PayeeINNValidationLELenError,
     PayeeINNValidationNonEmptyError,
+    PayeeKPPValidationEmptyNotAllowed,
+    PayeeKPPValidationOnlyEmptyError,
     PayerINNValidationCustomsLen10Error,
     PayerINNValidationCustomsLen12Error,
     PayerINNValidationEmptyNotAllowedError,
@@ -204,4 +206,18 @@ def validate_payer_kpp(
         raise PayerKPPValidationINN10EmptyNotAllowed
     elif len(payer_inn) == 12 and value is not None:
         raise PayerKPPValidationINN12OnlyEmptyError
+    return value
+
+
+def validate_payee_kpp(
+    value: Optional[Kpp],
+    payment_type: PaymentType,
+) -> Optional[Kpp]:
+    if payment_type in {PaymentType.FL, PaymentType.IP}:
+        if value is not None:
+            raise PayeeKPPValidationOnlyEmptyError
+        return None
+
+    if value is None:
+        raise PayeeKPPValidationEmptyNotAllowed
     return value

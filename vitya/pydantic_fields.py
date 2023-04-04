@@ -15,7 +15,7 @@ from .validators import (
 
 try:
     from pydantic.errors import PydanticValueError
-except ImportError:
+except ImportError:  # pragma: no cover
     pass
 
 CallableGenerator = Generator[Callable[..., Any], None, None]

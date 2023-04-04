@@ -22,6 +22,8 @@ from vitya.payment_order.errors import (
     PayeeINNValidationIPLenError,
     PayeeINNValidationLELenError,
     PayeeINNValidationNonEmptyError,
+    PayeeKPPValidationEmptyNotAllowed,
+    PayeeKPPValidationOnlyEmptyError,
     PayerINNValidationEmptyNotAllowedError,
     PayerKPPValidationINN10EmptyNotAllowed,
     PayerKPPValidationINN12OnlyEmptyError,
@@ -43,6 +45,7 @@ from vitya.payment_order.payments.checkers import (
     OperationKindChecker,
     PayeeAccountChecker,
     PayeeInnChecker,
+    PayeeKppChecker,
     PayerInnChecker,
     PayerKppChecker,
     PayerStatusChecker,
@@ -347,12 +350,42 @@ class TestPayerKppChecker(BaseModelChecker):
     ]
 )
 def test_payer_kpp_checker(
-    payer_kpp: PayerStatus,
+    payer_kpp: Kpp,
     payment_type: PaymentType,
     payer_inn: Inn,
     exception: Type[Exception]
 ) -> None:
     try:
         TestPayerKppChecker(payer_kpp=payer_kpp, payment_type=payment_type, payer_inn=payer_inn)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+
+
+class TestPayeeKppChecker(BaseModelChecker):
+    payee_kpp: Optional[Kpp]
+    payment_type: PaymentType
+
+    __checkers__ = [
+        (PayeeKppChecker, ['payee_kpp', 'payment_type']),
+    ]
+
+
+@pytest.mark.parametrize(
+    'payee_kpp, payment_type, exception',
+    [
+        (None, PaymentType.FL, None),
+        (KPP, PaymentType.FL, PayeeKPPValidationOnlyEmptyError),
+
+        (None, PaymentType.CUSTOMS, PayeeKPPValidationEmptyNotAllowed),
+        (KPP, PaymentType.CUSTOMS, None),
+    ]
+)
+def test_payee_kpp_checker(
+    payee_kpp: Kpp,
+    payment_type: PaymentType,
+    exception: Type[Exception]
+) -> None:
+    try:
+        TestPayeeKppChecker(payee_kpp=payee_kpp, payment_type=payment_type)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)

@@ -17,6 +17,7 @@ from vitya.payment_order.payments.validators import (
     validate_operation_kind,
     validate_payee_account,
     validate_payee_inn,
+    validate_payee_kpp,
     validate_payer_inn,
     validate_payer_kpp,
     validate_payer_status,
@@ -34,7 +35,7 @@ class CheckerError(ValueError):
 
 class BaseChecker(ABC):
     @abstractmethod
-    def check(self) -> None:
+    def check(self) -> None:  # pragma: no cover
         pass
 
 
@@ -182,4 +183,20 @@ class PayerKppChecker(BaseChecker):
             value=self.payer_kpp,
             payment_type=self.payment_type,
             payer_inn=self.payer_inn
+        )
+
+
+class PayeeKppChecker(BaseChecker):
+    def __init__(
+        self,
+        payee_kpp: Kpp,
+        payment_type: PaymentType,
+    ) -> None:
+        self.payee_kpp = payee_kpp
+        self.payment_type = payment_type
+
+    def check(self) -> None:
+        validate_payee_kpp(
+            value=self.payee_kpp,
+            payment_type=self.payment_type,
         )
