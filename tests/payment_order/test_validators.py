@@ -4,13 +4,17 @@ from typing import ContextManager, Optional
 
 import pytest
 
-from tests.payment_order.testdata import INVALID_UIN, IP_ACCOUNT, VALID_UIN
+from tests.payment_order.testdata import CBC, INVALID_UIN, IP_ACCOUNT, VALID_UIN
 from vitya.payment_order.errors import (
     AccountNumberValidationDigitsOnlyError,
     AccountNumberValidationSizeError,
     AccountNumberValidationTypeError,
     AmountValidationLengthError,
     AmountValidationLessOrEqualZeroError,
+    CbcValidationTypeError,
+    CbcValidationValueCannotZerosOnly,
+    CbcValidationValueDigitsOnlyError,
+    CbcValidationValueLenError,
     NumberValidationLenError,
     OperationKindValidationTypeError,
     OperationKindValidationValueError,
@@ -33,6 +37,7 @@ from vitya.payment_order.errors import (
 from vitya.payment_order.validators import (
     validate_account_number,
     validate_amount,
+    validate_cbc,
     validate_number,
     validate_operation_kind,
     validate_payee,
@@ -263,3 +268,24 @@ def test_validate_payer_status(
 ) -> None:
     with exception_handler:
         assert validate_payer_status(value=value) == expected_value
+
+
+@pytest.mark.parametrize(
+    'value, exception_handler, expected_value',
+    [
+        (None, pytest.raises(CbcValidationTypeError), None),
+        ('', nullcontext(), None),
+        ('0', nullcontext(), None),
+        ('1', pytest.raises(CbcValidationValueLenError), None),
+        ('a' * 20, pytest.raises(CbcValidationValueDigitsOnlyError), None),
+        ('0' * 20, pytest.raises(CbcValidationValueCannotZerosOnly), None),
+        (CBC, nullcontext(), CBC),
+    ]
+)
+def test_validate_cbc(
+    value: str,
+    exception_handler: ContextManager,
+    expected_value: Optional[str]
+) -> None:
+    with exception_handler:
+        assert validate_cbc(value=value) == expected_value

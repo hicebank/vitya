@@ -4,6 +4,7 @@ from typing import Any, Callable, Generator, Optional
 from vitya.payment_order.validators import (
     validate_account_number,
     validate_amount,
+    validate_cbc,
     validate_number,
     validate_operation_kind,
     validate_payee,
@@ -148,3 +149,15 @@ class PayerStatus(str):
     @classmethod
     def validate(cls, value: str) -> str:
         return validate_payer_status(value)
+
+
+class Cbc(str):
+    """КБК (104)"""
+
+    @classmethod
+    def __get_validators__(cls) -> CallableGenerator:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: str) -> Optional[str]:
+        return validate_cbc(value)

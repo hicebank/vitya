@@ -338,3 +338,27 @@ class PayeeKPPValidationOnlyEmptyError(PayeeKPPValidationError, KPPValidationOnl
 
 class PayeeKPPValidationEmptyNotAllowed(PayeeKPPValidationError, KPPValidationEmptyNotAllowed):
     msg_template = 'invalid payee kpp: for fns, customs, budget other or le empty value is not allowed'
+
+
+class CbcValidationError(PydanticValueError):
+    msg_template = 'invalid cbc: base error'
+
+
+class CbcValidationTypeError(CbcValidationError):
+    msg_template = 'invalid cbc: cbc must be str'
+
+
+class CbcValidationEmptyNotAllowed(CbcValidationError):
+    msg_template = 'invalid cbc: for fns or tms empty value is not allowed'
+
+
+class CbcValidationValueLenError(CbcValidationError):
+    msg_template = 'invalid cbc: cbc must be 20 digits'
+
+
+class CbcValidationValueDigitsOnlyError(CbcValidationError):
+    msg_template = 'invalid cbc: only digits allowed'
+
+
+class CbcValidationValueCannotZerosOnly(CbcValidationError):
+    msg_template = 'invalid cbc: cannot contain only zeros'

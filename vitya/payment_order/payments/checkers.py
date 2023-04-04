@@ -7,6 +7,7 @@ from pydantic.errors import PydanticValueError
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.fields import (
     AccountNumber,
+    Cbc,
     OperationKind,
     PayerStatus,
     Purpose,
@@ -14,6 +15,7 @@ from vitya.payment_order.fields import (
 )
 from vitya.payment_order.payments.validators import (
     validate_account_by_bic,
+    validate_cbc,
     validate_operation_kind,
     validate_payee_account,
     validate_payee_inn,
@@ -198,5 +200,21 @@ class PayeeKppChecker(BaseChecker):
     def check(self) -> None:
         validate_payee_kpp(
             value=self.payee_kpp,
+            payment_type=self.payment_type,
+        )
+
+
+class CbcChecker(BaseChecker):
+    def __init__(
+        self,
+        cbc: Cbc,
+        payment_type: PaymentType,
+    ) -> None:
+        self.cbc = cbc
+        self.payment_type = payment_type
+
+    def check(self) -> None:
+        validate_cbc(
+            value=self.cbc,
             payment_type=self.payment_type,
         )

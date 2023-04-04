@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from tests.payment_order.testdata import (
     BIC,
+    CBC,
     INN,
     IP_ACCOUNT,
     IP_INN,
@@ -15,6 +16,7 @@ from tests.payment_order.testdata import (
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
+    CbcValidationEmptyNotAllowed,
     OperationKindValidationBudgetValueError,
     PayeeAccountValidationBICValueError,
     PayeeAccountValidationFNSValueError,
@@ -34,6 +36,7 @@ from vitya.payment_order.errors import (
 )
 from vitya.payment_order.fields import (
     AccountNumber,
+    Cbc,
     OperationKind,
     PayerStatus,
     Purpose,
@@ -42,6 +45,7 @@ from vitya.payment_order.fields import (
 from vitya.payment_order.payments.checkers import (
     AccountBicChecker,
     BaseModelChecker,
+    CbcChecker,
     OperationKindChecker,
     PayeeAccountChecker,
     PayeeInnChecker,
@@ -387,5 +391,34 @@ def test_payee_kpp_checker(
 ) -> None:
     try:
         TestPayeeKppChecker(payee_kpp=payee_kpp, payment_type=payment_type)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+
+
+class TestCbcChecker(BaseModelChecker):
+    cbc: Optional[Cbc]
+    payment_type: PaymentType
+
+    __checkers__ = [
+        (CbcChecker, ['payee_kpp', 'payment_type']),
+    ]
+
+
+@pytest.mark.parametrize(
+    'cbc, payment_type, exception',
+    [
+        (None, PaymentType.FL, None),
+        (None, PaymentType.FNS, CbcValidationEmptyNotAllowed),
+        (None, PaymentType.CUSTOMS, CbcValidationEmptyNotAllowed),
+        (CBC, PaymentType.CUSTOMS, None),
+    ]
+)
+def test_cbc_checker(
+    cbc: Cbc,
+    payment_type: PaymentType,
+    exception: Type[Exception]
+) -> None:
+    try:
+        TestCbcChecker(cbc=cbc, payment_type=payment_type)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)

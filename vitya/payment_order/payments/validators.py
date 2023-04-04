@@ -4,6 +4,7 @@ from typing import Optional
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
+    CbcValidationEmptyNotAllowed,
     OperationKindValidationBudgetValueError,
     PayeeAccountValidationBICValueError,
     PayeeAccountValidationFNSValueError,
@@ -30,6 +31,7 @@ from vitya.payment_order.errors import (
 )
 from vitya.payment_order.fields import (
     AccountNumber,
+    Cbc,
     OperationKind,
     PayerStatus,
     Purpose,
@@ -220,4 +222,20 @@ def validate_payee_kpp(
 
     if value is None:
         raise PayeeKPPValidationEmptyNotAllowed
+    return value
+
+
+def validate_cbc(
+    value: Optional[Cbc],
+    payment_type: PaymentType,
+) -> Optional[Cbc]:
+    if not payment_type.is_budget:
+        return None
+
+    if payment_type == PaymentType.BUDGET_OTHER and value is None:
+        return None
+
+    if payment_type in {PaymentType.FNS, PaymentType.CUSTOMS} and value is None:
+        raise CbcValidationEmptyNotAllowed
+
     return value

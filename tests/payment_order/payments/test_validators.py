@@ -5,6 +5,7 @@ import pytest
 
 from tests.payment_order.testdata import (
     BIC,
+    CBC,
     FL_INN,
     INN,
     IP_ACCOUNT,
@@ -16,6 +17,7 @@ from tests.payment_order.testdata import (
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
+    CbcValidationEmptyNotAllowed,
     OperationKindValidationBudgetValueError,
     PayeeAccountValidationBICValueError,
     PayeeAccountValidationFNSValueError,
@@ -44,6 +46,7 @@ from vitya.payment_order.fields import AccountNumber, OperationKind, PayerStatus
 from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
 from vitya.payment_order.payments.validators import (
     validate_account_by_bic,
+    validate_cbc,
     validate_operation_kind,
     validate_payee_account,
     validate_payee_inn,
@@ -440,6 +443,30 @@ def test_validate_payee_kpp(
 ) -> None:
     with exception_handler:
         assert expected_value == validate_payee_kpp(
+            value=value,
+            payment_type=payment_type,
+        )
+
+
+@pytest.mark.parametrize(
+    'value, payment_type, exception_handler, expected_value',
+    [
+        (None, PaymentType.FL, nullcontext(), None),
+        (None, PaymentType.BUDGET_OTHER, nullcontext(), None),
+        (CBC, PaymentType.BUDGET_OTHER, nullcontext(), CBC),
+        (None, PaymentType.FNS, pytest.raises(CbcValidationEmptyNotAllowed), None),
+        (None, PaymentType.CUSTOMS, pytest.raises(CbcValidationEmptyNotAllowed), None),
+        (CBC, PaymentType.FNS, nullcontext(), CBC),
+    ]
+)
+def test_validate_cbc(
+    value: Optional[Kpp],
+    payment_type: PaymentType,
+    exception_handler: ContextManager,
+    expected_value: Optional[Kpp],
+) -> None:
+    with exception_handler:
+        assert expected_value == validate_cbc(
             value=value,
             payment_type=payment_type,
         )
