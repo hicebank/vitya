@@ -14,6 +14,7 @@ from vitya.payment_order.validators import (
     validate_purpose,
     validate_purpose_code,
     validate_reason,
+    validate_tax_period,
     validate_uin,
 )
 
@@ -174,3 +175,15 @@ class Reason(str):
     @classmethod
     def validate(cls, value: str) -> Optional[str]:
         return validate_reason(value)
+
+
+class TaxPeriod(str):
+    """Периодичность платежа / Код таможенного органа (107)"""
+
+    @classmethod
+    def __get_validators__(cls) -> CallableGenerator:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: str) -> Optional[str]:
+        return validate_tax_period(value)

@@ -399,3 +399,47 @@ class ReasonValidationValueLenError(ReasonValidationError):
 
 class ReasonValidationValueError(ReasonValidationError):
     msg_template = f'invalid reason: value must be in {REASONS}'
+
+
+class TaxPeriodValidationError(PydanticValueError):
+    msg_template = 'invalid tax period: base error'
+
+
+class TaxPeriodValidationTypeError(TaxPeriodValidationError):
+    msg_template = 'invalid tax period: must be str'
+
+
+class TaxPeriodValidationEmptyNotAllowed(TaxPeriodValidationError):
+    msg_template = 'invalid tax period: empty is not allowed'
+
+
+class TaxPeriodValidationValueLenError(TaxPeriodValidationError):
+    msg_template = 'invalid tax period: invalid len'
+
+
+class TaxPeriodValidationBOValueLenError(TaxPeriodValidationValueLenError):
+    msg_template = 'invalid tax period: for bo must be 10'
+
+
+class TaxPeriodValidationCustomsEmptyNotAllowed(TaxPeriodValidationEmptyNotAllowed):
+    msg_template = 'invalid tax period: for customs empty is not allowed'
+
+
+class TaxPeriodValidationCustomsValueLenError(TaxPeriodValidationValueLenError):
+    msg_template = 'invalid tax period: for customs must be 8'
+
+
+class TaxPeriodValidationFNS02EmptyNotAllowed(TaxPeriodValidationError):
+    msg_template = 'invalid tax period: for fns with payer status = "02" empty is not allowed'
+
+
+class TaxPeriodValidationFNS01OnlyEmpty(TaxPeriodValidationError):
+    msg_template = 'invalid tax period: for fns with payer status = "01" or "13" only empty allowed'
+
+
+class TaxPeriodValidationFNSEmptyNotAllowed(TaxPeriodValidationEmptyNotAllowed):
+    msg_template = 'invalid tax period: for fns empty is not allowed'
+
+
+class TaxPeriodValidationFNSValueLenError(TaxPeriodValidationValueLenError):
+    msg_template = 'invalid tax period: for fns must be 10'

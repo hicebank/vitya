@@ -12,6 +12,7 @@ from vitya.payment_order.fields import (
     PayerStatus,
     Purpose,
     Reason,
+    TaxPeriod,
     Uin,
 )
 from vitya.payment_order.payments.validators import (
@@ -27,6 +28,7 @@ from vitya.payment_order.payments.validators import (
     validate_payer_status,
     validate_purpose,
     validate_reason,
+    validate_tax_period,
     validate_uin,
 )
 from vitya.pydantic_fields import Bic, Inn, Kpp, Oktmo
@@ -255,4 +257,23 @@ class ReasonChecker(BaseChecker):
         validate_reason(
             value=self.reason,
             payment_type=self.payment_type,
+        )
+
+
+class TaxPeriodChecker(BaseChecker):
+    def __init__(
+        self,
+        tax_period: TaxPeriod,
+        payment_type: PaymentType,
+        payer_status: PayerStatus,
+    ) -> None:
+        self.tax_period = tax_period
+        self.payment_type = payment_type
+        self.payer_status = payer_status
+
+    def check(self) -> None:
+        validate_tax_period(
+            value=self.tax_period,
+            payment_type=self.payment_type,
+            payer_status=self.payer_status,
         )

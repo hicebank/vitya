@@ -31,6 +31,7 @@ from vitya.payment_order.errors import (
     ReasonValidationTypeError,
     ReasonValidationValueError,
     ReasonValidationValueLenError,
+    TaxPeriodValidationTypeError,
     UINValidationControlSumError,
     UINValidationDigitsOnlyError,
     UINValidationLenError,
@@ -50,6 +51,7 @@ from vitya.payment_order.validators import (
     validate_purpose,
     validate_purpose_code,
     validate_reason,
+    validate_tax_period,
     validate_uin,
     validate_uin_control_sum,
 )
@@ -313,3 +315,21 @@ def test_validate_reason(
 ) -> None:
     with exception_handler:
         assert validate_reason(value=value) == expected_value
+
+
+@pytest.mark.parametrize(
+    'value, exception_handler, expected_value',
+    [
+        (None, pytest.raises(TaxPeriodValidationTypeError), None),
+        ('', nullcontext(), None),
+        ('0', nullcontext(), None),
+        ('2022-01-20', nullcontext(), '2022-01-20'),
+    ]
+)
+def test_validate_tax_period(
+    value: str,
+    exception_handler: ContextManager,
+    expected_value: Optional[str]
+) -> None:
+    with exception_handler:
+        assert validate_tax_period(value=value) == expected_value

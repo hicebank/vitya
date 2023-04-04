@@ -36,6 +36,13 @@ from vitya.payment_order.errors import (
     PayerStatusValidationNullNotAllowedError,
     PurposeValidationIPNDSError,
     ReasonValidationFNSOnlyEmptyError,
+    TaxPeriodValidationBOValueLenError,
+    TaxPeriodValidationCustomsEmptyNotAllowed,
+    TaxPeriodValidationCustomsValueLenError,
+    TaxPeriodValidationFNS01OnlyEmpty,
+    TaxPeriodValidationFNS02EmptyNotAllowed,
+    TaxPeriodValidationFNSEmptyNotAllowed,
+    TaxPeriodValidationFNSValueLenError,
     UINValidationValueZeroError,
 )
 from vitya.payment_order.fields import (
@@ -45,6 +52,7 @@ from vitya.payment_order.fields import (
     PayerStatus,
     Purpose,
     Reason,
+    TaxPeriod,
     Uin,
 )
 from vitya.payment_order.payments.checkers import (
@@ -61,6 +69,7 @@ from vitya.payment_order.payments.checkers import (
     PayerStatusChecker,
     PurposeChecker,
     ReasonChecker,
+    TaxPeriodChecker,
     UinChecker,
 )
 from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
@@ -522,6 +531,44 @@ def test_reason_checker(
 ) -> None:
     try:
         TestReasonChecker(reason=reason, payment_type=payment_type)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        if exception:  # pragma: no cover
+            raise NotImplementedError
+
+
+class TestTaxPeriodChecker(BaseModelChecker):
+    tax_period: Optional[TaxPeriod]
+    payment_type: PaymentType
+    payer_status: PayerStatus
+
+    __checkers__ = [
+        (TaxPeriodChecker, ['tax_period', 'payment_type', 'payer_status']),
+    ]
+
+
+@pytest.mark.parametrize(
+    'tax_period, payment_type, payer_status, exception',
+    [
+        ('2' * 11, PaymentType.BUDGET_OTHER, '01', TaxPeriodValidationBOValueLenError),
+        (None, PaymentType.CUSTOMS, '01', TaxPeriodValidationCustomsEmptyNotAllowed),
+        ('2022022', PaymentType.CUSTOMS, '01', TaxPeriodValidationCustomsValueLenError),
+        (None, PaymentType.FNS, '02', TaxPeriodValidationFNS02EmptyNotAllowed),
+        ('1', PaymentType.FNS, '01', TaxPeriodValidationFNS01OnlyEmpty),
+        ('1', PaymentType.FNS, '13', TaxPeriodValidationFNS01OnlyEmpty),
+        (None, PaymentType.FNS, '30', TaxPeriodValidationFNSEmptyNotAllowed),
+        ('1' * 9, PaymentType.FNS, '30', TaxPeriodValidationFNSValueLenError),
+    ]
+)
+def test_tax_period_checker(
+    tax_period: TaxPeriod,
+    payment_type: PaymentType,
+    payer_status: PayerStatus,
+    exception: Type[Exception]
+) -> None:
+    try:
+        TestTaxPeriodChecker(tax_period=tax_period, payment_type=payment_type, payer_status=payer_status)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:

@@ -43,11 +43,24 @@ from vitya.payment_order.errors import (
     PurposeCodeValidationNullError,
     PurposeValidationIPNDSError,
     ReasonValidationFNSOnlyEmptyError,
+    TaxPeriodValidationBOValueLenError,
+    TaxPeriodValidationCustomsEmptyNotAllowed,
+    TaxPeriodValidationCustomsValueLenError,
+    TaxPeriodValidationFNS01OnlyEmpty,
+    TaxPeriodValidationFNS02EmptyNotAllowed,
+    TaxPeriodValidationFNSEmptyNotAllowed,
+    TaxPeriodValidationFNSValueLenError,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
     UINValidationValueZeroError,
 )
-from vitya.payment_order.fields import AccountNumber, Cbc, OperationKind, PayerStatus
+from vitya.payment_order.fields import (
+    AccountNumber,
+    Cbc,
+    OperationKind,
+    PayerStatus,
+    Reason,
+)
 from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
 from vitya.payment_order.payments.validators import (
     validate_account_by_bic,
@@ -63,6 +76,7 @@ from vitya.payment_order.payments.validators import (
     validate_purpose,
     validate_purpose_code,
     validate_reason,
+    validate_tax_period,
     validate_uin,
 )
 from vitya.pydantic_fields import Bic, Inn, Kpp, Oktmo
@@ -521,13 +535,50 @@ def test_validate_oktmo(
 
 )
 def test_validate_reason(
-    value: Optional[Kpp],
+    value: Optional[Reason],
     payment_type: PaymentType,
     exception_handler: ContextManager,
-    expected_value: Optional[Kpp],
+    expected_value: Optional[Reason],
 ) -> None:
     with exception_handler:
         assert expected_value == validate_reason(
             value=value,
             payment_type=payment_type,
+        )
+
+
+@pytest.mark.parametrize(
+    'value, payment_type, payer_status, exception_handler, expected_value',
+    [
+        (None, PaymentType.FL, '01', nullcontext(), None),
+        (None, PaymentType.BUDGET_OTHER, '01', nullcontext(), None),
+        ('20220222', PaymentType.BUDGET_OTHER, '01', nullcontext(), '20220222'),
+        ('2' * 11, PaymentType.BUDGET_OTHER, '01', pytest.raises(TaxPeriodValidationBOValueLenError), None),
+        (None, PaymentType.CUSTOMS, '01', pytest.raises(TaxPeriodValidationCustomsEmptyNotAllowed), None),
+        ('20220222', PaymentType.CUSTOMS, '01', nullcontext(), '20220222'),
+        ('2022022', PaymentType.CUSTOMS, '01', pytest.raises(TaxPeriodValidationCustomsValueLenError), None),
+
+        (None, PaymentType.FNS, '02', pytest.raises(TaxPeriodValidationFNS02EmptyNotAllowed), None),
+        ('1' * 10, PaymentType.FNS, '02', nullcontext(), '1' * 10),
+        ('1', PaymentType.FNS, '01', pytest.raises(TaxPeriodValidationFNS01OnlyEmpty), None),
+        ('1', PaymentType.FNS, '13', pytest.raises(TaxPeriodValidationFNS01OnlyEmpty), None),
+        (None, PaymentType.FNS, '01', nullcontext(), None),
+        (None, PaymentType.FNS, '13', nullcontext(), None),
+        (None, PaymentType.FNS, '30', pytest.raises(TaxPeriodValidationFNSEmptyNotAllowed), None),
+        ('1' * 9, PaymentType.FNS, '30', pytest.raises(TaxPeriodValidationFNSValueLenError), None),
+        ('1' * 10, PaymentType.FNS, '30', nullcontext(), '1' * 10),
+    ]
+)
+def test_validate_tax_period(
+    value: Optional[Reason],
+    payment_type: PaymentType,
+    payer_status: PayerStatus,
+    exception_handler: ContextManager,
+    expected_value: Optional[Kpp],
+) -> None:
+    with exception_handler:
+        assert expected_value == validate_tax_period(
+            value=value,
+            payment_type=payment_type,
+            payer_status=payer_status,
         )

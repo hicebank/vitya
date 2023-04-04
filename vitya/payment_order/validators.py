@@ -29,6 +29,7 @@ from vitya.payment_order.errors import (
     ReasonValidationTypeError,
     ReasonValidationValueError,
     ReasonValidationValueLenError,
+    TaxPeriodValidationTypeError,
     UINValidationControlSumError,
     UINValidationDigitsOnlyError,
     UINValidationLenError,
@@ -230,4 +231,12 @@ def validate_reason(value: str) -> Optional[str]:
         raise ReasonValidationValueLenError
     elif value not in REASONS:
         raise ReasonValidationValueError
+    return value
+
+
+def validate_tax_period(value: str) -> Optional[str]:
+    if not isinstance(value, str):
+        raise TaxPeriodValidationTypeError
+    elif value in {'', '0'}:
+        return None
     return value

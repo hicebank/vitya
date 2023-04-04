@@ -29,6 +29,13 @@ from vitya.payment_order.errors import (
     PurposeCodeValidationNullError,
     PurposeValidationIPNDSError,
     ReasonValidationFNSOnlyEmptyError,
+    TaxPeriodValidationBOValueLenError,
+    TaxPeriodValidationCustomsEmptyNotAllowed,
+    TaxPeriodValidationCustomsValueLenError,
+    TaxPeriodValidationFNS01OnlyEmpty,
+    TaxPeriodValidationFNS02EmptyNotAllowed,
+    TaxPeriodValidationFNSEmptyNotAllowed,
+    TaxPeriodValidationFNSValueLenError,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
     UINValidationValueZeroError,
@@ -40,6 +47,7 @@ from vitya.payment_order.fields import (
     PayerStatus,
     Purpose,
     Reason,
+    TaxPeriod,
     Uin,
 )
 from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
@@ -286,3 +294,38 @@ def validate_reason(
             raise ReasonValidationFNSOnlyEmptyError
         return None
     return value
+
+
+def validate_tax_period(
+    value: Optional[TaxPeriod],
+    payment_type: PaymentType,
+    payer_status: PayerStatus,
+) -> Optional[TaxPeriod]:
+    if not payment_type.is_budget:
+        return None
+
+    if payment_type == PaymentType.BUDGET_OTHER:
+        if value is None:
+            return None
+        elif len(value) > 10:
+            raise TaxPeriodValidationBOValueLenError
+        return value
+    elif payment_type == PaymentType.CUSTOMS:
+        if value is None:
+            raise TaxPeriodValidationCustomsEmptyNotAllowed
+        elif len(value) != 8:
+            raise TaxPeriodValidationCustomsValueLenError
+        return value
+    else:
+        if payer_status == '02' and value is None:
+            raise TaxPeriodValidationFNS02EmptyNotAllowed
+        if payer_status in {'01', '13'}:
+            if value is not None:
+                raise TaxPeriodValidationFNS01OnlyEmpty
+            return None
+
+        if value is None:
+            raise TaxPeriodValidationFNSEmptyNotAllowed
+        elif len(value) != 10:
+            raise TaxPeriodValidationFNSValueLenError
+        return value
