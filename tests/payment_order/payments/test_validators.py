@@ -20,6 +20,9 @@ from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
     CbcValidationEmptyNotAllowed,
+    DocumentDateValidationBOLenError,
+    DocumentDateValidationCustomsLenError,
+    DocumentDateValidationFNSOnlyEmptyError,
     DocumentNumberValidationBOEmptyNotAllowed,
     DocumentNumberValidationBOOnlyEmptyError,
     DocumentNumberValidationBOValueError,
@@ -77,6 +80,7 @@ from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
 from vitya.payment_order.payments.validators import (
     validate_account_by_bic,
     validate_cbc,
+    validate_document_date,
     validate_document_number,
     validate_oktmo,
     validate_operation_kind,
@@ -781,4 +785,31 @@ def test_validate_document_number(
             payer_inn=payer_inn,
             uin=uin,
             reason=reason,
+        )
+
+
+@pytest.mark.parametrize(
+    'value, payment_type, exception_handler, expected_value',
+    [
+        (None, PaymentType.FL, nullcontext(), None),
+        ('1', PaymentType.FNS, pytest.raises(DocumentDateValidationFNSOnlyEmptyError), None),
+        (None, PaymentType.FNS, nullcontext(), None),
+        (None, PaymentType.CUSTOMS, nullcontext(), None),
+        (None, PaymentType.BUDGET_OTHER, nullcontext(), None),
+        ('1' * 11, PaymentType.CUSTOMS, pytest.raises(DocumentDateValidationCustomsLenError), None),
+        ('1' * 10, PaymentType.CUSTOMS, nullcontext(), '1' * 10),
+        ('1' * 11, PaymentType.BUDGET_OTHER, pytest.raises(DocumentDateValidationBOLenError), None),
+        ('1' * 10, PaymentType.BUDGET_OTHER, nullcontext(), '1' * 10),
+    ]
+)
+def test_validate_document_date(
+    value: Optional[TaxPeriod],
+    payment_type: PaymentType,
+    exception_handler: ContextManager,
+    expected_value: Optional[TaxPeriod],
+) -> None:
+    with exception_handler:
+        assert expected_value == validate_document_date(
+            value=value,
+            payment_type=payment_type,
         )

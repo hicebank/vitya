@@ -5,6 +5,7 @@ from vitya.payment_order.validators import (
     validate_account_number,
     validate_amount,
     validate_cbc,
+    validate_document_date,
     validate_document_number,
     validate_number,
     validate_operation_kind,
@@ -200,3 +201,15 @@ class DocumentNumber(str):
     @classmethod
     def validate(cls, value: str) -> Optional[str]:
         return validate_document_number(value)
+
+
+class DocumentDate(str):
+    """Дата документа (109)"""
+
+    @classmethod
+    def __get_validators__(cls) -> CallableGenerator:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: str) -> Optional[str]:
+        return validate_document_date(value)

@@ -8,6 +8,7 @@ from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.fields import (
     AccountNumber,
     Cbc,
+    DocumentDate,
     DocumentNumber,
     OperationKind,
     PayerStatus,
@@ -19,6 +20,7 @@ from vitya.payment_order.fields import (
 from vitya.payment_order.payments.validators import (
     validate_account_by_bic,
     validate_cbc,
+    validate_document_date,
     validate_document_number,
     validate_oktmo,
     validate_operation_kind,
@@ -309,4 +311,20 @@ class DocumentNumberChecker(BaseChecker):
             payee_account=self.payee_account,
             uin=self.uin,
             payer_inn=self.payer_inn,
+        )
+
+
+class DocumentDateChecker(BaseChecker):
+    def __init__(
+        self,
+        document_date: DocumentDate,
+        payment_type: PaymentType,
+    ) -> None:
+        self.document_date = document_date
+        self.payment_type = payment_type
+
+    def check(self) -> None:
+        validate_document_date(
+            value=self.document_date,
+            payment_type=self.payment_type,
         )

@@ -15,6 +15,7 @@ from vitya.payment_order.errors import (
     CbcValidationValueCannotZerosOnly,
     CbcValidationValueDigitsOnlyError,
     CbcValidationValueLenError,
+    DocumentDateValidationTypeError,
     DocumentNumberValidationTypeError,
     NumberValidationLenError,
     OperationKindValidationTypeError,
@@ -43,6 +44,7 @@ from vitya.payment_order.validators import (
     validate_account_number,
     validate_amount,
     validate_cbc,
+    validate_document_date,
     validate_document_number,
     validate_number,
     validate_operation_kind,
@@ -353,3 +355,21 @@ def test_validate_document_number(
 ) -> None:
     with exception_handler:
         assert validate_document_number(value=value) == expected_value
+
+
+@pytest.mark.parametrize(
+    'value, exception_handler, expected_value',
+    [
+        [None, pytest.raises(DocumentDateValidationTypeError), None],
+        ('', nullcontext(), None),
+        ('0', nullcontext(), None),
+        ('20220202', nullcontext(), '20220202'),
+    ]
+)
+def test_validate_document_date(
+    value: str,
+    exception_handler: ContextManager,
+    expected_value: Optional[str]
+) -> None:
+    with exception_handler:
+        assert validate_document_date(value=value) == expected_value

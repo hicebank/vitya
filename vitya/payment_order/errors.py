@@ -515,3 +515,23 @@ class DocumentNumberValidationCustomsValueLen15Error(DocumentNumberValidationErr
         'invalid document number: for customs with reason in {"ИЛ", "ИН", "ПБ", "КЭ"} '
         'value len from 1 to 15 chars'
     )
+
+
+class DocumentDateValidationError(PydanticValueError):
+    msg_template = 'invalid document date: base error'
+
+
+class DocumentDateValidationTypeError(PydanticValueError):
+    msg_template = 'invalid document date: must be str'
+
+
+class DocumentDateValidationFNSOnlyEmptyError(DocumentDateValidationError):
+    msg_template = 'invalid document date: for fns only empty allowed'
+
+
+class DocumentDateValidationCustomsLenError(DocumentDateValidationError):
+    msg_template = 'invalid document date: for customs value must be equal 10 chars'
+
+
+class DocumentDateValidationBOLenError(DocumentDateValidationError):
+    msg_template = 'invalid document date: for customs value max 10 chars'

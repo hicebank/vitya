@@ -5,6 +5,9 @@ from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
     CbcValidationEmptyNotAllowed,
+    DocumentDateValidationBOLenError,
+    DocumentDateValidationCustomsLenError,
+    DocumentDateValidationFNSOnlyEmptyError,
     DocumentNumberValidationBOEmptyNotAllowed,
     DocumentNumberValidationBOOnlyEmptyError,
     DocumentNumberValidationBOValueError,
@@ -52,6 +55,7 @@ from vitya.payment_order.errors import (
 from vitya.payment_order.fields import (
     AccountNumber,
     Cbc,
+    DocumentDate,
     DocumentNumber,
     OperationKind,
     PayerStatus,
@@ -388,3 +392,27 @@ def validate_document_number(
             raise DocumentNumberValidationCustomsValueLen15Error
         return value
     raise PaymentTypeValueError(payment_type=str(payment_type))  # pragma: no cover
+
+
+def validate_document_date(
+    value: Optional[DocumentDate],
+    payment_type: PaymentType,
+) -> Optional[DocumentDate]:
+    if not payment_type.is_budget:
+        return None
+
+    if payment_type == PaymentType.FNS:
+        if value is not None:
+            raise DocumentDateValidationFNSOnlyEmptyError
+        return None
+    else:
+        if value is None:
+            return None
+        if payment_type == PaymentType.CUSTOMS:
+            if len(value) != 10:
+                raise DocumentDateValidationCustomsLenError
+            return value
+        else:
+            if len(value) > 10:
+                raise DocumentDateValidationBOLenError
+            return value

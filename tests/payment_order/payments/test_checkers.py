@@ -18,6 +18,9 @@ from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
     CbcValidationEmptyNotAllowed,
+    DocumentDateValidationBOLenError,
+    DocumentDateValidationCustomsLenError,
+    DocumentDateValidationFNSOnlyEmptyError,
     DocumentNumberValidationBOEmptyNotAllowed,
     DocumentNumberValidationBOOnlyEmptyError,
     DocumentNumberValidationBOValueError,
@@ -57,6 +60,7 @@ from vitya.payment_order.errors import (
 from vitya.payment_order.fields import (
     AccountNumber,
     Cbc,
+    DocumentDate,
     DocumentNumber,
     OperationKind,
     PayerStatus,
@@ -69,6 +73,7 @@ from vitya.payment_order.payments.checkers import (
     AccountBicChecker,
     BaseModelChecker,
     CbcChecker,
+    DocumentDateChecker,
     DocumentNumberChecker,
     OktmoChecker,
     OperationKindChecker,
@@ -715,6 +720,37 @@ def test_document_number_checker(
             uin=uin,
             reason=reason,
         )
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        if exception:  # pragma: no cover
+            raise NotImplementedError
+
+
+class TestDocumentDateChecker(BaseModelChecker):
+    document_date: Optional[DocumentDate]
+    payment_type: PaymentType
+
+    __checkers__ = [
+        (DocumentDateChecker, ['document_date', 'payment_type']),
+    ]
+
+
+@pytest.mark.parametrize(
+    'document_date, payment_type, exception',
+    [
+        ('1', PaymentType.FNS, DocumentDateValidationFNSOnlyEmptyError),
+        ('1' * 11, PaymentType.CUSTOMS, DocumentDateValidationCustomsLenError),
+        ('1' * 11, PaymentType.BUDGET_OTHER, DocumentDateValidationBOLenError),
+    ]
+)
+def test_document_date_checker(
+    document_date: DocumentDate,
+    payment_type: PaymentType,
+    exception: Type[Exception]
+) -> None:
+    try:
+        TestDocumentDateChecker(document_date=document_date, payment_type=payment_type)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:
