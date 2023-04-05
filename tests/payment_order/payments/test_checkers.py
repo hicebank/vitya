@@ -3,6 +3,7 @@ from typing import Optional, Tuple, Type
 import pytest
 from pydantic import ValidationError
 
+from tests.helpers import parametrize_with_dict
 from tests.payment_order.testdata import (
     BIC,
     CBC,
@@ -17,6 +18,14 @@ from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
     CbcValidationEmptyNotAllowed,
+    DocumentNumberValidationBOEmptyNotAllowed,
+    DocumentNumberValidationBOOnlyEmptyError,
+    DocumentNumberValidationBOValueError,
+    DocumentNumberValidationBOValueLenError,
+    DocumentNumberValidationCustoms00ValueError,
+    DocumentNumberValidationCustomsValueLen7Error,
+    DocumentNumberValidationCustomsValueLen15Error,
+    DocumentNumberValidationFNSOnlyEmptyError,
     OktmoValidationEmptyNotAllowed,
     OktmoValidationFNSEmptyNotAllowed,
     OktmoValidationZerosNotAllowed,
@@ -48,6 +57,7 @@ from vitya.payment_order.errors import (
 from vitya.payment_order.fields import (
     AccountNumber,
     Cbc,
+    DocumentNumber,
     OperationKind,
     PayerStatus,
     Purpose,
@@ -59,6 +69,7 @@ from vitya.payment_order.payments.checkers import (
     AccountBicChecker,
     BaseModelChecker,
     CbcChecker,
+    DocumentNumberChecker,
     OktmoChecker,
     OperationKindChecker,
     PayeeAccountChecker,
@@ -569,6 +580,141 @@ def test_tax_period_checker(
 ) -> None:
     try:
         TestTaxPeriodChecker(tax_period=tax_period, payment_type=payment_type, payer_status=payer_status)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        if exception:  # pragma: no cover
+            raise NotImplementedError
+
+
+class DocumentNumberCheckerChecker(BaseModelChecker):
+    document_number: Optional[DocumentNumber]
+    payment_type: PaymentType
+    reason: Optional[Reason]
+    payer_status: PayerStatus
+    payee_account: AccountNumber
+    uin: Optional[Uin]
+    payer_inn: Optional[Inn]
+
+    __checkers__ = [
+        (
+            DocumentNumberChecker, [
+                'document_number', 'payment_type', 'reason',
+                'payer_status', 'payee_account', 'uin', 'payer_inn',
+            ]
+        ),
+    ]
+
+
+@parametrize_with_dict(
+    [
+        'document_number', 'payment_type', 'payer_status', 'payee_account',
+        'payer_inn', 'uin', 'reason', 'exception',
+    ],
+    [
+        {
+            'document_number': '02;1222',
+            'payment_type': PaymentType.FNS,
+            'payer_status': '13',
+            'payee_account': IP_ACCOUNT,
+            'payer_inn': INN,
+            'uin': None,
+            'reason': None,
+            'exception': DocumentNumberValidationFNSOnlyEmptyError,
+        },
+        {
+            'document_number': '02;1222',
+            'payment_type': PaymentType.BUDGET_OTHER,
+            'payer_status': '31',
+            'payee_account': '03212' + '1' * 15,
+            'payer_inn': INN,
+            'uin': VALID_UIN,
+            'reason': '',
+            'exception': DocumentNumberValidationBOOnlyEmptyError,
+        },
+        {
+            'document_number': None,
+            'payment_type': PaymentType.BUDGET_OTHER,
+            'payer_status': '24',
+            'payee_account': IP_ACCOUNT,
+            'payer_inn': None,
+            'uin': None,
+            'reason': '',
+            'exception': DocumentNumberValidationBOEmptyNotAllowed,
+        },
+        {
+            'document_number': '1' * 16,
+            'payment_type': PaymentType.BUDGET_OTHER,
+            'payer_status': '24',
+            'payee_account': IP_ACCOUNT,
+            'payer_inn': INN,
+            'uin': None,
+            'reason': '',
+            'exception': DocumentNumberValidationBOValueLenError,
+        },
+        {
+            'document_number': '18;',
+            'payment_type': PaymentType.BUDGET_OTHER,
+            'payer_status': '24',
+            'payee_account': IP_ACCOUNT,
+            'payer_inn': INN,
+            'uin': None,
+            'reason': '',
+            'exception': DocumentNumberValidationBOValueError,
+        },
+        {
+            'document_number': None,
+            'payment_type': PaymentType.CUSTOMS,
+            'payer_status': '24',
+            'payee_account': IP_ACCOUNT,
+            'payer_inn': INN,
+            'uin': None,
+            'reason': '00',
+            'exception': DocumentNumberValidationCustoms00ValueError,
+        },
+        {
+            'document_number': '1' * 8,
+            'payment_type': PaymentType.CUSTOMS,
+            'payer_status': '24',
+            'payee_account': IP_ACCOUNT,
+            'payer_inn': INN,
+            'uin': None,
+            'reason': 'ПК',
+            'exception': DocumentNumberValidationCustomsValueLen7Error,
+        },
+        {
+            'document_number': None,
+            'payment_type': PaymentType.CUSTOMS,
+            'payer_status': '24',
+            'payee_account': IP_ACCOUNT,
+            'payer_inn': INN,
+            'uin': None,
+            'reason': 'ИЛ',
+            'exception': DocumentNumberValidationCustomsValueLen15Error,
+        },
+
+    ]
+)
+def test_document_number_checker(
+    document_number: DocumentNumber,
+    payment_type: PaymentType,
+    payer_status: PayerStatus,
+    payee_account: AccountNumber,
+    payer_inn: Inn,
+    uin: Uin,
+    reason: Reason,
+    exception: Type[Exception]
+) -> None:
+    try:
+        DocumentNumberCheckerChecker(
+            document_number=document_number,
+            payment_type=payment_type,
+            payer_status=payer_status,
+            payee_account=payee_account,
+            payer_inn=payer_inn,
+            uin=uin,
+            reason=reason,
+        )
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:

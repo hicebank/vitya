@@ -8,6 +8,7 @@ from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.fields import (
     AccountNumber,
     Cbc,
+    DocumentNumber,
     OperationKind,
     PayerStatus,
     Purpose,
@@ -18,6 +19,7 @@ from vitya.payment_order.fields import (
 from vitya.payment_order.payments.validators import (
     validate_account_by_bic,
     validate_cbc,
+    validate_document_number,
     validate_oktmo,
     validate_operation_kind,
     validate_payee_account,
@@ -55,7 +57,7 @@ class BaseModelChecker(BaseModel):
         for checker, fields_names in cls.__checkers__:
             try:
                 args = [values[field_name] for field_name in fields_names]
-            except KeyError:
+            except KeyError:  # pragma: no cover
                 continue
             else:
                 try:
@@ -276,4 +278,35 @@ class TaxPeriodChecker(BaseChecker):
             value=self.tax_period,
             payment_type=self.payment_type,
             payer_status=self.payer_status,
+        )
+
+
+class DocumentNumberChecker(BaseChecker):
+    def __init__(
+        self,
+        document_number: DocumentNumber,
+        payment_type: PaymentType,
+        reason: Reason,
+        payer_status: PayerStatus,
+        payee_account: AccountNumber,
+        uin: Uin,
+        payer_inn: Inn,
+    ) -> None:
+        self.document_number = document_number
+        self.payment_type = payment_type
+        self.reason = reason
+        self.payer_status = payer_status
+        self.payee_account = payee_account
+        self.uin = uin
+        self.payer_inn = payer_inn
+
+    def check(self) -> None:
+        validate_document_number(
+            value=self.document_number,
+            payment_type=self.payment_type,
+            reason=self.reason,
+            payer_status=self.payer_status,
+            payee_account=self.payee_account,
+            uin=self.uin,
+            payer_inn=self.payer_inn,
         )

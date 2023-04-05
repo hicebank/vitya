@@ -13,6 +13,7 @@ from vitya.payment_order.errors import (
     CbcValidationValueDigitsOnlyError,
     CbcValidationValueLenError,
     CustomerValidationSizeError,
+    DocumentNumberValidationTypeError,
     NumberValidationLenError,
     OperationKindValidationTypeError,
     OperationKindValidationValueError,
@@ -237,6 +238,14 @@ def validate_reason(value: str) -> Optional[str]:
 def validate_tax_period(value: str) -> Optional[str]:
     if not isinstance(value, str):
         raise TaxPeriodValidationTypeError
+    elif value in {'', '0'}:
+        return None
+    return value
+
+
+def validate_document_number(value: str) -> Optional[str]:
+    if not isinstance(value, str):
+        raise DocumentNumberValidationTypeError
     elif value in {'', '0'}:
         return None
     return value

@@ -1,11 +1,22 @@
+from typing import Any
+
 from pydantic.errors import PydanticValueError
 
 from vitya.payment_order.payments.helpers import (
     CHARS_FOR_PURPOSE,
+    DOCUMENT_NUMBERS,
     PAYER_STATUSES,
     REASONS,
 )
 from vitya.validators import OktmoValidationError
+
+
+class PaymentTypeValueError(PydanticValueError):
+    msg_template = 'invalid payment type: unknown payment type = '
+
+    def __init__(self, payment_type: str, *args: Any, **kwargs: Any) -> None:  # pragma: no cover
+        super().__init__(*args, **kwargs)
+        self.msg_template += payment_type
 
 
 class AmountValidationError(PydanticValueError):
@@ -443,3 +454,64 @@ class TaxPeriodValidationFNSEmptyNotAllowed(TaxPeriodValidationEmptyNotAllowed):
 
 class TaxPeriodValidationFNSValueLenError(TaxPeriodValidationValueLenError):
     msg_template = 'invalid tax period: for fns must be 10'
+
+
+class DocumentNumberValidationError(PydanticValueError):
+    msg_template = 'invalid document number: base error'
+
+
+class DocumentNumberValidationTypeError(DocumentNumberValidationError):
+    msg_template = 'invalid document number: must be str'
+
+
+class DocumentNumberValidationOnlyEmptyError(DocumentNumberValidationError):
+    msg_template = 'invalid document number: only empty allowed'
+
+
+class DocumentNumberValidationEmptyNotAllowed(DocumentNumberValidationError):
+    msg_template = 'invalid document number: empty is not allowed'
+
+
+class DocumentNumberValidationFNSOnlyEmptyError(DocumentNumberValidationOnlyEmptyError):
+    msg_template = 'invalid document number: for fns only empty allowed'
+
+
+class DocumentNumberValidationBOEmptyNotAllowed(DocumentNumberValidationEmptyNotAllowed):
+    msg_template = (
+        'invalid document number: for bo with payer status = "24", empty payer inn and empty uin empty is not allowed'
+    )
+
+
+class DocumentNumberValidationBOOnlyEmptyError(DocumentNumberValidationOnlyEmptyError):
+    msg_template = (
+        'invalid document number: for bo with payee account starts with "03212", '
+        'payer status = "31", uin is not empty - empty value is not allowed'
+    )
+
+
+class DocumentNumberValidationBOValueError(DocumentNumberValidationError):
+    msg_template = (
+        f'invalid document number: for bo first two chars should be in {DOCUMENT_NUMBERS}, and third is equal to ";"'
+    )
+
+
+class DocumentNumberValidationBOValueLenError(DocumentNumberValidationError):
+    msg_template = 'invalid document number: for bo value len max 15'
+
+
+class DocumentNumberValidationCustoms00ValueError(DocumentNumberValidationError):
+    msg_template = 'invalid document number: for customs with reason = "00" value must starts with "00"'
+
+
+class DocumentNumberValidationCustomsValueLen7Error(DocumentNumberValidationError):
+    msg_template = (
+        'invalid document number: for customs with '
+        'reason in {"ПК", "УВ", "ТГ", "ТБ", "ТД", "ПВ"} value len max 7'
+    )
+
+
+class DocumentNumberValidationCustomsValueLen15Error(DocumentNumberValidationError):
+    msg_template = (
+        'invalid document number: for customs with reason in {"ИЛ", "ИН", "ПБ", "КЭ"} '
+        'value len from 1 to 15 chars'
+    )

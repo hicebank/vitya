@@ -5,6 +5,14 @@ from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
     CbcValidationEmptyNotAllowed,
+    DocumentNumberValidationBOEmptyNotAllowed,
+    DocumentNumberValidationBOOnlyEmptyError,
+    DocumentNumberValidationBOValueError,
+    DocumentNumberValidationBOValueLenError,
+    DocumentNumberValidationCustoms00ValueError,
+    DocumentNumberValidationCustomsValueLen7Error,
+    DocumentNumberValidationCustomsValueLen15Error,
+    DocumentNumberValidationFNSOnlyEmptyError,
     OktmoValidationEmptyNotAllowed,
     OktmoValidationFNSEmptyNotAllowed,
     OktmoValidationZerosNotAllowed,
@@ -25,6 +33,7 @@ from vitya.payment_order.errors import (
     PayerKPPValidationINN12OnlyEmptyError,
     PayerStatusValidationCustoms05NotAllowedError,
     PayerStatusValidationNullNotAllowedError,
+    PaymentTypeValueError,
     PurposeCodeValidationFlError,
     PurposeCodeValidationNullError,
     PurposeValidationIPNDSError,
@@ -43,6 +52,7 @@ from vitya.payment_order.errors import (
 from vitya.payment_order.fields import (
     AccountNumber,
     Cbc,
+    DocumentNumber,
     OperationKind,
     PayerStatus,
     Purpose,
@@ -50,7 +60,10 @@ from vitya.payment_order.fields import (
     TaxPeriod,
     Uin,
 )
-from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
+from vitya.payment_order.payments.helpers import (
+    DOCUMENT_NUMBERS,
+    FNS_PAYEE_ACCOUNT_NUMBER,
+)
 from vitya.pydantic_fields import Bic, Inn, Kpp, Oktmo
 
 
@@ -329,3 +342,49 @@ def validate_tax_period(
         elif len(value) != 10:
             raise TaxPeriodValidationFNSValueLenError
         return value
+
+
+def validate_document_number(
+    value: Optional[DocumentNumber],
+    payment_type: PaymentType,
+    reason: Optional[Reason],
+    payer_status: Optional[PayerStatus],
+    payee_account: AccountNumber,
+    uin: Optional[Uin],
+    payer_inn: Optional[Inn],
+) -> Optional[DocumentNumber]:
+    if not payment_type.is_budget:
+        return None
+
+    if payment_type == PaymentType.FNS:
+        if value is not None:
+            raise DocumentNumberValidationFNSOnlyEmptyError
+        return None
+    elif payment_type == PaymentType.BUDGET_OTHER:
+        if payee_account.startswith('03212') and payer_status == '31' and uin is not None:
+            if value is not None:
+                raise DocumentNumberValidationBOOnlyEmptyError
+            return None
+
+        if payer_status == '24' and payer_inn is None and uin is None and value is None:
+            raise DocumentNumberValidationBOEmptyNotAllowed
+        if value is not None:
+            if len(value) > 15:
+                raise DocumentNumberValidationBOValueLenError
+            if len(value) < 3 or value[2] != ";" or value[:2] not in DOCUMENT_NUMBERS:
+                raise DocumentNumberValidationBOValueError
+        return value
+    elif payment_type == PaymentType.CUSTOMS:
+        if reason == '00' and (value is None or not value.startswith('00')):
+            raise DocumentNumberValidationCustoms00ValueError
+        if reason in {'ПК', 'УВ', 'ТГ', 'ТБ', 'ТД', 'ПВ'} and value and len(value) > 7:
+            raise DocumentNumberValidationCustomsValueLen7Error
+        if (
+            reason in {'ИЛ', 'ИН', 'ПБ', 'КЭ'}
+            and (
+                value is None or len(value) > 15
+            )
+        ):
+            raise DocumentNumberValidationCustomsValueLen15Error
+        return value
+    raise PaymentTypeValueError(payment_type=str(payment_type))  # pragma: no cover
