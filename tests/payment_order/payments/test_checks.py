@@ -43,6 +43,7 @@ from vitya.payment_order.errors import (
     PayeeINNValidationNonEmptyError,
     PayeeKPPValidationEmptyNotAllowed,
     PayeeKPPValidationOnlyEmptyError,
+    PayeeKPPValidationStartsWithZeros,
     PayerINNValidationCustomsLen10Error,
     PayerINNValidationCustomsLen12Error,
     PayerINNValidationEmptyNotAllowedError,
@@ -76,26 +77,26 @@ from vitya.payment_order.fields import (
     TaxPeriod,
     Uin,
 )
-from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
-from vitya.payment_order.payments.validators import (
-    validate_account_by_bic,
-    validate_cbc,
-    validate_document_date,
-    validate_document_number,
-    validate_oktmo,
-    validate_operation_kind,
-    validate_payee_account,
-    validate_payee_inn,
-    validate_payee_kpp,
-    validate_payer_inn,
-    validate_payer_kpp,
-    validate_payer_status,
-    validate_purpose,
-    validate_purpose_code,
-    validate_reason,
-    validate_tax_period,
-    validate_uin,
+from vitya.payment_order.payments.checks import (
+    check_account_by_bic,
+    check_cbc,
+    check_document_date,
+    check_document_number,
+    check_oktmo,
+    check_operation_kind,
+    check_payee_account,
+    check_payee_inn,
+    check_payee_kpp,
+    check_payer_inn,
+    check_payer_kpp,
+    check_payer_status,
+    check_purpose,
+    check_purpose_code,
+    check_reason,
+    check_tax_period,
+    check_uin,
 )
+from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
 from vitya.pydantic_fields import Bic, Inn, Kpp, Oktmo
 
 
@@ -108,7 +109,7 @@ from vitya.pydantic_fields import Bic, Inn, Kpp, Oktmo
         (IP_ACCOUNT, PaymentType.IP, BIC[:-1] + '1', pytest.raises(PayeeAccountValidationBICValueError), None),
     ]
 )
-def test_validate_payee_account(
+def test_check_payee_account(
     value: AccountNumber,
     payment_type: PaymentType,
     payee_bic: Bic,
@@ -116,7 +117,7 @@ def test_validate_payee_account(
     expected_value: str
 ) -> None:
     with exception_handler:
-        assert validate_payee_account(value=value, payment_type=payment_type, payee_bic=payee_bic) == expected_value
+        assert check_payee_account(value=value, payment_type=payment_type, payee_bic=payee_bic) == expected_value
 
 
 @pytest.mark.parametrize(
@@ -126,13 +127,13 @@ def test_validate_payee_account(
         (IP_ACCOUNT[:-1] + '0', BIC, pytest.raises(AccountValidationBICValueError)),
     ]
 )
-def test_validate_account_by_bic(
+def test_check_account_by_bic(
     account_number: AccountNumber,
     bic: Bic,
     exception_handler: ContextManager,
 ) -> None:
     with exception_handler:
-        validate_account_by_bic(account_number=account_number, bic=bic)
+        check_account_by_bic(account_number=account_number, bic=bic)
 
 
 @pytest.mark.parametrize(
@@ -143,14 +144,14 @@ def test_validate_account_by_bic(
         ('03', PaymentType.BUDGET_OTHER, pytest.raises(OperationKindValidationBudgetValueError), None),
     ]
 )
-def test_validate_operation_kind(
+def test_check_operation_kind(
     value: OperationKind,
     payment_type: PaymentType,
     exception_handler: ContextManager,
     expected_value: str
 ) -> None:
     with exception_handler:
-        assert validate_operation_kind(value=value, payment_type=payment_type) == expected_value
+        assert check_operation_kind(value=value, payment_type=payment_type) == expected_value
 
 
 @pytest.mark.parametrize(
@@ -162,14 +163,14 @@ def test_validate_operation_kind(
         (1, PaymentType.IP, pytest.raises(PurposeCodeValidationNullError), None),
     ]
 )
-def test_validate_purpose_code(
+def test_check_purpose_code(
     value: int,
     payment_type: PaymentType,
     exception_handler: ContextManager,
     expected_value: int
 ) -> None:
     with exception_handler:
-        assert validate_purpose_code(value=value, payment_type=payment_type) == expected_value
+        assert check_purpose_code(value=value, payment_type=payment_type) == expected_value
 
 
 @pytest.mark.parametrize(
@@ -241,7 +242,7 @@ def test_validate_purpose_code(
         ),
     ]
 )
-def test_validate_uin(
+def test_check_uin(
     value: Optional[str],
     payment_type: PaymentType,
     payer_status: PayerStatus,
@@ -250,7 +251,7 @@ def test_validate_uin(
     expected_value: str
 ) -> None:
     with exception_handler:
-        assert validate_uin(
+        assert check_uin(
             value=value,
             payment_type=payment_type,
             payer_inn=payer_inn,
@@ -266,14 +267,14 @@ def test_validate_uin(
         ('some with НДС', PaymentType.IP, nullcontext(), 'some with НДС'),
     ]
 )
-def test_validate_purpose(
+def test_check_purpose(
     value: Optional[str],
     payment_type: PaymentType,
     exception_handler: ContextManager,
     expected_value: str
 ) -> None:
     with exception_handler:
-        assert validate_purpose(payment_type=payment_type, value=value) == expected_value
+        assert check_purpose(value=value, payment_type=payment_type) == expected_value
 
 
 @pytest.mark.parametrize(
@@ -369,7 +370,7 @@ def test_validate_purpose(
         ),
     ]
 )
-def test_validate_payer_inn(
+def test_check_payer_inn(
     value: Optional[str],
     payment_type: PaymentType,
     payer_status: PayerStatus,
@@ -378,7 +379,7 @@ def test_validate_payer_inn(
     expected_value: str
 ) -> None:
     with exception_handler:
-        assert expected_value == validate_payer_inn(
+        assert expected_value == check_payer_inn(
             value=value, payment_type=payment_type, payer_status=payer_status, for_third_face=for_third_face
         )
 
@@ -399,14 +400,14 @@ def test_validate_payer_inn(
         (LE_INN, PaymentType.CUSTOMS, nullcontext(), LE_INN),
     ]
 )
-def test_validate_payee_inn(
+def test_check_payee_inn(
     value: Optional[str],
     payment_type: PaymentType,
     exception_handler: ContextManager,
     expected_value: str
 ) -> None:
     with exception_handler:
-        assert expected_value == validate_payee_inn(value=value, payment_type=payment_type)
+        assert expected_value == check_payee_inn(value=value, payment_type=payment_type)
 
 
 @pytest.mark.parametrize(
@@ -421,7 +422,7 @@ def test_validate_payee_inn(
         ('31', PaymentType.CUSTOMS, True, nullcontext(), '31')
     ]
 )
-def test_validate_payer_status(
+def test_check_payer_status(
     value: Optional[PayerStatus],
     payment_type: PaymentType,
     for_third_face: bool,
@@ -429,7 +430,7 @@ def test_validate_payer_status(
     expected_value: Optional[PayerStatus],
 ) -> None:
     with exception_handler:
-        assert expected_value == validate_payer_status(
+        assert expected_value == check_payer_status(
             value=value,
             payment_type=payment_type,
             for_third_face=for_third_face,
@@ -448,7 +449,7 @@ def test_validate_payer_status(
         (KPP, PaymentType.CUSTOMS, LE_INN, nullcontext(), KPP),
     ]
 )
-def test_validate_payer_kpp(
+def test_check_payer_kpp(
     value: Optional[Kpp],
     payment_type: PaymentType,
     payer_inn: Inn,
@@ -456,11 +457,7 @@ def test_validate_payer_kpp(
     expected_value: Optional[Kpp],
 ) -> None:
     with exception_handler:
-        assert expected_value == validate_payer_kpp(
-            value=value,
-            payment_type=payment_type,
-            payer_inn=payer_inn,
-        )
+        assert expected_value == check_payer_kpp(value=value, payment_type=payment_type, payer_inn=payer_inn)
 
 
 @pytest.mark.parametrize(
@@ -471,19 +468,17 @@ def test_validate_payer_kpp(
 
         (None, PaymentType.FNS, pytest.raises(PayeeKPPValidationEmptyNotAllowed), None),
         (KPP, PaymentType.FNS, nullcontext(), KPP),
+        ('001234567', PaymentType.FNS, pytest.raises(PayeeKPPValidationStartsWithZeros), None),
     ]
 )
-def test_validate_payee_kpp(
+def test_check_payee_kpp(
     value: Optional[Kpp],
     payment_type: PaymentType,
     exception_handler: ContextManager,
     expected_value: Optional[Kpp],
 ) -> None:
     with exception_handler:
-        assert expected_value == validate_payee_kpp(
-            value=value,
-            payment_type=payment_type,
-        )
+        assert expected_value == check_payee_kpp(value=value, payment_type=payment_type)
 
 
 @pytest.mark.parametrize(
@@ -497,17 +492,14 @@ def test_validate_payee_kpp(
         (CBC, PaymentType.FNS, nullcontext(), CBC),
     ]
 )
-def test_validate_cbc(
+def test_check_cbc(
     value: Optional[Cbc],
     payment_type: PaymentType,
     exception_handler: ContextManager,
     expected_value: Optional[Cbc],
 ) -> None:
     with exception_handler:
-        assert expected_value == validate_cbc(
-            value=value,
-            payment_type=payment_type,
-        )
+        assert expected_value == check_cbc(value=value, payment_type=payment_type)
 
 
 @pytest.mark.parametrize(
@@ -524,7 +516,7 @@ def test_validate_cbc(
         (OKTMO, PaymentType.FNS, '06', nullcontext(), OKTMO),
     ]
 )
-def test_validate_oktmo(
+def test_check_oktmo(
     value: Optional[Oktmo],
     payment_type: PaymentType,
     payer_status: PayerStatus,
@@ -532,11 +524,7 @@ def test_validate_oktmo(
     expected_value: Optional[Oktmo],
 ) -> None:
     with exception_handler:
-        assert expected_value == validate_oktmo(
-            value=value,
-            payment_type=payment_type,
-            payer_status=payer_status,
-        )
+        assert expected_value == check_oktmo(value=value, payment_type=payment_type, payer_status=payer_status)
 
 
 @pytest.mark.parametrize(
@@ -551,17 +539,14 @@ def test_validate_oktmo(
     ]
 
 )
-def test_validate_reason(
+def test_check_reason(
     value: Optional[Reason],
     payment_type: PaymentType,
     exception_handler: ContextManager,
     expected_value: Optional[Reason],
 ) -> None:
     with exception_handler:
-        assert expected_value == validate_reason(
-            value=value,
-            payment_type=payment_type,
-        )
+        assert expected_value == check_reason(value=value, payment_type=payment_type)
 
 
 @pytest.mark.parametrize(
@@ -586,7 +571,7 @@ def test_validate_reason(
         ('1' * 10, PaymentType.FNS, '30', nullcontext(), '1' * 10),
     ]
 )
-def test_validate_tax_period(
+def test_check_tax_period(
     value: Optional[TaxPeriod],
     payment_type: PaymentType,
     payer_status: PayerStatus,
@@ -594,11 +579,7 @@ def test_validate_tax_period(
     expected_value: Optional[TaxPeriod],
 ) -> None:
     with exception_handler:
-        assert expected_value == validate_tax_period(
-            value=value,
-            payment_type=payment_type,
-            payer_status=payer_status,
-        )
+        assert expected_value == check_tax_period(value=value, payment_type=payment_type, payer_status=payer_status)
 
 
 @parametrize_with_dict(
@@ -765,7 +746,7 @@ def test_validate_tax_period(
         }
     ]
 )
-def test_validate_document_number(
+def test_check_document_number(
     value: Optional[DocumentNumber],
     payment_type: PaymentType,
     payer_status: Optional[PayerStatus],
@@ -777,7 +758,7 @@ def test_validate_document_number(
     expected_value: Optional[DocumentNumber],
 ) -> None:
     with exception_handler:
-        assert expected_value == validate_document_number(
+        assert expected_value == check_document_number(
             value=value,
             payment_type=payment_type,
             payer_status=payer_status,
@@ -802,14 +783,11 @@ def test_validate_document_number(
         ('1' * 10, PaymentType.BUDGET_OTHER, nullcontext(), '1' * 10),
     ]
 )
-def test_validate_document_date(
+def test_check_document_date(
     value: Optional[TaxPeriod],
     payment_type: PaymentType,
     exception_handler: ContextManager,
     expected_value: Optional[TaxPeriod],
 ) -> None:
     with exception_handler:
-        assert expected_value == validate_document_date(
-            value=value,
-            payment_type=payment_type,
-        )
+        assert expected_value == check_document_date(value=value, payment_type=payment_type)

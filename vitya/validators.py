@@ -1,7 +1,7 @@
 import re
 from typing import List, Optional
 
-from pydantic.errors import PydanticValueError
+from pydantic.errors import PydanticTypeError, PydanticValueError
 
 
 class ValidationError(ValueError):
@@ -15,7 +15,7 @@ class OktmoValidationError(PydanticValueError):
     msg_template = 'invalid oktmo: base error'
 
 
-class OktmoValidationTypeError(PydanticValueError):
+class OktmoValidationTypeError(OktmoValidationError, PydanticTypeError):
     msg_template = 'invalid oktmo: must be str'
 
 
@@ -44,6 +44,9 @@ def validate_inn(inn: str, is_ip: Optional[bool] = None) -> None:
 
     if not re.fullmatch(r'[0-9]+', inn):
         raise ValidationError('inn can contain only numbers')
+
+    if inn.startswith('00'):
+        raise ValidationError('inn cannot starts with "00"')
 
     coefs10 = [2, 4, 10, 3, 5, 9, 4, 6, 8]
     coefs11 = [7] + coefs10

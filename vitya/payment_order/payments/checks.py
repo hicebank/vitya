@@ -28,6 +28,7 @@ from vitya.payment_order.errors import (
     PayeeINNValidationNonEmptyError,
     PayeeKPPValidationEmptyNotAllowed,
     PayeeKPPValidationOnlyEmptyError,
+    PayeeKPPValidationStartsWithZeros,
     PayerINNValidationCustomsLen10Error,
     PayerINNValidationCustomsLen12Error,
     PayerINNValidationEmptyNotAllowedError,
@@ -71,7 +72,7 @@ from vitya.payment_order.payments.helpers import (
 from vitya.pydantic_fields import Bic, Inn, Kpp, Oktmo
 
 
-def validate_account_by_bic(
+def check_account_by_bic(
     account_number: AccountNumber,
     bic: Bic,
 ) -> None:
@@ -82,7 +83,7 @@ def validate_account_by_bic(
         raise AccountValidationBICValueError
 
 
-def validate_payee_account(
+def check_payee_account(
     value: AccountNumber,
     payment_type: PaymentType,
     payee_bic: Bic,
@@ -92,13 +93,13 @@ def validate_payee_account(
             raise PayeeAccountValidationFNSValueError
     elif not payment_type.is_budget:
         try:
-            validate_account_by_bic(account_number=value, bic=payee_bic)
+            check_account_by_bic(account_number=value, bic=payee_bic)
         except AccountValidationBICValueError as e:
             raise PayeeAccountValidationBICValueError from e
     return value
 
 
-def validate_operation_kind(
+def check_operation_kind(
     value: OperationKind,
     payment_type: PaymentType
 ) -> OperationKind:
@@ -108,7 +109,7 @@ def validate_operation_kind(
     return value
 
 
-def validate_purpose_code(
+def check_purpose_code(
     value: Optional[int],
     payment_type: PaymentType,
 ) -> Optional[int]:
@@ -121,7 +122,7 @@ def validate_purpose_code(
     return value
 
 
-def validate_uin(
+def check_uin(
     value: Optional[Uin],
     payment_type: PaymentType,
     payer_status: PayerStatus,
@@ -146,7 +147,7 @@ def validate_uin(
     return value
 
 
-def validate_purpose(
+def check_purpose(
     value: Optional[Purpose],
     payment_type: PaymentType,
 ) -> Optional[str]:
@@ -159,7 +160,7 @@ def validate_purpose(
     return value
 
 
-def validate_payer_inn(
+def check_payer_inn(
     value: Optional[Inn],
     payment_type: PaymentType,
     payer_status: PayerStatus,
@@ -190,7 +191,7 @@ def validate_payer_inn(
     return value
 
 
-def validate_payee_inn(
+def check_payee_inn(
     value: Optional[Inn],
     payment_type: PaymentType,
 ) -> Optional[str]:
@@ -209,7 +210,7 @@ def validate_payee_inn(
     return value
 
 
-def validate_payer_status(
+def check_payer_status(
     value: Optional[PayerStatus],
     payment_type: PaymentType,
     for_third_face: bool,
@@ -226,7 +227,7 @@ def validate_payer_status(
     return value
 
 
-def validate_payer_kpp(
+def check_payer_kpp(
     value: Optional[Kpp],
     payment_type: PaymentType,
     payer_inn: str,
@@ -241,7 +242,7 @@ def validate_payer_kpp(
     return value
 
 
-def validate_payee_kpp(
+def check_payee_kpp(
     value: Optional[Kpp],
     payment_type: PaymentType,
 ) -> Optional[Kpp]:
@@ -252,10 +253,12 @@ def validate_payee_kpp(
 
     if value is None:
         raise PayeeKPPValidationEmptyNotAllowed
+    if value.startswith('00'):
+        raise PayeeKPPValidationStartsWithZeros
     return value
 
 
-def validate_cbc(
+def check_cbc(
     value: Optional[Cbc],
     payment_type: PaymentType,
 ) -> Optional[Cbc]:
@@ -271,7 +274,7 @@ def validate_cbc(
     return value
 
 
-def validate_oktmo(
+def check_oktmo(
     value: Optional[Oktmo],
     payment_type: PaymentType,
     payer_status: PayerStatus,
@@ -296,7 +299,7 @@ def validate_oktmo(
     return value
 
 
-def validate_reason(
+def check_reason(
     value: Optional[Reason],
     payment_type: PaymentType,
 ) -> Optional[Reason]:
@@ -313,7 +316,7 @@ def validate_reason(
     return value
 
 
-def validate_tax_period(
+def check_tax_period(
     value: Optional[TaxPeriod],
     payment_type: PaymentType,
     payer_status: PayerStatus,
@@ -348,7 +351,7 @@ def validate_tax_period(
         return value
 
 
-def validate_document_number(
+def check_document_number(
     value: Optional[DocumentNumber],
     payment_type: PaymentType,
     reason: Optional[Reason],
@@ -379,7 +382,7 @@ def validate_document_number(
                 raise DocumentNumberValidationBOValueError
         return value
     elif payment_type == PaymentType.CUSTOMS:
-        if reason == '00' and (value is None or not value.startswith('00')):
+        if reason == '00' and (value is None or value != '00'):
             raise DocumentNumberValidationCustoms00ValueError
         if reason in {'ПК', 'УВ', 'ТГ', 'ТБ', 'ТД', 'ПВ'} and value and len(value) > 7:
             raise DocumentNumberValidationCustomsValueLen7Error
@@ -394,7 +397,7 @@ def validate_document_number(
     raise PaymentTypeValueError(payment_type=str(payment_type))  # pragma: no cover
 
 
-def validate_document_date(
+def check_document_date(
     value: Optional[DocumentDate],
     payment_type: PaymentType,
 ) -> Optional[DocumentDate]:

@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic.errors import PydanticValueError
+from pydantic.errors import PydanticTypeError, PydanticValueError
 
 from vitya.payment_order.payments.helpers import (
     CHARS_FOR_PURPOSE,
@@ -71,7 +71,7 @@ class OperationKindValidationError(PydanticValueError):
     msg_template = 'invalid operation kind: base error'
 
 
-class OperationKindValidationTypeError(OperationKindValidationError):
+class OperationKindValidationTypeError(OperationKindValidationError, PydanticTypeError):
     msg_template = 'invalid operation kind: operation kind must be str'
 
 
@@ -87,7 +87,7 @@ class PurposeCodeValidationError(PydanticValueError):
     msg_template = 'invalid purpose code: base error'
 
 
-class PurposeCodeValidationTypeError(PurposeCodeValidationError):
+class PurposeCodeValidationTypeError(PurposeCodeValidationError, PydanticTypeError):
     msg_template = 'invalid purpose: must be int'
 
 
@@ -103,7 +103,7 @@ class UINValidationError(PydanticValueError):
     msg_template = 'invalid uin: base error'
 
 
-class UINValidationTypeError(UINValidationError):
+class UINValidationTypeError(UINValidationError, PydanticTypeError):
     msg_template = 'invalid uin: must be str'
 
 
@@ -160,7 +160,7 @@ class PurposeValidationError(PydanticValueError):
     msg_template = 'invalid purpose: base error'
 
 
-class PurposeValidationTypeError(PurposeValidationError):
+class PurposeValidationTypeError(PurposeValidationError, PydanticTypeError):
     msg_template = 'invalid purpose: must be str'
 
 
@@ -260,7 +260,7 @@ class AccountNumberValidationError(PydanticValueError):
     msg_template = 'invalid account number: base error'
 
 
-class AccountNumberValidationTypeError(AccountNumberValidationError):
+class AccountNumberValidationTypeError(AccountNumberValidationError, PydanticTypeError):
     msg_template = 'invalid account number: account number must be str'
 
 
@@ -288,7 +288,7 @@ class PayerStatusValidationError(PydanticValueError):
     msg_template = 'invalid payer status: base error'
 
 
-class PayerStatusValidationTypeError(PayerStatusValidationError):
+class PayerStatusValidationTypeError(PayerStatusValidationError, PydanticTypeError):
     msg_template = 'invalid payer status: payer status must be str'
 
 
@@ -356,11 +356,15 @@ class PayeeKPPValidationEmptyNotAllowed(PayeeKPPValidationError, KPPValidationEm
     msg_template = 'invalid payee kpp: for fns, customs, budget other or le empty value is not allowed'
 
 
+class PayeeKPPValidationStartsWithZeros(PayeeKPPValidationError):
+    msg_template = 'invalid payee kpp: for fns, customs, budget other or le kpp cannot starts with "00"'
+
+
 class CbcValidationError(PydanticValueError):
     msg_template = 'invalid cbc: base error'
 
 
-class CbcValidationTypeError(CbcValidationError):
+class CbcValidationTypeError(CbcValidationError, PydanticTypeError):
     msg_template = 'invalid cbc: cbc must be str'
 
 
@@ -396,7 +400,7 @@ class ReasonValidationError(PydanticValueError):
     msg_template = 'invalid reason: base error'
 
 
-class ReasonValidationTypeError(ReasonValidationError):
+class ReasonValidationTypeError(ReasonValidationError, PydanticTypeError):
     msg_template = 'invalid reason: must be str'
 
 
@@ -416,7 +420,7 @@ class TaxPeriodValidationError(PydanticValueError):
     msg_template = 'invalid tax period: base error'
 
 
-class TaxPeriodValidationTypeError(TaxPeriodValidationError):
+class TaxPeriodValidationTypeError(TaxPeriodValidationError, PydanticTypeError):
     msg_template = 'invalid tax period: must be str'
 
 
@@ -460,7 +464,7 @@ class DocumentNumberValidationError(PydanticValueError):
     msg_template = 'invalid document number: base error'
 
 
-class DocumentNumberValidationTypeError(DocumentNumberValidationError):
+class DocumentNumberValidationTypeError(DocumentNumberValidationError, PydanticTypeError):
     msg_template = 'invalid document number: must be str'
 
 
@@ -521,7 +525,7 @@ class DocumentDateValidationError(PydanticValueError):
     msg_template = 'invalid document date: base error'
 
 
-class DocumentDateValidationTypeError(PydanticValueError):
+class DocumentDateValidationTypeError(PydanticValueError, PydanticTypeError):
     msg_template = 'invalid document date: must be str'
 
 
