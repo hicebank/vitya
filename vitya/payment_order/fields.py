@@ -107,7 +107,7 @@ class OperationKind(str):
         return validate_operation_kind(value)
 
 
-class Uin(str):
+class UIN(str):
     """Код (УИН) (22)"""
 
     @classmethod
@@ -155,7 +155,7 @@ class PayerStatus(str):
         return validate_payer_status(value)
 
 
-class Cbc(str):
+class CBC(str):
     """КБК (104)"""
 
     @classmethod

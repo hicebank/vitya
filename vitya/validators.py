@@ -1,7 +1,22 @@
 import re
 from typing import List, Optional
 
-from pydantic.errors import PydanticTypeError, PydanticValueError
+from .errors import (
+    BICValidationLenError,
+    BICValidationTypeError,
+    BICValidationValueDigitsOnlyError,
+    INNValidationControlSumError,
+    INNValidationDigitsOnlyError,
+    INNValidationLenError,
+    INNValidationStartsWithZerosError,
+    INNValidationTypeError,
+    KPPValidationTypeError,
+    KPPValidationValueError,
+    KPPValidationValueLenError,
+    OktmoValidationTypeError,
+    OktmoValidationValueError,
+    OktmoValidationValueLenError,
+)
 
 
 class ValidationError(ValueError):
@@ -11,42 +26,26 @@ class ValidationError(ValueError):
     pass
 
 
-class OktmoValidationError(PydanticValueError):
-    msg_template = 'invalid oktmo: base error'
-
-
-class OktmoValidationTypeError(OktmoValidationError, PydanticTypeError):
-    msg_template = 'invalid oktmo: must be str'
-
-
-class OktmoValidationValueLenError(PydanticValueError):
-    msg_template = 'invalid oktmo: must be match 8 or 11 digits'
-
-
-class OktmoValidationValueError(PydanticValueError):
-    msg_template = 'invalid oktmo: must be match as ([0-9]{11}|[0-9]{8})'
-
-
 def _count_inn_checksum(inn: str, coefficients: List[int]) -> int:
     assert len(inn) == len(coefficients)
     n = sum([int(digit) * coef for digit, coef in zip(inn, coefficients)])
     return n % 11 % 10
 
 
-def validate_inn(inn: str, is_ip: Optional[bool] = None) -> None:
+def validate_inn(inn: str, is_ip: Optional[bool] = None) -> str:
     """
     Source:
     https://www.consultant.ru/document/cons_doc_LAW_134082/947eeb5630c9f58cbc6103f0910440cef8eaccac/
     https://ru.wikipedia.org/wiki/%D0%98%D0%B4%D0%B5%D0%BD%D1%82%D0%B8%D1%84%D0%B8%D0%BA%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D1%8B%D0%B9_%D0%BD%D0%BE%D0%BC%D0%B5%D1%80_%D0%BD%D0%B0%D0%BB%D0%BE%D0%B3%D0%BE%D0%BF%D0%BB%D0%B0%D1%82%D0%B5%D0%BB%D1%8C%D1%89%D0%B8%D0%BA%D0%B0
     """
     if not isinstance(inn, str):
-        raise ValidationError('inn should be passed as string')
+        raise INNValidationTypeError
 
     if not re.fullmatch(r'[0-9]+', inn):
-        raise ValidationError('inn can contain only numbers')
+        raise INNValidationDigitsOnlyError
 
     if inn.startswith('00'):
-        raise ValidationError('inn cannot starts with "00"')
+        raise INNValidationStartsWithZerosError
 
     coefs10 = [2, 4, 10, 3, 5, 9, 4, 6, 8]
     coefs11 = [7] + coefs10
@@ -55,65 +54,63 @@ def validate_inn(inn: str, is_ip: Optional[bool] = None) -> None:
     if len(inn) == 10 and is_ip is not True:
         n10 = _count_inn_checksum(inn[:9], coefs10)
         if n10 != int(inn[9]):
-            raise ValidationError(f'wrong checksum on last digit: {inn[9]}; expected: {n10}')
-        return
-
-    if len(inn) == 12 and is_ip is not False:
+            raise INNValidationControlSumError
+        return inn
+    elif len(inn) == 12 and is_ip is not False:
         n11 = _count_inn_checksum(inn[:10], coefs11)
         if n11 != int(inn[10]):
-            raise ValidationError(f'wrong checksum on pre-last digit: {inn[10]}; expected: {n11}')
+            raise INNValidationControlSumError
 
         n12 = _count_inn_checksum(inn[:11], coefs12)
         if n12 != int(inn[11]):
-            raise ValidationError(f'wrong checksum on last digit: {inn[11]}; expected: {n12}')
-        return
+            raise INNValidationControlSumError
+        return inn
+    elif len(inn) == 5:
+        return inn
 
-    if len(inn) == 5:
-        return
-
-    raise ValidationError('wrong size of inn, it can be 5, 10 or 12 chars only')
+    raise INNValidationLenError
 
 
-def validate_inn_ip(inn: str) -> None:
+def validate_inn_ip(inn: str) -> str:
     return validate_inn(inn, is_ip=True)
 
 
-def validate_inn_jur(inn: str) -> None:
+def validate_inn_jur(inn: str) -> str:
     return validate_inn(inn, is_ip=False)
 
 
-def validate_kpp(kpp: str) -> None:
+def validate_kpp(kpp: str) -> Optional[str]:
     """
     Source: https://kontur.ru/bk/spravka/491-chtotakoe_kpp
     """
     if not isinstance(kpp, str):
-        raise ValidationError('kpp should be passed as string')
-
-    if kpp == '0':
-        # '0' allowed as kpp value
-        return
+        raise KPPValidationTypeError
+    elif kpp in {'0', ''}:
+        return None
 
     if len(kpp) != 9:
-        raise ValidationError('wrong size of kpp, it can be 9 chars only')
+        raise KPPValidationValueLenError
 
     if not re.fullmatch(r'[0-9]{4}[0-9A-Z]{2}[0-9]{3}', kpp):
-        raise ValidationError('wrong kpp')
+        raise KPPValidationValueError
+    return kpp
 
 
-def validate_bic(bic: str) -> None:
+def validate_bic(bic: str) -> str:
     """
     Source:
     https://ru.wikipedia.org/wiki/%D0%91%D0%B0%D0%BD%D0%BA%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B9_%D0%B8%D0%B4%D0%B5%D0%BD%D1%82%D0%B8%D1%84%D0%B8%D0%BA%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D1%8B%D0%B9_%D0%BA%D0%BE%D0%B4
     https://bik-info.ru/
     """
     if not isinstance(bic, str):
-        raise ValidationError('bic should be passed as string')
+        raise BICValidationTypeError
 
     if len(bic) != 9:
-        raise ValidationError('wrong size of bic, it can be 9 chars only')
+        raise BICValidationLenError
 
     if not re.fullmatch(r'[0-9]+', bic):
-        raise ValidationError('wrong bic')
+        raise BICValidationValueDigitsOnlyError
+    return bic
 
 
 def validate_ogrn(ogrn: str, is_ip: Optional[bool] = None) -> None:

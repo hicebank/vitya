@@ -1,5 +1,6 @@
 import pytest
 from pydantic import BaseModel, ValidationError as PydanticValidationError
+from pydantic.errors import PydanticValueError
 
 from vitya import (
     ValidationError as VityaValidationError,
@@ -13,58 +14,58 @@ from vitya import (
     validate_oktmo,
     validate_snils,
 )
-from vitya.pydantic_fields import (
-    Bic,
-    Inn,
-    InnIp,
-    InnJur,
-    Kpp,
-    Ogrn,
-    OgrnIp,
-    Oktmo,
-    Snils,
-)
-from vitya.validators import (
+from vitya.errors import (
     OktmoValidationTypeError,
     OktmoValidationValueError,
     OktmoValidationValueLenError,
 )
+from vitya.pydantic_fields import (
+    BIC,
+    INN,
+    KPP,
+    OGRN,
+    OKTMO,
+    SNILS,
+    INNIp,
+    INNJur,
+    OGRNIp,
+)
 
 
 class InnModel(BaseModel):
-    inn: Inn
+    inn: INN
 
 
 class InnModelIp(BaseModel):
-    inn: InnIp
+    inn: INNIp
 
 
 class InnModelJur(BaseModel):
-    inn: InnJur
+    inn: INNJur
 
 
 class KppModel(BaseModel):
-    kpp: Kpp
+    kpp: KPP
 
 
 class BicModel(BaseModel):
-    bic: Bic
+    bic: BIC
 
 
 class OgrnModel(BaseModel):
-    ogrn: Ogrn
+    ogrn: OGRN
 
 
 class OgrnIpModel(BaseModel):
-    ogrnip: OgrnIp
+    ogrnip: OGRNIp
 
 
 class SnilsModel(BaseModel):
-    snils: Snils
+    snils: SNILS
 
 
 class OktmoModel(BaseModel):
-    oktmo: Oktmo
+    oktmo: OKTMO
 
 
 @pytest.mark.parametrize('inn', [
@@ -72,7 +73,7 @@ class OktmoModel(BaseModel):
 ])
 def test_valid_inn(inn):
     """No exception raise"""
-    assert validate_inn(inn) is None
+    validate_inn(inn)
 
     inn_model = InnModel(inn=inn)
     assert inn_model.inn == inn
@@ -82,7 +83,7 @@ def test_valid_inn(inn):
     '469933069430', '368332974449', '298410962506', '686899030369', '097289845404'
 ])
 def test_valid_inn_ip(inn):
-    assert validate_inn_ip(inn) is None
+    validate_inn_ip(inn)
 
     inn_model_ip = InnModelIp(inn=inn)
     assert inn_model_ip.inn == inn
@@ -95,7 +96,7 @@ def test_valid_inn_ip(inn):
     '9267145148', '5302008630', '6524062615', '0207895252', '0990471741'
 ])
 def test_valid_inn_jur(inn):
-    assert validate_inn_jur(inn) is None
+    validate_inn_jur(inn)
 
     inn_model_jur = InnModelJur(inn=inn)
     assert inn_model_jur.inn == inn
@@ -117,7 +118,7 @@ def test_valid_inn_jur(inn):
     '36640A9397'    # don't match regexp
 ])
 def test_wrong_inn(inn):
-    with pytest.raises(VityaValidationError):
+    with pytest.raises(PydanticValueError):
         validate_inn(inn)
 
     with pytest.raises(PydanticValidationError):
@@ -131,11 +132,11 @@ def test_wrong_inn(inn):
 
 
 @pytest.mark.parametrize('kpp', [
-    '616401001', '770943002', '7709AB002', '320143522', '704601307', '0'
+    '616401001', '770943002', '7709AB002', '320143522', '704601307',
 ])
 def test_valid_kpp(kpp):
     """No exception raise"""
-    assert validate_kpp(kpp) is None
+    validate_kpp(kpp)
 
     kpp_model = KppModel(kpp=kpp)
     assert kpp_model.kpp == kpp
@@ -143,7 +144,6 @@ def test_valid_kpp(kpp):
 
 @pytest.mark.parametrize('kpp', [
     None,          # can't be None
-    '',
     616401001,     # can't be nothing than str
     770943002,
     '77070838',    # should be size of 9 chars
@@ -151,7 +151,7 @@ def test_valid_kpp(kpp):
     '7709ABС02'    # don't match regexp
 ])
 def test_wrong_kpp(kpp):
-    with pytest.raises(VityaValidationError):
+    with pytest.raises(PydanticValueError):
         validate_kpp(kpp)
 
     with pytest.raises(PydanticValidationError):
@@ -163,7 +163,7 @@ def test_wrong_kpp(kpp):
 ])
 def test_valid_bic(bic):
     """No exception raise"""
-    assert validate_bic(bic) is None
+    validate_bic(bic)
 
     bic_model = BicModel(bic=bic)
     assert bic_model.bic == bic
@@ -179,7 +179,7 @@ def test_valid_bic(bic):
     '04452A901'
 ])
 def test_wrong_bic(bic):
-    with pytest.raises(VityaValidationError):
+    with pytest.raises(PydanticValueError):
         validate_bic(bic)
 
     with pytest.raises(PydanticValidationError):

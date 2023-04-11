@@ -40,15 +40,15 @@ validate_oktmo("69701000001")
 
 ```python
 from pydantic import BaseModel, ValidationError
-from vitya.pydantic_fields import Inn
+from vitya.pydantic_fields import INN
 
 
 class InnModel(BaseModel):
-    inn: Inn
+    inn: INN
 
 
 inn_model = InnModel(inn="302502032671")
-assert inn_model.inn == "302502032671"    
+assert inn_model.inn == "302502032671"
 
 try:
     InnModel(inn="3664069398")

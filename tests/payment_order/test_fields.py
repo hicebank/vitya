@@ -29,6 +29,7 @@ from vitya.payment_order.errors import (
     UINValidationTypeError,
 )
 from vitya.payment_order.fields import (
+    UIN,
     AccountNumber,
     Amount,
     Number,
@@ -38,7 +39,6 @@ from vitya.payment_order.fields import (
     PaymentOrder,
     Purpose,
     PurposeCode,
-    Uin,
 )
 
 
@@ -209,7 +209,7 @@ def test_operation_kind(
 
 
 class TestUINModel(BaseModel):
-    field: Uin
+    field: UIN
 
 
 @pytest.mark.parametrize(

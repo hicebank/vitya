@@ -6,8 +6,9 @@ from pydantic.errors import PydanticValueError
 
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.fields import (
+    CBC,
+    UIN,
     AccountNumber,
-    Cbc,
     DocumentDate,
     DocumentNumber,
     OperationKind,
@@ -15,7 +16,6 @@ from vitya.payment_order.fields import (
     Purpose,
     Reason,
     TaxPeriod,
-    Uin,
 )
 from vitya.payment_order.payments.checks import (
     check_account_by_bic,
@@ -35,7 +35,7 @@ from vitya.payment_order.payments.checks import (
     check_tax_period,
     check_uin,
 )
-from vitya.pydantic_fields import Bic, Inn, Kpp, Oktmo
+from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 
 class CheckerError(ValueError):
@@ -82,7 +82,7 @@ class BaseModelChecker(BaseModel):
 
 
 class AccountBicChecker(BaseChecker):
-    def __init__(self, account_number: AccountNumber, bic: Bic) -> None:
+    def __init__(self, account_number: AccountNumber, bic: BIC) -> None:
         self.account_number = account_number
         self.bic = bic
 
@@ -91,7 +91,7 @@ class AccountBicChecker(BaseChecker):
 
 
 class PayeeAccountChecker(BaseChecker):
-    def __init__(self, account_number: AccountNumber, bic: Bic, payment_type: PaymentType) -> None:
+    def __init__(self, account_number: AccountNumber, bic: BIC, payment_type: PaymentType) -> None:
         self.account_number = account_number
         self.bic = bic
         self.payment_type = payment_type
@@ -109,10 +109,10 @@ class OperationKindChecker(BaseChecker):
         check_operation_kind(value=self.operation_kind, payment_type=self.payment_type)
 
 
-class PayerInnChecker(BaseChecker):
+class PayerINNChecker(BaseChecker):
     def __init__(
         self,
-        payer_inn: Inn,
+        payer_inn: INN,
         payer_status: PayerStatus,
         for_third_face: bool,
         payment_type: PaymentType
@@ -124,13 +124,15 @@ class PayerInnChecker(BaseChecker):
 
     def check(self) -> None:
         check_payer_inn(
-            value=self.payer_inn, payment_type=self.payment_type, payer_status=self.payer_status,
+            value=self.payer_inn,
+            payment_type=self.payment_type,
+            payer_status=self.payer_status,
             for_third_face=self.for_third_face
-            )
+        )
 
 
-class UinChecker(BaseChecker):
-    def __init__(self, uin: Uin, payer_inn: Inn, payer_status: PayerStatus, payment_type: PaymentType) -> None:
+class UINChecker(BaseChecker):
+    def __init__(self, uin: UIN, payer_inn: INN, payer_status: PayerStatus, payment_type: PaymentType) -> None:
         self.uin = uin
         self.payer_inn = payer_inn
         self.payer_status = payer_status
@@ -138,8 +140,11 @@ class UinChecker(BaseChecker):
 
     def check(self) -> None:
         check_uin(
-            value=self.uin, payment_type=self.payment_type, payer_status=self.payer_status, payer_inn=self.payer_inn
-            )
+            value=self.uin,
+            payment_type=self.payment_type,
+            payer_status=self.payer_status,
+            payer_inn=self.payer_inn,
+        )
 
 
 class PurposeChecker(BaseChecker):
@@ -151,10 +156,10 @@ class PurposeChecker(BaseChecker):
         check_purpose(value=self.purpose, payment_type=self.payment_type)
 
 
-class PayeeInnChecker(BaseChecker):
+class PayeeINNChecker(BaseChecker):
     def __init__(
         self,
-        payee_inn: Inn,
+        payee_inn: INN,
         payment_type: PaymentType
     ) -> None:
         self.payee_inn = payee_inn
@@ -179,12 +184,12 @@ class PayerStatusChecker(BaseChecker):
         check_payer_status(value=self.payer_status, payment_type=self.payment_type, for_third_face=self.for_third_face)
 
 
-class PayerKppChecker(BaseChecker):
+class PayerKPPChecker(BaseChecker):
     def __init__(
         self,
-        payer_kpp: Kpp,
+        payer_kpp: KPP,
         payment_type: PaymentType,
-        payer_inn: Inn,
+        payer_inn: INN,
     ) -> None:
         self.payer_kpp = payer_kpp
         self.payment_type = payment_type
@@ -194,10 +199,10 @@ class PayerKppChecker(BaseChecker):
         check_payer_kpp(value=self.payer_kpp, payment_type=self.payment_type, payer_inn=self.payer_inn)
 
 
-class PayeeKppChecker(BaseChecker):
+class PayeeKPPChecker(BaseChecker):
     def __init__(
         self,
-        payee_kpp: Kpp,
+        payee_kpp: KPP,
         payment_type: PaymentType,
     ) -> None:
         self.payee_kpp = payee_kpp
@@ -207,10 +212,10 @@ class PayeeKppChecker(BaseChecker):
         check_payee_kpp(value=self.payee_kpp, payment_type=self.payment_type)
 
 
-class CbcChecker(BaseChecker):
+class CBCChecker(BaseChecker):
     def __init__(
         self,
-        cbc: Cbc,
+        cbc: CBC,
         payment_type: PaymentType,
     ) -> None:
         self.cbc = cbc
@@ -220,10 +225,10 @@ class CbcChecker(BaseChecker):
         check_cbc(value=self.cbc, payment_type=self.payment_type)
 
 
-class OktmoChecker(BaseChecker):
+class OKTMOChecker(BaseChecker):
     def __init__(
         self,
-        oktmo: Oktmo,
+        oktmo: OKTMO,
         payment_type: PaymentType,
         payer_status: PayerStatus,
     ) -> None:
@@ -271,8 +276,8 @@ class DocumentNumberChecker(BaseChecker):
         reason: Reason,
         payer_status: PayerStatus,
         payee_account: AccountNumber,
-        uin: Uin,
-        payer_inn: Inn,
+        uin: UIN,
+        payer_inn: INN,
     ) -> None:
         self.document_number = document_number
         self.payment_type = payment_type
@@ -284,9 +289,14 @@ class DocumentNumberChecker(BaseChecker):
 
     def check(self) -> None:
         check_document_number(
-            value=self.document_number, payment_type=self.payment_type, reason=self.reason,
-            payer_status=self.payer_status, payee_account=self.payee_account, uin=self.uin, payer_inn=self.payer_inn
-            )
+            value=self.document_number,
+            payment_type=self.payment_type,
+            reason=self.reason,
+            payer_status=self.payer_status,
+            payee_account=self.payee_account,
+            uin=self.uin,
+            payer_inn=self.payer_inn,
+        )
 
 
 class DocumentDateChecker(BaseChecker):

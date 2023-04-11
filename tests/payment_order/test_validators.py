@@ -4,7 +4,7 @@ from typing import ContextManager, Optional
 
 import pytest
 
-from tests.payment_order.testdata import CBC, INVALID_UIN, IP_ACCOUNT, VALID_UIN
+from tests.payment_order.testdata import INVALID_UIN, IP_ACCOUNT, VALID_CBC, VALID_UIN
 from vitya.payment_order.errors import (
     AccountNumberValidationDigitsOnlyError,
     AccountNumberValidationSizeError,
@@ -289,7 +289,7 @@ def test_validate_payer_status(
         ('1', pytest.raises(CbcValidationValueLenError), None),
         ('a' * 20, pytest.raises(CbcValidationValueDigitsOnlyError), None),
         ('0' * 20, pytest.raises(CbcValidationValueCannotZerosOnly), None),
-        (CBC, nullcontext(), CBC),
+        (VALID_CBC, nullcontext(), VALID_CBC),
     ]
 )
 def test_validate_cbc(

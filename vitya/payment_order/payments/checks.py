@@ -54,8 +54,9 @@ from vitya.payment_order.errors import (
     UINValidationValueZeroError,
 )
 from vitya.payment_order.fields import (
+    CBC,
+    UIN,
     AccountNumber,
-    Cbc,
     DocumentDate,
     DocumentNumber,
     OperationKind,
@@ -63,18 +64,17 @@ from vitya.payment_order.fields import (
     Purpose,
     Reason,
     TaxPeriod,
-    Uin,
 )
 from vitya.payment_order.payments.helpers import (
     DOCUMENT_NUMBERS,
     FNS_PAYEE_ACCOUNT_NUMBER,
 )
-from vitya.pydantic_fields import Bic, Inn, Kpp, Oktmo
+from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 
 def check_account_by_bic(
     account_number: AccountNumber,
-    bic: Bic,
+    bic: BIC,
 ) -> None:
     _sum = 0
     for c, v in zip(bic[-3:] + account_number, [7, 1, 3] * 8):
@@ -86,7 +86,7 @@ def check_account_by_bic(
 def check_payee_account(
     value: AccountNumber,
     payment_type: PaymentType,
-    payee_bic: Bic,
+    payee_bic: BIC,
 ) -> str:
     if payment_type == PaymentType.FNS:
         if value != FNS_PAYEE_ACCOUNT_NUMBER:
@@ -123,7 +123,7 @@ def check_purpose_code(
 
 
 def check_uin(
-    value: Optional[Uin],
+    value: Optional[UIN],
     payment_type: PaymentType,
     payer_status: PayerStatus,
     payer_inn: Optional[str],
@@ -161,7 +161,7 @@ def check_purpose(
 
 
 def check_payer_inn(
-    value: Optional[Inn],
+    value: Optional[INN],
     payment_type: PaymentType,
     payer_status: PayerStatus,
     for_third_face: bool = False,
@@ -192,7 +192,7 @@ def check_payer_inn(
 
 
 def check_payee_inn(
-    value: Optional[Inn],
+    value: Optional[INN],
     payment_type: PaymentType,
 ) -> Optional[str]:
     if payment_type == PaymentType.IP:
@@ -228,10 +228,10 @@ def check_payer_status(
 
 
 def check_payer_kpp(
-    value: Optional[Kpp],
+    value: Optional[KPP],
     payment_type: PaymentType,
     payer_inn: str,
-) -> Optional[Kpp]:
+) -> Optional[KPP]:
     if not payment_type.is_budget:
         return None
 
@@ -243,9 +243,9 @@ def check_payer_kpp(
 
 
 def check_payee_kpp(
-    value: Optional[Kpp],
+    value: Optional[KPP],
     payment_type: PaymentType,
-) -> Optional[Kpp]:
+) -> Optional[KPP]:
     if payment_type in {PaymentType.FL, PaymentType.IP}:
         if value is not None:
             raise PayeeKPPValidationOnlyEmptyError
@@ -259,9 +259,9 @@ def check_payee_kpp(
 
 
 def check_cbc(
-    value: Optional[Cbc],
+    value: Optional[CBC],
     payment_type: PaymentType,
-) -> Optional[Cbc]:
+) -> Optional[CBC]:
     if not payment_type.is_budget:
         return None
 
@@ -275,10 +275,10 @@ def check_cbc(
 
 
 def check_oktmo(
-    value: Optional[Oktmo],
+    value: Optional[OKTMO],
     payment_type: PaymentType,
     payer_status: PayerStatus,
-) -> Optional[Oktmo]:
+) -> Optional[OKTMO]:
     if not payment_type.is_budget:
         return None
 
@@ -357,8 +357,8 @@ def check_document_number(
     reason: Optional[Reason],
     payer_status: Optional[PayerStatus],
     payee_account: AccountNumber,
-    uin: Optional[Uin],
-    payer_inn: Optional[Inn],
+    uin: Optional[UIN],
+    payer_inn: Optional[INN],
 ) -> Optional[DocumentNumber]:
     if not payment_type.is_budget:
         return None

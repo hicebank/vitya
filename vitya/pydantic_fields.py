@@ -34,57 +34,57 @@ def _validate_wrapper(func: Callable[[str], None], name: str, value: str) -> str
     return value
 
 
-class Inn(str):
+class INN(str):
     @classmethod
     def __get_validators__(cls) -> CallableGenerator:
         yield cls.validate
 
     @classmethod
     def validate(cls, value: str) -> str:
-        return _validate_wrapper(validate_inn, "inn", value)
+        return validate_inn(value)
 
 
-class InnIp(str):
+class INNIp(str):
     @classmethod
     def __get_validators__(cls) -> CallableGenerator:
         yield cls.validate
 
     @classmethod
     def validate(cls, value: str) -> str:
-        return _validate_wrapper(validate_inn_ip, "inn_ip", value)
+        return validate_inn_ip(value)
 
 
-class InnJur(str):
+class INNJur(str):
     @classmethod
     def __get_validators__(cls) -> CallableGenerator:
         yield cls.validate
 
     @classmethod
     def validate(cls, value: str) -> str:
-        return _validate_wrapper(validate_inn_jur, "inn_jur", value)
+        return validate_inn_jur(value)
 
 
-class Kpp(str):
+class KPP(str):
+    @classmethod
+    def __get_validators__(cls) -> CallableGenerator:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value: str) -> Optional[str]:
+        return validate_kpp(value)
+
+
+class BIC(str):
     @classmethod
     def __get_validators__(cls) -> CallableGenerator:
         yield cls.validate
 
     @classmethod
     def validate(cls, value: str) -> str:
-        return _validate_wrapper(validate_kpp, "kpp", value)
+        return validate_bic(value)
 
 
-class Bic(str):
-    @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value: str) -> str:
-        return _validate_wrapper(validate_bic, "bic", value)
-
-
-class Ogrn(str):
+class OGRN(str):
     @classmethod
     def __get_validators__(cls) -> CallableGenerator:
         yield cls.validate
@@ -94,7 +94,7 @@ class Ogrn(str):
         return _validate_wrapper(validate_ogrn, "ogrn", value)
 
 
-class OgrnIp(str):
+class OGRNIp(str):
     @classmethod
     def __get_validators__(cls) -> CallableGenerator:
         yield cls.validate
@@ -104,7 +104,7 @@ class OgrnIp(str):
         return _validate_wrapper(validate_ogrnip, "ogrn_ip", value)
 
 
-class Snils(str):
+class SNILS(str):
     @classmethod
     def __get_validators__(cls) -> CallableGenerator:
         yield cls.validate
@@ -114,7 +114,7 @@ class Snils(str):
         return _validate_wrapper(validate_snils, "snils", value)
 
 
-class Oktmo(str):
+class OKTMO(str):
     @classmethod
     def __get_validators__(cls) -> CallableGenerator:
         yield cls.validate

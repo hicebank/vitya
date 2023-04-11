@@ -2,13 +2,18 @@ from typing import Any
 
 from pydantic.errors import PydanticTypeError, PydanticValueError
 
+from vitya.errors import (
+    INNValidationError,
+    INNValidationLenError,
+    KPPValidationError,
+    OktmoValidationError,
+)
 from vitya.payment_order.payments.helpers import (
     CHARS_FOR_PURPOSE,
     DOCUMENT_NUMBERS,
     PAYER_STATUSES,
     REASONS,
 )
-from vitya.validators import OktmoValidationError
 
 
 class PaymentTypeValueError(PydanticValueError):
@@ -176,22 +181,6 @@ class PurposeValidationIPNDSError(PurposeValidationError):
     msg_template = 'invalid purpose: for IP payment purpose must contains "НДС"'
 
 
-class INNValidationError(PydanticValueError):
-    msg_template = 'invalid inn: base error'
-
-
-class INNValidationControlSumError(INNValidationError):
-    msg_template = 'invalid inn: invalid control sum'
-
-
-class INNValidationDigitsOnlyError(INNValidationError):
-    msg_template = 'invalid inn: inn must contains only digits'
-
-
-class INNValidationLenError(INNValidationError):
-    msg_template = 'invalid inn: len inn must be 5, 10 or 12'
-
-
 class PayerINNValidationCustomsLenError(INNValidationLenError):
     msg_template = 'invalid inn: customs len inn base error'
 
@@ -302,22 +291,6 @@ class PayerStatusValidationNullNotAllowedError(PayerStatusValidationError):
 
 class PayerStatusValidationCustoms05NotAllowedError(PayerStatusValidationError):
     msg_template = 'invalid payer status: for customs payment and for_third_face = true value "06" not allowed'
-
-
-class KPPValidationError(PydanticValueError):
-    msg_template = 'invalid kpp: base error'
-
-
-class KPPValidationValueLenError(KPPValidationError):
-    msg_template = 'invalid kpp: kpp must be 9'
-
-
-class KPPValidationValueDigitsOnlyError(KPPValidationError):
-    msg_template = 'invalid kpp: only digits allowed'
-
-
-class KPPValidationValueCannotZerosStarts(KPPValidationError):
-    msg_template = 'invalid kpp: cannot starts with "00"'
 
 
 class KPPValidationOnlyEmptyError(KPPValidationError):

@@ -5,15 +5,15 @@ import pytest
 
 from tests.helpers import parametrize_with_dict
 from tests.payment_order.testdata import (
-    BIC,
-    CBC,
     FL_INN,
-    INN,
     IP_ACCOUNT,
     IP_INN,
-    KPP,
     LE_INN,
-    OKTMO,
+    VALID_BIC,
+    VALID_CBC,
+    VALID_INN,
+    VALID_KPP,
+    VALID_OKTMO,
     VALID_UIN,
 )
 from vitya.payment_order.enums import PaymentType
@@ -68,14 +68,14 @@ from vitya.payment_order.errors import (
     UINValidationValueZeroError,
 )
 from vitya.payment_order.fields import (
+    CBC,
+    UIN,
     AccountNumber,
-    Cbc,
     DocumentNumber,
     OperationKind,
     PayerStatus,
     Reason,
     TaxPeriod,
-    Uin,
 )
 from vitya.payment_order.payments.checks import (
     check_account_by_bic,
@@ -97,22 +97,22 @@ from vitya.payment_order.payments.checks import (
     check_uin,
 )
 from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
-from vitya.pydantic_fields import Bic, Inn, Kpp, Oktmo
+from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 
 @pytest.mark.parametrize(
     'value, payment_type, payee_bic, exception_handler, expected_value',
     [
-        (IP_ACCOUNT, PaymentType.IP, BIC, nullcontext(), IP_ACCOUNT),
+        (IP_ACCOUNT, PaymentType.IP, VALID_BIC, nullcontext(), IP_ACCOUNT),
         (FNS_PAYEE_ACCOUNT_NUMBER, PaymentType.FNS, '', nullcontext(), FNS_PAYEE_ACCOUNT_NUMBER),
         (FNS_PAYEE_ACCOUNT_NUMBER[:-1], PaymentType.FNS, '', pytest.raises(PayeeAccountValidationFNSValueError), None),
-        (IP_ACCOUNT, PaymentType.IP, BIC[:-1] + '1', pytest.raises(PayeeAccountValidationBICValueError), None),
+        (IP_ACCOUNT, PaymentType.IP, VALID_BIC[:-1] + '1', pytest.raises(PayeeAccountValidationBICValueError), None),
     ]
 )
 def test_check_payee_account(
     value: AccountNumber,
     payment_type: PaymentType,
-    payee_bic: Bic,
+    payee_bic: BIC,
     exception_handler: ContextManager,
     expected_value: str
 ) -> None:
@@ -123,13 +123,13 @@ def test_check_payee_account(
 @pytest.mark.parametrize(
     'account_number, bic, exception_handler',
     [
-        (IP_ACCOUNT, BIC, nullcontext()),
-        (IP_ACCOUNT[:-1] + '0', BIC, pytest.raises(AccountValidationBICValueError)),
+        (IP_ACCOUNT, VALID_BIC, nullcontext()),
+        (IP_ACCOUNT[:-1] + '0', VALID_BIC, pytest.raises(AccountValidationBICValueError)),
     ]
 )
 def test_check_account_by_bic(
     account_number: AccountNumber,
-    bic: Bic,
+    bic: BIC,
     exception_handler: ContextManager,
 ) -> None:
     with exception_handler:
@@ -281,12 +281,12 @@ def test_check_purpose(
     'value, payment_type, payer_status, for_third_face, exception_handler, expected_value',
     [
         (
-            INN,
+            VALID_INN,
             PaymentType.FL,
             '',
             False,
             nullcontext(),
-            INN,
+            VALID_INN,
         ),
         (
             None,
@@ -361,12 +361,12 @@ def test_check_purpose(
             None,
         ),
         (
-            INN,
+            VALID_INN,
             PaymentType.CUSTOMS,
             '',
             False,
             nullcontext(),
-            INN,
+            VALID_INN,
         ),
     ]
 )
@@ -440,21 +440,21 @@ def test_check_payer_status(
 @pytest.mark.parametrize(
     'value, payment_type, payer_inn, exception_handler, expected_value',
     [
-        (KPP, PaymentType.FL, INN, nullcontext(), None),
-        (None, PaymentType.FL, INN, nullcontext(), None),
+        (VALID_KPP, PaymentType.FL, VALID_INN, nullcontext(), None),
+        (None, PaymentType.FL, VALID_INN, nullcontext(), None),
 
         (None, PaymentType.CUSTOMS, LE_INN, pytest.raises(PayerKPPValidationINN10EmptyNotAllowed), None),
-        (KPP, PaymentType.CUSTOMS, IP_INN, pytest.raises(PayerKPPValidationINN12OnlyEmptyError), None),
+        (VALID_KPP, PaymentType.CUSTOMS, IP_INN, pytest.raises(PayerKPPValidationINN12OnlyEmptyError), None),
 
-        (KPP, PaymentType.CUSTOMS, LE_INN, nullcontext(), KPP),
+        (VALID_KPP, PaymentType.CUSTOMS, LE_INN, nullcontext(), VALID_KPP),
     ]
 )
 def test_check_payer_kpp(
-    value: Optional[Kpp],
+    value: Optional[KPP],
     payment_type: PaymentType,
-    payer_inn: Inn,
+    payer_inn: INN,
     exception_handler: ContextManager,
-    expected_value: Optional[Kpp],
+    expected_value: Optional[KPP],
 ) -> None:
     with exception_handler:
         assert expected_value == check_payer_kpp(value=value, payment_type=payment_type, payer_inn=payer_inn)
@@ -464,18 +464,18 @@ def test_check_payer_kpp(
     'value, payment_type, exception_handler, expected_value',
     [
         (None, PaymentType.FL, nullcontext(), None),
-        (KPP, PaymentType.FL, pytest.raises(PayeeKPPValidationOnlyEmptyError), None),
+        (VALID_KPP, PaymentType.FL, pytest.raises(PayeeKPPValidationOnlyEmptyError), None),
 
         (None, PaymentType.FNS, pytest.raises(PayeeKPPValidationEmptyNotAllowed), None),
-        (KPP, PaymentType.FNS, nullcontext(), KPP),
+        (VALID_KPP, PaymentType.FNS, nullcontext(), VALID_KPP),
         ('001234567', PaymentType.FNS, pytest.raises(PayeeKPPValidationStartsWithZeros), None),
     ]
 )
 def test_check_payee_kpp(
-    value: Optional[Kpp],
+    value: Optional[KPP],
     payment_type: PaymentType,
     exception_handler: ContextManager,
-    expected_value: Optional[Kpp],
+    expected_value: Optional[KPP],
 ) -> None:
     with exception_handler:
         assert expected_value == check_payee_kpp(value=value, payment_type=payment_type)
@@ -486,17 +486,17 @@ def test_check_payee_kpp(
     [
         (None, PaymentType.FL, nullcontext(), None),
         (None, PaymentType.BUDGET_OTHER, nullcontext(), None),
-        (CBC, PaymentType.BUDGET_OTHER, nullcontext(), CBC),
+        (VALID_CBC, PaymentType.BUDGET_OTHER, nullcontext(), VALID_CBC),
         (None, PaymentType.FNS, pytest.raises(CbcValidationEmptyNotAllowed), None),
         (None, PaymentType.CUSTOMS, pytest.raises(CbcValidationEmptyNotAllowed), None),
-        (CBC, PaymentType.FNS, nullcontext(), CBC),
+        (VALID_CBC, PaymentType.FNS, nullcontext(), VALID_CBC),
     ]
 )
 def test_check_cbc(
-    value: Optional[Cbc],
+    value: Optional[CBC],
     payment_type: PaymentType,
     exception_handler: ContextManager,
-    expected_value: Optional[Cbc],
+    expected_value: Optional[CBC],
 ) -> None:
     with exception_handler:
         assert expected_value == check_cbc(value=value, payment_type=payment_type)
@@ -513,15 +513,15 @@ def test_check_cbc(
         (None, PaymentType.FNS, '02', pytest.raises(OktmoValidationFNSEmptyNotAllowed), None),
         (None, PaymentType.FNS, '06', pytest.raises(OktmoValidationEmptyNotAllowed), None),
         ('0' * 8, PaymentType.FNS, '06', pytest.raises(OktmoValidationZerosNotAllowed), None),
-        (OKTMO, PaymentType.FNS, '06', nullcontext(), OKTMO),
+        (VALID_OKTMO, PaymentType.FNS, '06', nullcontext(), VALID_OKTMO),
     ]
 )
 def test_check_oktmo(
-    value: Optional[Oktmo],
+    value: Optional[OKTMO],
     payment_type: PaymentType,
     payer_status: PayerStatus,
     exception_handler: ContextManager,
-    expected_value: Optional[Oktmo],
+    expected_value: Optional[OKTMO],
 ) -> None:
     with exception_handler:
         assert expected_value == check_oktmo(value=value, payment_type=payment_type, payer_status=payer_status)
@@ -666,7 +666,7 @@ def test_check_tax_period(
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '24',
             'payee_account': '03212',
-            'payer_inn': INN,
+            'payer_inn': VALID_INN,
             'uin': None,
             'reason': '',
             'exception_handler': nullcontext(),
@@ -678,7 +678,7 @@ def test_check_tax_period(
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '24',
             'payee_account': '03212',
-            'payer_inn': INN,
+            'payer_inn': VALID_INN,
             'uin': None,
             'reason': '',
             'exception_handler': pytest.raises(DocumentNumberValidationBOValueLenError),
@@ -690,7 +690,7 @@ def test_check_tax_period(
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '24',
             'payee_account': '03212',
-            'payer_inn': INN,
+            'payer_inn': VALID_INN,
             'uin': None,
             'reason': '',
             'exception_handler': pytest.raises(DocumentNumberValidationBOValueError),
@@ -702,7 +702,7 @@ def test_check_tax_period(
             'payment_type': PaymentType.CUSTOMS,
             'payer_status': '24',
             'payee_account': '03212',
-            'payer_inn': INN,
+            'payer_inn': VALID_INN,
             'uin': None,
             'reason': '00',
             'exception_handler': pytest.raises(DocumentNumberValidationCustoms00ValueError),
@@ -714,7 +714,7 @@ def test_check_tax_period(
             'payment_type': PaymentType.CUSTOMS,
             'payer_status': '24',
             'payee_account': '03212',
-            'payer_inn': INN,
+            'payer_inn': VALID_INN,
             'uin': None,
             'reason': 'ПК',
             'exception_handler': pytest.raises(DocumentNumberValidationCustomsValueLen7Error),
@@ -726,7 +726,7 @@ def test_check_tax_period(
             'payment_type': PaymentType.CUSTOMS,
             'payer_status': '24',
             'payee_account': '03212',
-            'payer_inn': INN,
+            'payer_inn': VALID_INN,
             'uin': None,
             'reason': 'ИЛ',
             'exception_handler': pytest.raises(DocumentNumberValidationCustomsValueLen15Error),
@@ -738,7 +738,7 @@ def test_check_tax_period(
             'payment_type': PaymentType.CUSTOMS,
             'payer_status': '24',
             'payee_account': '03212',
-            'payer_inn': INN,
+            'payer_inn': VALID_INN,
             'uin': None,
             'reason': 'ИЛ',
             'exception_handler': nullcontext(),
@@ -751,8 +751,8 @@ def test_check_document_number(
     payment_type: PaymentType,
     payer_status: Optional[PayerStatus],
     payee_account: AccountNumber,
-    payer_inn: Optional[Inn],
-    uin: Optional[Uin],
+    payer_inn: Optional[INN],
+    uin: Optional[UIN],
     reason: Optional[str],
     exception_handler: ContextManager,
     expected_value: Optional[DocumentNumber],
