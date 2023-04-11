@@ -1,9 +1,9 @@
-from typing import Any, Iterable
+from typing import Any, Dict, Iterable, List
 
 import pytest
 
 
-def parametrize_with_dict(argnames: list[str], cases: Iterable[dict[str, Any]]):
+def parametrize_with_dict(argnames: List[str], cases: Iterable[Dict[str, Any]]):
     def decorator(func):
         return pytest.mark.parametrize(
             argnames,
