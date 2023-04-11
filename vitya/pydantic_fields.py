@@ -8,7 +8,7 @@ from .validators import (
     validate_bic,
     validate_inn,
     validate_inn_ip,
-    validate_inn_jur,
+    validate_inn_le,
     validate_kpp,
     validate_ogrn,
     validate_ogrnip,
@@ -71,16 +71,16 @@ class INN(FieldMixin, str):
         return validate_inn(value)
 
 
-class INNIp(FieldMixin, str):
+class INNIP(FieldMixin, str):
     @classmethod
     def _validate(cls, value: str) -> str:
         return validate_inn_ip(value)
 
 
-class INNJur(FieldMixin, str):
+class INNLE(FieldMixin, str):
     @classmethod
     def _validate(cls, value: str) -> str:
-        return validate_inn_jur(value)
+        return validate_inn_le(value)
 
 
 class KPP(FieldMixin, str):
@@ -101,7 +101,7 @@ class OGRN(FieldMixin, str):
         return _validate_wrapper(validate_ogrn, "ogrn", value)
 
 
-class OGRNIp(FieldMixin, str):
+class OGRNIP(FieldMixin, str):
     @classmethod
     def _validate(cls, value: str) -> str:
         return _validate_wrapper(validate_ogrnip, "ogrn_ip", value)

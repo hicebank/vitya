@@ -6,7 +6,7 @@ Validators for different russian banking values.
 Values you can validate:
 - ИНН ```validate_inn```
     - ИНН для ИП/Физ.Лица ```validate_inn_ip```
-    - ИНН для Юр.Лица ```validate_inn_jur```
+    - ИНН для Юр.Лица ```validate_inn_le```
 - КПП ```validate_kpp```
 - БИК ```validate_bic```
 - ОГРН ```validate_ogrn```

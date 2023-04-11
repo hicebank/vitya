@@ -6,7 +6,7 @@ from vitya.errors import (
     INNValidationError,
     INNValidationLenError,
     KPPValidationError,
-    OktmoValidationError,
+    OKTMOValidationError,
 )
 from vitya.payment_order.payments.helpers import (
     CHARS_FOR_PURPOSE,
@@ -333,39 +333,39 @@ class PayeeKPPValidationStartsWithZeros(PayeeKPPValidationError):
     msg_template = 'invalid payee kpp: for fns, customs, budget other or le kpp cannot starts with "00"'
 
 
-class CbcValidationError(PydanticValueError):
+class CBCValidationError(PydanticValueError):
     msg_template = 'invalid cbc: base error'
 
 
-class CbcValidationTypeError(CbcValidationError, PydanticTypeError):
+class CBCValidationTypeError(CBCValidationError, PydanticTypeError):
     msg_template = 'invalid cbc: cbc must be str'
 
 
-class CbcValidationEmptyNotAllowed(CbcValidationError):
+class CBCValidationEmptyNotAllowed(CBCValidationError):
     msg_template = 'invalid cbc: for fns or tms empty value is not allowed'
 
 
-class CbcValidationValueLenError(CbcValidationError):
+class CBCValidationValueLenError(CBCValidationError):
     msg_template = 'invalid cbc: cbc must be 20 digits'
 
 
-class CbcValidationValueDigitsOnlyError(CbcValidationError):
+class CBCValidationValueDigitsOnlyError(CBCValidationError):
     msg_template = 'invalid cbc: only digits allowed'
 
 
-class CbcValidationValueCannotZerosOnly(CbcValidationError):
+class CBCValidationValueCannotZerosOnly(CBCValidationError):
     msg_template = 'invalid cbc: cannot contain only zeros'
 
 
-class OktmoValidationEmptyNotAllowed(OktmoValidationError):
+class OKTMOValidationEmptyNotAllowed(OKTMOValidationError):
     msg_template = 'invalid oktmo: empty value is not allowed'
 
 
-class OktmoValidationFNSEmptyNotAllowed(OktmoValidationEmptyNotAllowed):
+class OKTMOValidationFNSEmptyNotAllowed(OKTMOValidationEmptyNotAllowed):
     msg_template = 'invalid oktmo: for fns with payer status = "02" empty value is not allowed'
 
 
-class OktmoValidationZerosNotAllowed(OktmoValidationError):
+class OKTMOValidationZerosNotAllowed(OKTMOValidationError):
     msg_template = 'invalid oktmo: cannot be all zeros'
 
 

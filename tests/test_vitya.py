@@ -9,7 +9,7 @@ from vitya import (
     validate_bic,
     validate_inn,
     validate_inn_ip,
-    validate_inn_jur,
+    validate_inn_le,
     validate_kpp,
     validate_ogrn,
     validate_ogrnip,
@@ -17,57 +17,57 @@ from vitya import (
     validate_snils,
 )
 from vitya.errors import (
-    OktmoValidationTypeError,
-    OktmoValidationValueError,
-    OktmoValidationValueLenError,
+    OKTMOValidationTypeError,
+    OKTMOValidationValueError,
+    OKTMOValidationValueLenError,
 )
 from vitya.pydantic_fields import (
     BIC,
     INN,
+    INNIP,
+    INNLE,
     KPP,
     OGRN,
+    OGRNIP,
     OKTMO,
     SNILS,
     FieldMixin,
-    INNIp,
-    INNJur,
-    OGRNIp,
 )
 
 
-class InnModel(BaseModel):
+class INNModel(BaseModel):
     inn: INN
 
 
-class InnModelIp(BaseModel):
-    inn: INNIp
+class INNIPModel(BaseModel):
+    inn: INNIP
 
 
-class InnModelJur(BaseModel):
-    inn: INNJur
+class INNLEModel(BaseModel):
+    inn: INNLE
 
 
-class KppModel(BaseModel):
+class KPPModel(BaseModel):
     kpp: KPP
 
 
-class BicModel(BaseModel):
+class BICModel(BaseModel):
     bic: BIC
 
 
-class OgrnModel(BaseModel):
+class OGRNModel(BaseModel):
     ogrn: OGRN
 
 
-class OgrnIpModel(BaseModel):
-    ogrnip: OGRNIp
+class OGRNIPModel(BaseModel):
+    ogrnip: OGRNIP
 
 
-class SnilsModel(BaseModel):
+class SNILSModel(BaseModel):
     snils: SNILS
 
 
-class OktmoModel(BaseModel):
+class OKTMOModel(BaseModel):
     oktmo: OKTMO
 
 
@@ -80,7 +80,7 @@ def test_valid_inn(inn):
     """No exception raise"""
     validate_inn(inn)
 
-    inn_model = InnModel(inn=inn)
+    inn_model = INNModel(inn=inn)
     assert inn_model.inn == inn
 
 
@@ -92,11 +92,11 @@ def test_valid_inn(inn):
 def test_valid_inn_ip(inn):
     validate_inn_ip(inn)
 
-    inn_model_ip = InnModelIp(inn=inn)
+    inn_model_ip = INNIPModel(inn=inn)
     assert inn_model_ip.inn == inn
 
     with pytest.raises(PydanticValidationError):
-        InnModelJur(inn=inn)
+        INNLEModel(inn=inn)
 
 
 @pytest.mark.parametrize(
@@ -104,14 +104,14 @@ def test_valid_inn_ip(inn):
         '9267145148', '5302008630', '6524062615', '0207895252', '0990471741'
     ]
 )
-def test_valid_inn_jur(inn):
-    validate_inn_jur(inn)
+def test_valid_inn_le(inn):
+    validate_inn_le(inn)
 
-    inn_model_jur = InnModelJur(inn=inn)
-    assert inn_model_jur.inn == inn
+    inn_model_le = INNLEModel(inn=inn)
+    assert inn_model_le.inn == inn
 
     with pytest.raises(PydanticValidationError):
-        InnModelIp(inn=inn)
+        INNIPModel(inn=inn)
 
 
 @pytest.mark.parametrize(
@@ -133,13 +133,13 @@ def test_wrong_inn(inn):
         validate_inn(inn)
 
     with pytest.raises(PydanticValidationError):
-        InnModel(inn=inn)
+        INNModel(inn=inn)
 
     with pytest.raises(PydanticValidationError):
-        InnModelIp(inn=inn)
+        INNIPModel(inn=inn)
 
     with pytest.raises(PydanticValidationError):
-        InnModelJur(inn=inn)
+        INNLEModel(inn=inn)
 
 
 @pytest.mark.parametrize(
@@ -151,7 +151,7 @@ def test_valid_kpp(kpp):
     """No exception raise"""
     validate_kpp(kpp)
 
-    kpp_model = KppModel(kpp=kpp)
+    kpp_model = KPPModel(kpp=kpp)
     assert kpp_model.kpp == kpp
 
 
@@ -170,7 +170,7 @@ def test_wrong_kpp(kpp):
         validate_kpp(kpp)
 
     with pytest.raises(PydanticValidationError):
-        KppModel(kpp=kpp)
+        KPPModel(kpp=kpp)
 
 
 @pytest.mark.parametrize(
@@ -182,7 +182,7 @@ def test_valid_bic(bic):
     """No exception raise"""
     validate_bic(bic)
 
-    bic_model = BicModel(bic=bic)
+    bic_model = BICModel(bic=bic)
     assert bic_model.bic == bic
 
 
@@ -202,7 +202,7 @@ def test_wrong_bic(bic):
         validate_bic(bic)
 
     with pytest.raises(PydanticValidationError):
-        BicModel(bic=bic)
+        BICModel(bic=bic)
 
 
 @pytest.mark.parametrize(
@@ -214,7 +214,7 @@ def test_valid_ogrn(ogrn):
     """No exception raise"""
     assert validate_ogrn(ogrn) is None
 
-    ogrn_model = OgrnModel(ogrn=ogrn)
+    ogrn_model = OGRNModel(ogrn=ogrn)
     assert ogrn_model.ogrn == ogrn
 
 
@@ -227,7 +227,7 @@ def test_valid_ogrnip(ogrnip):
     """No exception raise"""
     assert validate_ogrnip(ogrnip) is None
 
-    ogrnip_model = OgrnIpModel(ogrnip=ogrnip)
+    ogrnip_model = OGRNIPModel(ogrnip=ogrnip)
     assert ogrnip_model.ogrnip == ogrnip
 
 
@@ -238,7 +238,7 @@ def test_valid_ogrnip(ogrnip):
 )
 def test_wrong_ogrnip(ogrnip):
     with pytest.raises(PydanticValidationError):
-        OgrnIpModel(ogrnip=ogrnip)
+        OGRNIPModel(ogrnip=ogrnip)
 
 
 @pytest.mark.parametrize(
@@ -262,10 +262,10 @@ def test_wrong_ogrn(ogrn):
         validate_ogrn(ogrn)
 
     with pytest.raises(PydanticValidationError):
-        OgrnModel(ogrn=ogrn)
+        OGRNModel(ogrn=ogrn)
 
     with pytest.raises(PydanticValidationError):
-        OgrnIpModel(ogrnip=ogrn)
+        OGRNIPModel(ogrnip=ogrn)
 
 
 @pytest.mark.parametrize(
@@ -281,7 +281,7 @@ def test_valid_snils(snils):
     """No exception raise"""
     assert validate_snils(snils) is None
 
-    snils_model = SnilsModel(snils=snils)
+    snils_model = SNILSModel(snils=snils)
     assert snils_model.snils == snils
 
 
@@ -304,7 +304,7 @@ def test_wrong_snils(snils):
         validate_snils(snils)
 
     with pytest.raises(PydanticValidationError):
-        SnilsModel(snils=snils)
+        SNILSModel(snils=snils)
 
 
 @pytest.mark.parametrize(
@@ -320,17 +320,17 @@ def test_valid_oktmo(oktmo):
     """No exception raise"""
     assert validate_oktmo(oktmo) == oktmo
 
-    oktmo_model = OktmoModel(oktmo=oktmo)
+    oktmo_model = OKTMOModel(oktmo=oktmo)
     assert oktmo_model.oktmo == oktmo
 
 
 @pytest.mark.parametrize(
     'oktmo, error',
     [
-        (None, OktmoValidationTypeError),
-        (69654000, OktmoValidationTypeError),
-        ('6965400', OktmoValidationValueLenError),
-        ('69b01000001', OktmoValidationValueError),
+        (None, OKTMOValidationTypeError),
+        (69654000, OKTMOValidationTypeError),
+        ('6965400', OKTMOValidationValueLenError),
+        ('69b01000001', OKTMOValidationValueError),
     ]
 )
 def test_wrong_oktmo(oktmo, error):
@@ -338,7 +338,7 @@ def test_wrong_oktmo(oktmo, error):
         validate_oktmo(oktmo)
 
     with pytest.raises(PydanticValidationError):
-        OktmoModel(oktmo=oktmo)
+        OKTMOModel(oktmo=oktmo)
 
 
 class Field(FieldMixin, str):

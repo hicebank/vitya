@@ -17,7 +17,7 @@ from tests.payment_order.testdata import (
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
-    CbcValidationEmptyNotAllowed,
+    CBCValidationEmptyNotAllowed,
     DocumentDateValidationBOLenError,
     DocumentDateValidationCustomsLenError,
     DocumentDateValidationFNSOnlyEmptyError,
@@ -29,9 +29,9 @@ from vitya.payment_order.errors import (
     DocumentNumberValidationCustomsValueLen7Error,
     DocumentNumberValidationCustomsValueLen15Error,
     DocumentNumberValidationFNSOnlyEmptyError,
-    OktmoValidationEmptyNotAllowed,
-    OktmoValidationFNSEmptyNotAllowed,
-    OktmoValidationZerosNotAllowed,
+    OKTMOValidationEmptyNotAllowed,
+    OKTMOValidationFNSEmptyNotAllowed,
+    OKTMOValidationZerosNotAllowed,
     OperationKindValidationBudgetValueError,
     PayeeAccountValidationBICValueError,
     PayeeAccountValidationFNSValueError,
@@ -450,7 +450,7 @@ def test_payee_kpp_checker(
         assert exception is None
 
 
-class TestCbcChecker(BaseModelChecker):
+class TestCBCChecker(BaseModelChecker):
     cbc: Optional[CBC]
     payment_type: PaymentType
 
@@ -463,8 +463,8 @@ class TestCbcChecker(BaseModelChecker):
     'cbc, payment_type, exception',
     [
         (None, PaymentType.FL, None),
-        (None, PaymentType.FNS, CbcValidationEmptyNotAllowed),
-        (None, PaymentType.CUSTOMS, CbcValidationEmptyNotAllowed),
+        (None, PaymentType.FNS, CBCValidationEmptyNotAllowed),
+        (None, PaymentType.CUSTOMS, CBCValidationEmptyNotAllowed),
         (VALID_CBC, PaymentType.CUSTOMS, None),
     ]
 )
@@ -474,7 +474,7 @@ def test_cbc_checker(
     exception: Type[Exception]
 ) -> None:
     try:
-        TestCbcChecker(cbc=cbc, payment_type=payment_type)
+        TestCBCChecker(cbc=cbc, payment_type=payment_type)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:
@@ -494,9 +494,9 @@ class TestOktmoChecker(BaseModelChecker):
 @pytest.mark.parametrize(
     'oktmo, payment_type, payer_status, exception',
     [
-        (None, PaymentType.FNS, '02', OktmoValidationFNSEmptyNotAllowed),
-        (None, PaymentType.FNS, '06', OktmoValidationEmptyNotAllowed),
-        ('0' * 8, PaymentType.FNS, '06', OktmoValidationZerosNotAllowed)
+        (None, PaymentType.FNS, '02', OKTMOValidationFNSEmptyNotAllowed),
+        (None, PaymentType.FNS, '06', OKTMOValidationEmptyNotAllowed),
+        ('0' * 8, PaymentType.FNS, '06', OKTMOValidationZerosNotAllowed)
     ]
 )
 def test_oktmo_checker(

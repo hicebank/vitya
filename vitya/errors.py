@@ -1,19 +1,19 @@
 from pydantic.errors import PydanticTypeError, PydanticValueError
 
 
-class OktmoValidationError(PydanticValueError):
+class OKTMOValidationError(PydanticValueError):
     msg_template = 'invalid oktmo: base error'
 
 
-class OktmoValidationTypeError(OktmoValidationError, PydanticTypeError):
+class OKTMOValidationTypeError(OKTMOValidationError, PydanticTypeError):
     msg_template = 'invalid oktmo: must be str'
 
 
-class OktmoValidationValueLenError(PydanticValueError):
+class OKTMOValidationValueLenError(PydanticValueError):
     msg_template = 'invalid oktmo: must be match 8 or 11 digits'
 
 
-class OktmoValidationValueError(PydanticValueError):
+class OKTMOValidationValueError(PydanticValueError):
     msg_template = 'invalid oktmo: must be match as ([0-9]{11}|[0-9]{8})'
 
 

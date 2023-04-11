@@ -13,9 +13,9 @@ from .errors import (
     KPPValidationTypeError,
     KPPValidationValueError,
     KPPValidationValueLenError,
-    OktmoValidationTypeError,
-    OktmoValidationValueError,
-    OktmoValidationValueLenError,
+    OKTMOValidationTypeError,
+    OKTMOValidationValueError,
+    OKTMOValidationValueLenError,
 )
 
 
@@ -75,7 +75,7 @@ def validate_inn_ip(inn: str) -> str:
     return validate_inn(inn, is_ip=True)
 
 
-def validate_inn_jur(inn: str) -> str:
+def validate_inn_le(inn: str) -> str:
     return validate_inn(inn, is_ip=False)
 
 
@@ -186,11 +186,11 @@ def validate_oktmo(oktmo: str) -> Optional[str]:
     https://www.consultant.ru/cons/CGI/online.cgi?req=doc;base=LAW;n=149911#fUpVRbSdflobnNc4
     """
     if not isinstance(oktmo, str):
-        raise OktmoValidationTypeError
+        raise OKTMOValidationTypeError
     elif oktmo in {'', '0'}:
         return None
     elif len(oktmo) not in {8, 11}:
-        raise OktmoValidationValueLenError
+        raise OKTMOValidationValueLenError
     if not re.fullmatch(r'([0-9]{11}|[0-9]{8})', oktmo):
-        raise OktmoValidationValueError
+        raise OKTMOValidationValueError
     return oktmo

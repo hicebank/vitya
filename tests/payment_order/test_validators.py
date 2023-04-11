@@ -11,10 +11,10 @@ from vitya.payment_order.errors import (
     AccountNumberValidationTypeError,
     AmountValidationLengthError,
     AmountValidationLessOrEqualZeroError,
-    CbcValidationTypeError,
-    CbcValidationValueCannotZerosOnly,
-    CbcValidationValueDigitsOnlyError,
-    CbcValidationValueLenError,
+    CBCValidationTypeError,
+    CBCValidationValueCannotZerosOnly,
+    CBCValidationValueDigitsOnlyError,
+    CBCValidationValueLenError,
     DocumentDateValidationTypeError,
     DocumentNumberValidationTypeError,
     NumberValidationLenError,
@@ -283,12 +283,12 @@ def test_validate_payer_status(
 @pytest.mark.parametrize(
     'value, exception_handler, expected_value',
     [
-        (None, pytest.raises(CbcValidationTypeError), None),
+        (None, pytest.raises(CBCValidationTypeError), None),
         ('', nullcontext(), None),
         ('0', nullcontext(), None),
-        ('1', pytest.raises(CbcValidationValueLenError), None),
-        ('a' * 20, pytest.raises(CbcValidationValueDigitsOnlyError), None),
-        ('0' * 20, pytest.raises(CbcValidationValueCannotZerosOnly), None),
+        ('1', pytest.raises(CBCValidationValueLenError), None),
+        ('a' * 20, pytest.raises(CBCValidationValueDigitsOnlyError), None),
+        ('0' * 20, pytest.raises(CBCValidationValueCannotZerosOnly), None),
         (VALID_CBC, nullcontext(), VALID_CBC),
     ]
 )

@@ -4,7 +4,7 @@ from typing import Optional
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
-    CbcValidationEmptyNotAllowed,
+    CBCValidationEmptyNotAllowed,
     DocumentDateValidationBOLenError,
     DocumentDateValidationCustomsLenError,
     DocumentDateValidationFNSOnlyEmptyError,
@@ -16,9 +16,9 @@ from vitya.payment_order.errors import (
     DocumentNumberValidationCustomsValueLen7Error,
     DocumentNumberValidationCustomsValueLen15Error,
     DocumentNumberValidationFNSOnlyEmptyError,
-    OktmoValidationEmptyNotAllowed,
-    OktmoValidationFNSEmptyNotAllowed,
-    OktmoValidationZerosNotAllowed,
+    OKTMOValidationEmptyNotAllowed,
+    OKTMOValidationFNSEmptyNotAllowed,
+    OKTMOValidationZerosNotAllowed,
     OperationKindValidationBudgetValueError,
     PayeeAccountValidationBICValueError,
     PayeeAccountValidationFNSValueError,
@@ -269,7 +269,7 @@ def check_cbc(
         return None
 
     if payment_type in {PaymentType.FNS, PaymentType.CUSTOMS} and value is None:
-        raise CbcValidationEmptyNotAllowed
+        raise CBCValidationEmptyNotAllowed
 
     return value
 
@@ -289,13 +289,13 @@ def check_oktmo(
         return None
 
     if payment_type == PaymentType.FNS and payer_status == '02' and value is None:
-        raise OktmoValidationFNSEmptyNotAllowed
+        raise OKTMOValidationFNSEmptyNotAllowed
 
     if value is None:
-        raise OktmoValidationEmptyNotAllowed
+        raise OKTMOValidationEmptyNotAllowed
 
     if all(c == '0' for c in value):
-        raise OktmoValidationZerosNotAllowed
+        raise OKTMOValidationZerosNotAllowed
     return value
 
 

@@ -8,10 +8,10 @@ from vitya.payment_order.errors import (
     AccountNumberValidationTypeError,
     AmountValidationLengthError,
     AmountValidationLessOrEqualZeroError,
-    CbcValidationTypeError,
-    CbcValidationValueCannotZerosOnly,
-    CbcValidationValueDigitsOnlyError,
-    CbcValidationValueLenError,
+    CBCValidationTypeError,
+    CBCValidationValueCannotZerosOnly,
+    CBCValidationValueDigitsOnlyError,
+    CBCValidationValueLenError,
     CustomerValidationSizeError,
     DocumentDateValidationTypeError,
     DocumentNumberValidationTypeError,
@@ -212,15 +212,15 @@ def validate_payer_status(value: str) -> str:
 
 def validate_cbc(value: str) -> Optional[str]:
     if not isinstance(value, str):
-        raise CbcValidationTypeError
+        raise CBCValidationTypeError
     if value in {'', '0'}:
         return None
     if len(value) != 20:
-        raise CbcValidationValueLenError
+        raise CBCValidationValueLenError
     elif not only_digits(value):
-        raise CbcValidationValueDigitsOnlyError
+        raise CBCValidationValueDigitsOnlyError
     if all(c == '0' for c in value):
-        raise CbcValidationValueCannotZerosOnly
+        raise CBCValidationValueCannotZerosOnly
     return value
 
 
