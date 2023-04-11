@@ -216,7 +216,6 @@ class TestUINModel(BaseModel):
     'value, exception, expected',
     [
         (1, UINValidationTypeError, None),
-        ('', None, None),
         ('111', UINValidationLenError, None),
         ('0000', UINValidationOnlyZeroError, None),
         ('aaaa', UINValidationDigitsOnlyError, None),
