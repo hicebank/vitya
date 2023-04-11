@@ -8,18 +8,30 @@ from vitya.payment_order.errors import (
     AccountNumberValidationTypeError,
     AmountValidationLengthError,
     AmountValidationLessOrEqualZeroError,
+    CBCValidationTypeError,
+    CBCValidationValueCannotZerosOnly,
+    CBCValidationValueDigitsOnlyError,
+    CBCValidationValueLenError,
     CustomerValidationSizeError,
+    DocumentDateValidationTypeError,
+    DocumentNumberValidationTypeError,
     NumberValidationLenError,
     OperationKindValidationTypeError,
     OperationKindValidationValueError,
     PayeeValidationNameError,
     PayeeValidationSizeError,
+    PayerStatusValidationTypeError,
+    PayerStatusValidationValueError,
     PayerValidationSizeError,
     PaymentOrderValidationError,
     PurposeCodeValidationTypeError,
     PurposeValidationCharactersError,
     PurposeValidationMaxLenError,
     PurposeValidationTypeError,
+    ReasonValidationTypeError,
+    ReasonValidationValueError,
+    ReasonValidationValueLenError,
+    TaxPeriodValidationTypeError,
     UINValidationControlSumError,
     UINValidationDigitsOnlyError,
     UINValidationLenError,
@@ -28,6 +40,8 @@ from vitya.payment_order.errors import (
 )
 from vitya.payment_order.payments.helpers import (
     CHARS_FOR_PURPOSE,
+    PAYER_STATUSES,
+    REASONS,
     REPLACE_CHARS_FOR_SPACE,
 )
 
@@ -189,5 +203,58 @@ def validate_purpose(value: str) -> str:
 
 
 def validate_payer_status(value: str) -> str:
-    # TODO: on next pr (from 61 to 109 fields)
+    if not isinstance(value, str):
+        raise PayerStatusValidationTypeError
+    elif value not in PAYER_STATUSES:
+        raise PayerStatusValidationValueError
+    return value
+
+
+def validate_cbc(value: str) -> Optional[str]:
+    if not isinstance(value, str):
+        raise CBCValidationTypeError
+    if value in {'', '0'}:
+        return None
+    if len(value) != 20:
+        raise CBCValidationValueLenError
+    elif not only_digits(value):
+        raise CBCValidationValueDigitsOnlyError
+    if all(c == '0' for c in value):
+        raise CBCValidationValueCannotZerosOnly
+    return value
+
+
+def validate_reason(value: str) -> Optional[str]:
+    if not isinstance(value, str):
+        raise ReasonValidationTypeError
+    elif value in {'', '0'}:
+        return None
+    elif len(value) != 2:
+        raise ReasonValidationValueLenError
+    elif value not in REASONS:
+        raise ReasonValidationValueError
+    return value
+
+
+def validate_tax_period(value: str) -> Optional[str]:
+    if not isinstance(value, str):
+        raise TaxPeriodValidationTypeError
+    elif value in {'', '0'}:
+        return None
+    return value
+
+
+def validate_document_number(value: str) -> Optional[str]:
+    if not isinstance(value, str):
+        raise DocumentNumberValidationTypeError
+    elif value in {'', '0'}:
+        return None
+    return value
+
+
+def validate_document_date(value: str) -> Optional[str]:
+    if not isinstance(value, str):
+        raise DocumentDateValidationTypeError
+    elif value in {'', '0'}:
+        return None
     return value

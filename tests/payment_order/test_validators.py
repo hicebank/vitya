@@ -4,24 +4,36 @@ from typing import ContextManager, Optional
 
 import pytest
 
-from tests.payment_order.testdata import INVALID_UIN, IP_ACCOUNT, VALID_UIN
+from tests.payment_order.testdata import INVALID_UIN, IP_ACCOUNT, VALID_CBC, VALID_UIN
 from vitya.payment_order.errors import (
     AccountNumberValidationDigitsOnlyError,
     AccountNumberValidationSizeError,
     AccountNumberValidationTypeError,
     AmountValidationLengthError,
     AmountValidationLessOrEqualZeroError,
+    CBCValidationTypeError,
+    CBCValidationValueCannotZerosOnly,
+    CBCValidationValueDigitsOnlyError,
+    CBCValidationValueLenError,
+    DocumentDateValidationTypeError,
+    DocumentNumberValidationTypeError,
     NumberValidationLenError,
     OperationKindValidationTypeError,
     OperationKindValidationValueError,
     PayeeValidationNameError,
     PayeeValidationSizeError,
+    PayerStatusValidationTypeError,
+    PayerStatusValidationValueError,
     PayerValidationSizeError,
     PaymentOrderValidationError,
     PurposeCodeValidationTypeError,
     PurposeValidationCharactersError,
     PurposeValidationMaxLenError,
     PurposeValidationTypeError,
+    ReasonValidationTypeError,
+    ReasonValidationValueError,
+    ReasonValidationValueLenError,
+    TaxPeriodValidationTypeError,
     UINValidationControlSumError,
     UINValidationDigitsOnlyError,
     UINValidationLenError,
@@ -31,13 +43,19 @@ from vitya.payment_order.errors import (
 from vitya.payment_order.validators import (
     validate_account_number,
     validate_amount,
+    validate_cbc,
+    validate_document_date,
+    validate_document_number,
     validate_number,
     validate_operation_kind,
     validate_payee,
     validate_payer,
+    validate_payer_status,
     validate_payment_order,
     validate_purpose,
     validate_purpose_code,
+    validate_reason,
+    validate_tax_period,
     validate_uin,
     validate_uin_control_sum,
 )
@@ -243,3 +261,115 @@ def test_validate_uin_control_sum(
 ):
     with exception_handler:
         validate_uin_control_sum(value=value)
+
+
+@pytest.mark.parametrize(
+    'value, exception_handler, expected_value',
+    [
+        (None, pytest.raises(PayerStatusValidationTypeError), None),
+        ('00', pytest.raises(PayerStatusValidationValueError), None),
+        ('06', nullcontext(), '06'),
+    ]
+)
+def test_validate_payer_status(
+    value: str,
+    exception_handler: ContextManager,
+    expected_value: Optional[str]
+) -> None:
+    with exception_handler:
+        assert validate_payer_status(value=value) == expected_value
+
+
+@pytest.mark.parametrize(
+    'value, exception_handler, expected_value',
+    [
+        (None, pytest.raises(CBCValidationTypeError), None),
+        ('', nullcontext(), None),
+        ('0', nullcontext(), None),
+        ('1', pytest.raises(CBCValidationValueLenError), None),
+        ('a' * 20, pytest.raises(CBCValidationValueDigitsOnlyError), None),
+        ('0' * 20, pytest.raises(CBCValidationValueCannotZerosOnly), None),
+        (VALID_CBC, nullcontext(), VALID_CBC),
+    ]
+)
+def test_validate_cbc(
+    value: str,
+    exception_handler: ContextManager,
+    expected_value: Optional[str]
+) -> None:
+    with exception_handler:
+        assert validate_cbc(value=value) == expected_value
+
+
+@pytest.mark.parametrize(
+    'value, exception_handler, expected_value',
+    [
+        (None, pytest.raises(ReasonValidationTypeError), None),
+        ('', nullcontext(), None),
+        ('0', nullcontext(), None),
+        ('АИИ', pytest.raises(ReasonValidationValueLenError), None),
+        ('АИ', pytest.raises(ReasonValidationValueError), None),
+        ('ПК', nullcontext(), 'ПК'),
+    ]
+)
+def test_validate_reason(
+    value: str,
+    exception_handler: ContextManager,
+    expected_value: Optional[str]
+) -> None:
+    with exception_handler:
+        assert validate_reason(value=value) == expected_value
+
+
+@pytest.mark.parametrize(
+    'value, exception_handler, expected_value',
+    [
+        (None, pytest.raises(TaxPeriodValidationTypeError), None),
+        ('', nullcontext(), None),
+        ('0', nullcontext(), None),
+        ('2022-01-20', nullcontext(), '2022-01-20'),
+    ]
+)
+def test_validate_tax_period(
+    value: str,
+    exception_handler: ContextManager,
+    expected_value: Optional[str]
+) -> None:
+    with exception_handler:
+        assert validate_tax_period(value=value) == expected_value
+
+
+@pytest.mark.parametrize(
+    'value, exception_handler, expected_value',
+    [
+        (None, pytest.raises(DocumentNumberValidationTypeError), None),
+        ('', nullcontext(), None),
+        ('0', nullcontext(), None),
+        ('03;', nullcontext(), '03;'),
+    ]
+)
+def test_validate_document_number(
+    value: str,
+    exception_handler: ContextManager,
+    expected_value: Optional[str]
+) -> None:
+    with exception_handler:
+        assert validate_document_number(value=value) == expected_value
+
+
+@pytest.mark.parametrize(
+    'value, exception_handler, expected_value',
+    [
+        [None, pytest.raises(DocumentDateValidationTypeError), None],
+        ('', nullcontext(), None),
+        ('0', nullcontext(), None),
+        ('20220202', nullcontext(), '20220202'),
+    ]
+)
+def test_validate_document_date(
+    value: str,
+    exception_handler: ContextManager,
+    expected_value: Optional[str]
+) -> None:
+    with exception_handler:
+        assert validate_document_date(value=value) == expected_value

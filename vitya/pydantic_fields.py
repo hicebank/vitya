@@ -1,11 +1,14 @@
-from typing import Any, Callable, Generator
+from abc import ABC, abstractmethod
+from typing import Any, Callable, Generator, Optional
+
+from pydantic.fields import ModelField
 
 from .validators import (
     ValidationError,
     validate_bic,
     validate_inn,
     validate_inn_ip,
-    validate_inn_jur,
+    validate_inn_le,
     validate_kpp,
     validate_ogrn,
     validate_ogrnip,
@@ -14,8 +17,8 @@ from .validators import (
 )
 
 try:
-    from pydantic.errors import PydanticValueError
-except ImportError:
+    from pydantic.errors import MissingError, PydanticValueError
+except ImportError:  # pragma: no cover
     pass
 
 CallableGenerator = Generator[Callable[..., Any], None, None]
@@ -23,6 +26,10 @@ CallableGenerator = Generator[Callable[..., Any], None, None]
 
 class PydanticValidationError(PydanticValueError):
     msg_template = 'invalid {name}: {reason}'
+
+
+class EmptyError(Exception):
+    pass
 
 
 def _validate_wrapper(func: Callable[[str], None], name: str, value: str) -> str:
@@ -34,91 +41,79 @@ def _validate_wrapper(func: Callable[[str], None], name: str, value: str) -> str
     return value
 
 
-class Inn(str):
+class FieldMixin(ABC):
+    def __new__(cls, value: Any) -> 'FieldMixin':
+        value = cls._validate(value)
+        if value is None:
+            raise EmptyError
+        return super().__new__(cls, value)  # type: ignore
+
+    @classmethod
+    @abstractmethod
+    def _validate(cls, value: Any) -> Any:
+        pass
+
     @classmethod
     def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
+        def validator(value: Any, field: ModelField) -> Any:
+            try:
+                return cls(value)
+            except EmptyError:
+                if field.allow_none:
+                    return None
+                raise MissingError
+        yield validator
 
+
+class INN(FieldMixin, str):
     @classmethod
-    def validate(cls, value: str) -> str:
-        return _validate_wrapper(validate_inn, "inn", value)
+    def _validate(cls, value: str) -> str:
+        return validate_inn(value)
 
 
-class InnIp(str):
+class INNIP(FieldMixin, str):
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
+    def _validate(cls, value: str) -> str:
+        return validate_inn_ip(value)
 
+
+class INNLE(FieldMixin, str):
     @classmethod
-    def validate(cls, value: str) -> str:
-        return _validate_wrapper(validate_inn_ip, "inn_ip", value)
+    def _validate(cls, value: str) -> str:
+        return validate_inn_le(value)
 
 
-class InnJur(str):
+class KPP(FieldMixin, str):
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
+    def _validate(cls, value: str) -> Optional[str]:
+        return validate_kpp(value)
 
+
+class BIC(FieldMixin, str):
     @classmethod
-    def validate(cls, value: str) -> str:
-        return _validate_wrapper(validate_inn_jur, "inn_jur", value)
+    def _validate(cls, value: str) -> str:
+        return validate_bic(value)
 
 
-class Kpp(str):
+class OGRN(FieldMixin, str):
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value: str) -> str:
-        return _validate_wrapper(validate_kpp, "kpp", value)
-
-
-class Bic(str):
-    @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value: str) -> str:
-        return _validate_wrapper(validate_bic, "bic", value)
-
-
-class Ogrn(str):
-    @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value: str) -> str:
+    def _validate(cls, value: str) -> str:
         return _validate_wrapper(validate_ogrn, "ogrn", value)
 
 
-class OgrnIp(str):
+class OGRNIP(FieldMixin, str):
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value: str) -> str:
+    def _validate(cls, value: str) -> str:
         return _validate_wrapper(validate_ogrnip, "ogrn_ip", value)
 
 
-class Snils(str):
+class SNILS(FieldMixin, str):
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value: str) -> str:
+    def _validate(cls, value: str) -> str:
         return _validate_wrapper(validate_snils, "snils", value)
 
 
-class Oktmo(str):
+class OKTMO(FieldMixin, str):
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value: str) -> str:
-        return _validate_wrapper(validate_oktmo, "oktmo", value)
+    def _validate(cls, value: str) -> Optional[str]:
+        return validate_oktmo(value)

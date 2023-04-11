@@ -4,6 +4,9 @@ from typing import Any, Callable, Generator, Optional
 from vitya.payment_order.validators import (
     validate_account_number,
     validate_amount,
+    validate_cbc,
+    validate_document_date,
+    validate_document_number,
     validate_number,
     validate_operation_kind,
     validate_payee,
@@ -12,45 +15,36 @@ from vitya.payment_order.validators import (
     validate_payment_order,
     validate_purpose,
     validate_purpose_code,
+    validate_reason,
+    validate_tax_period,
     validate_uin,
 )
+from vitya.pydantic_fields import FieldMixin
 
 CallableGenerator = Generator[Callable[..., Any], None, None]
 
 
-class Number(str):
+class Number(FieldMixin, str):
     """Номер платёжного поручения (3)"""
 
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value: str) -> str:
+    def _validate(cls, value: str) -> str:
         return validate_number(value)
 
 
-class Amount(Decimal):
+class Amount(FieldMixin, Decimal):
     """Сумма (7)"""
 
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value: str) -> Decimal:
+    def _validate(cls, value: str) -> Decimal:
         return validate_amount(value)
 
 
-class Customer(str):
+class Customer(FieldMixin, str):
     """Общий класс для описания сущности владельца денег"""
 
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value: str) -> str:
+    def _validate(cls, value: str) -> str:
         return validate_payer(value)
 
 
@@ -62,89 +56,101 @@ class Payee(Customer):
     """Наименование получателя (16)"""
 
     @classmethod
-    def validate(cls, value: str) -> str:
+    def _validate(cls, value: str) -> str:
         return validate_payee(value)
 
 
-class PaymentOrder(int):
+class PaymentOrder(FieldMixin, int):
     """Очерёдность платежа (21)"""
 
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value: str) -> int:
+    def _validate(cls, value: str) -> int:
         return validate_payment_order(value)
 
 
-class AccountNumber(str):
+class AccountNumber(FieldMixin, str):
     """Счёт"""
 
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value: str) -> str:
+    def _validate(cls, value: str) -> str:
         return validate_account_number(value)
 
 
-class OperationKind(str):
+class OperationKind(FieldMixin, str):
     """Вид операции (18)"""
 
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value: str) -> str:
+    def _validate(cls, value: str) -> str:
         return validate_operation_kind(value)
 
 
-class Uin(str):
+class UIN(FieldMixin, str):
     """Код (УИН) (22)"""
 
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value: str) -> Optional[str]:
+    def _validate(cls, value: str) -> Optional[str]:
         return validate_uin(value)
 
 
-class PurposeCode(int):
+class PurposeCode(FieldMixin, int):
     """Назначение платежа кодовое (20)"""
 
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value: int) -> int:
+    def _validate(cls, value: int) -> int:
         return validate_purpose_code(value)
 
 
-class Purpose(str):
+class Purpose(FieldMixin, str):
     """Назначение платежа (24)"""
 
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value: str) -> str:
+    def _validate(cls, value: str) -> str:
         return validate_purpose(value)
 
 
-class PayerStatus(str):
+class PayerStatus(FieldMixin, str):
     """Статус плательщика (101)"""
 
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        yield cls.validate
+    def _validate(cls, value: str) -> str:
+        return validate_payer_status(value)
+
+
+class CBC(FieldMixin, str):
+    """КБК (104)"""
 
     @classmethod
-    def validate(cls, value: str) -> str:
-        return validate_payer_status(value)
+    def _validate(cls, value: str) -> Optional[str]:
+        return validate_cbc(value)
+
+
+class Reason(FieldMixin, str):
+    """Основание платежа (106)"""
+
+    @classmethod
+    def _validate(cls, value: str) -> Optional[str]:
+        return validate_reason(value)
+
+
+class TaxPeriod(FieldMixin, str):
+    """Периодичность платежа / Код таможенного органа (107)"""
+
+    @classmethod
+    def _validate(cls, value: str) -> Optional[str]:
+        return validate_tax_period(value)
+
+
+class DocumentNumber(FieldMixin, str):
+    """Номер документа (108)"""
+
+    @classmethod
+    def _validate(cls, value: str) -> Optional[str]:
+        return validate_document_number(value)
+
+
+class DocumentDate(FieldMixin, str):
+    """Дата документа (109)"""
+
+    @classmethod
+    def _validate(cls, value: str) -> Optional[str]:
+        return validate_document_date(value)
