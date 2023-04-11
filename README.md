@@ -6,7 +6,7 @@ Validators for different russian banking values.
 Values you can validate:
 - ИНН ```validate_inn```
     - ИНН для ИП/Физ.Лица ```validate_inn_ip```
-    - ИНН для Юр.Лица ```validate_inn_jur```
+    - ИНН для Юр.Лица ```validate_inn_le```
 - КПП ```validate_kpp```
 - БИК ```validate_bic```
 - ОГРН ```validate_ogrn```
@@ -40,15 +40,15 @@ validate_oktmo("69701000001")
 
 ```python
 from pydantic import BaseModel, ValidationError
-from vitya.pydantic_fields import Inn
+from vitya.pydantic_fields import INN
 
 
 class InnModel(BaseModel):
-    inn: Inn
+    inn: INN
 
 
 inn_model = InnModel(inn="302502032671")
-assert inn_model.inn == "302502032671"    
+assert inn_model.inn == "302502032671"
 
 try:
     InnModel(inn="3664069398")
