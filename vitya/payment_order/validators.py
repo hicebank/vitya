@@ -163,7 +163,7 @@ def validate_uin_control_sum(
 def validate_uin(value: str) -> Optional[str]:
     if not isinstance(value, str):
         raise UINValidationTypeError
-    if value == '':
+    if value in {'', '0'}:
         return None
     if not (len(value) == 4 or len(value) == 20 or len(value) == 25):
         raise UINValidationLenError
