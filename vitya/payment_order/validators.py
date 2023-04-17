@@ -231,8 +231,6 @@ def validate_reason(value: str) -> Optional[str]:
         return None
     elif len(value) != 2:
         raise ReasonValidationValueLenError
-    elif value not in REASONS:
-        raise ReasonValidationValueError
     return value
 
 

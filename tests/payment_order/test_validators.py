@@ -308,7 +308,6 @@ def test_validate_cbc(
         ('', nullcontext(), None),
         ('0', nullcontext(), None),
         ('АИИ', pytest.raises(ReasonValidationValueLenError), None),
-        ('АИ', pytest.raises(ReasonValidationValueError), None),
         ('ПК', nullcontext(), 'ПК'),
     ]
 )

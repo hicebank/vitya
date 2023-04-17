@@ -25,7 +25,7 @@ CallableGenerator = Generator[Callable[..., Any], None, None]
 
 
 class PydanticValidationError(PydanticValueError):
-    msg_template = 'invalid {name}: {reason}'
+    description = 'invalid {name}: {reason}'
 
 
 class EmptyError(Exception):

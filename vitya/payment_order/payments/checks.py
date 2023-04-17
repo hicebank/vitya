@@ -51,7 +51,7 @@ from vitya.payment_order.errors import (
     TaxPeriodValidationFNSValueLenError,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
-    UINValidationValueZeroError,
+    UINValidationValueZeroError, ReasonValidationValueError,
 )
 from vitya.payment_order.fields import (
     CBC,
@@ -67,7 +67,7 @@ from vitya.payment_order.fields import (
 )
 from vitya.payment_order.payments.helpers import (
     DOCUMENT_NUMBERS,
-    FNS_PAYEE_ACCOUNT_NUMBER,
+    FNS_PAYEE_ACCOUNT_NUMBER, REASONS,
 )
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
@@ -308,11 +308,12 @@ def check_reason(
 
     if payment_type in {PaymentType.CUSTOMS, PaymentType.BUDGET_OTHER} and value is None:
         return None
-
     if payment_type == PaymentType.FNS:
         if value is not None:
             raise ReasonValidationFNSOnlyEmptyError
         return None
+    if payment_type == PaymentType.CUSTOMS and value not in REASONS:
+        raise ReasonValidationValueError
     return value
 
 
@@ -394,7 +395,7 @@ def check_document_number(
         ):
             raise DocumentNumberValidationCustomsValueLen15Error
         return value
-    raise PaymentTypeValueError(payment_type=str(payment_type))  # pragma: no cover
+    raise PaymentTypeValueError(payment_type=payment_type)  # pragma: no cover
 
 
 def check_document_date(

@@ -65,7 +65,7 @@ from vitya.payment_order.errors import (
     TaxPeriodValidationFNSValueLenError,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
-    UINValidationValueZeroError,
+    UINValidationValueZeroError, ReasonValidationValueError,
 )
 from vitya.payment_order.fields import (
     CBC,
@@ -403,6 +403,7 @@ def test_check_oktmo(
         ('ПК', PaymentType.FNS, pytest.raises(ReasonValidationFNSOnlyEmptyError), None),
         (None, PaymentType.FNS, nullcontext(), None),
         ('ПК', PaymentType.BUDGET_OTHER, nullcontext(), 'ПК'),
+        ('AИ', PaymentType.CUSTOMS, pytest.raises(ReasonValidationValueError), None),
     ]
 
 )
