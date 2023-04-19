@@ -673,4 +673,3 @@ class DocumentDateValidationCustomsLenError(DocumentDateValidationError):
 class DocumentDateValidationBOLenError(DocumentDateValidationError):
     description = 'for bo value max 10 chars'
     description_ru = 'для иных платежей в бюджет значение не должно быть длиннее 10 символов'
-

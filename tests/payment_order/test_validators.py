@@ -31,7 +31,6 @@ from vitya.payment_order.errors import (
     PurposeValidationMaxLenError,
     PurposeValidationTypeError,
     ReasonValidationTypeError,
-    ReasonValidationValueErrorCustoms,
     ReasonValidationValueLenError,
     TaxPeriodValidationTypeError,
     UINValidationControlSumError,
