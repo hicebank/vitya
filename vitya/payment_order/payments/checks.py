@@ -51,7 +51,7 @@ from vitya.payment_order.errors import (
     TaxPeriodValidationFNSValueLenError,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
-    UINValidationValueZeroError, ReasonValidationValueError,
+    UINValidationValueZeroError, ReasonValidationValueErrorCustoms,
 )
 from vitya.payment_order.fields import (
     CBC,
@@ -65,9 +65,9 @@ from vitya.payment_order.fields import (
     Reason,
     TaxPeriod,
 )
-from vitya.payment_order.payments.helpers import (
+from vitya.payment_order.payments.constants import (
     DOCUMENT_NUMBERS,
-    FNS_PAYEE_ACCOUNT_NUMBER, REASONS,
+    FNS_PAYEE_ACCOUNT_NUMBER, CUSTOMS_REASONS,
 )
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
@@ -312,8 +312,8 @@ def check_reason(
         if value is not None:
             raise ReasonValidationFNSOnlyEmptyError
         return None
-    if payment_type == PaymentType.CUSTOMS and value not in REASONS:
-        raise ReasonValidationValueError
+    if payment_type == PaymentType.CUSTOMS and value not in CUSTOMS_REASONS:
+        raise ReasonValidationValueErrorCustoms
     return value
 
 

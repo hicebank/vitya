@@ -10,11 +10,11 @@ from vitya.errors import (
 )
 from vitya.errors_base import VityaDescribedError
 from vitya.payment_order.enums import PaymentType
-from vitya.payment_order.payments.helpers import (
+from vitya.payment_order.payments.constants import (
     CHARS_FOR_PURPOSE,
     DOCUMENT_NUMBERS,
     PAYER_STATUSES,
-    REASONS,
+    CUSTOMS_REASONS,
 )
 
 
@@ -508,9 +508,9 @@ class ReasonValidationValueLenError(ReasonValidationError):
     description_ru = 'должно состоять из 2 символов'
 
 
-class ReasonValidationValueError(ReasonValidationError):
-    description = f'value must be in {REASONS}'
-    description_ru = f'значение должно быть одним из {REASONS}'
+class ReasonValidationValueErrorCustoms(ReasonValidationError):
+    description = f'for customs payment value must be in {CUSTOMS_REASONS}'
+    description_ru = f'для платежей в таможню значение должно быть одним из {CUSTOMS_REASONS}'
 
 
 class TaxPeriodValidationError(VityaDescribedError, PydanticValueError):

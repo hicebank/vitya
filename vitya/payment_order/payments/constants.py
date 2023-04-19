@@ -32,7 +32,7 @@ PAYER_STATUSES = {
     '31'
 }
 
-REASONS = {
+CUSTOMS_REASONS = {
     'ПК',
     'КЭ',
     'УВ',

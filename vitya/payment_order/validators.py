@@ -29,7 +29,6 @@ from vitya.payment_order.errors import (
     PurposeValidationMaxLenError,
     PurposeValidationTypeError,
     ReasonValidationTypeError,
-    ReasonValidationValueError,
     ReasonValidationValueLenError,
     TaxPeriodValidationTypeError,
     UINValidationControlSumError,
@@ -38,10 +37,9 @@ from vitya.payment_order.errors import (
     UINValidationOnlyZeroError,
     UINValidationTypeError,
 )
-from vitya.payment_order.payments.helpers import (
+from vitya.payment_order.payments.constants import (
     CHARS_FOR_PURPOSE,
     PAYER_STATUSES,
-    REASONS,
     REPLACE_CHARS_FOR_SPACE,
 )
 

@@ -17,7 +17,7 @@ from vitya.payment_order.validators import (
     validate_purpose_code,
     validate_reason,
     validate_tax_period,
-    validate_uin,
+    validate_uin, validate_customer,
 )
 from vitya.pydantic_fields import FieldMixin
 
@@ -45,11 +45,15 @@ class Customer(FieldMixin, str):
 
     @classmethod
     def _validate(cls, value: str) -> str:
-        return validate_payer(value)
+        return validate_customer(value)
 
 
 class Payer(Customer):
     """Плательщик (8)"""
+
+    @classmethod
+    def _validate(cls, value: str) -> str:
+        return validate_payer(value)
 
 
 class Payee(Customer):
