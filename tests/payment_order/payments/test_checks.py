@@ -56,6 +56,7 @@ from vitya.payment_order.errors import (
     PurposeCodeValidationNullError,
     PurposeValidationIPNDSError,
     ReasonValidationFNSOnlyEmptyError,
+    ReasonValidationValueErrorCustoms,
     TaxPeriodValidationBOValueLenError,
     TaxPeriodValidationCustomsEmptyNotAllowed,
     TaxPeriodValidationCustomsValueLenError,
@@ -65,7 +66,7 @@ from vitya.payment_order.errors import (
     TaxPeriodValidationFNSValueLenError,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
-    UINValidationValueZeroError, ReasonValidationValueErrorCustoms,
+    UINValidationValueZeroError,
 )
 from vitya.payment_order.fields import (
     CBC,

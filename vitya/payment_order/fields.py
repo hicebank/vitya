@@ -5,6 +5,7 @@ from vitya.payment_order.validators import (
     validate_account_number,
     validate_amount,
     validate_cbc,
+    validate_customer,
     validate_document_date,
     validate_document_number,
     validate_number,
@@ -17,7 +18,7 @@ from vitya.payment_order.validators import (
     validate_purpose_code,
     validate_reason,
     validate_tax_period,
-    validate_uin, validate_customer,
+    validate_uin,
 )
 from vitya.pydantic_fields import FieldMixin
 

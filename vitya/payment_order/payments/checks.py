@@ -42,6 +42,7 @@ from vitya.payment_order.errors import (
     PurposeCodeValidationNullError,
     PurposeValidationIPNDSError,
     ReasonValidationFNSOnlyEmptyError,
+    ReasonValidationValueErrorCustoms,
     TaxPeriodValidationBOValueLenError,
     TaxPeriodValidationCustomsEmptyNotAllowed,
     TaxPeriodValidationCustomsValueLenError,
@@ -51,7 +52,7 @@ from vitya.payment_order.errors import (
     TaxPeriodValidationFNSValueLenError,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
-    UINValidationValueZeroError, ReasonValidationValueErrorCustoms,
+    UINValidationValueZeroError,
 )
 from vitya.payment_order.fields import (
     CBC,
@@ -66,8 +67,9 @@ from vitya.payment_order.fields import (
     TaxPeriod,
 )
 from vitya.payment_order.payments.constants import (
+    CUSTOMS_REASONS,
     DOCUMENT_NUMBERS,
-    FNS_PAYEE_ACCOUNT_NUMBER, CUSTOMS_REASONS,
+    FNS_PAYEE_ACCOUNT_NUMBER,
 )
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 

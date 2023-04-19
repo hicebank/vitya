@@ -12,9 +12,9 @@ from vitya.errors_base import VityaDescribedError
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.payments.constants import (
     CHARS_FOR_PURPOSE,
+    CUSTOMS_REASONS,
     DOCUMENT_NUMBERS,
     PAYER_STATUSES,
-    CUSTOMS_REASONS,
 )
 
 
