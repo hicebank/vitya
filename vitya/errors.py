@@ -5,7 +5,7 @@ from vitya.errors_base import VityaDescribedError
 
 class OKTMOValidationError(VityaDescribedError, PydanticValueError):
     target = 'oktmo'
-    target_ru = 'октмо'
+    target_ru = 'ОКТМО'
     description = 'base error'
     description_ru = 'базовая ошибка'
 
@@ -27,7 +27,7 @@ class OKTMOValidationValueError(PydanticValueError):
 
 class INNValidationError(VityaDescribedError, PydanticValueError):
     target = 'inn'
-    target_ru = 'инн'
+    target_ru = 'ИНН'
     description = 'base error'
     description_ru = 'базовая ошибка'
 
@@ -59,7 +59,7 @@ class INNValidationStartsWithZerosError(INNValidationError):
 
 class KPPValidationError(VityaDescribedError, PydanticValueError):
     target = 'kpp'
-    target_ru = 'кпп'
+    target_ru = 'КПП'
     description = 'base error'
     description_ru = 'базовая ошибка'
 
@@ -91,7 +91,7 @@ class KPPValidationValueCannotZerosStarts(KPPValidationError):
 
 class BICValidationError(VityaDescribedError, PydanticValueError):
     target = 'bic'
-    target_ru = 'бик'
+    target_ru = 'БИК'
     description = 'base error'
     description_ru = 'базовая ошибка'
 
