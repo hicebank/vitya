@@ -17,3 +17,16 @@ class PaymentType(str, Enum):
     @property
     def is_budget(self) -> bool:
         return self in self.budget_types()
+
+    _TO_RU = {
+        FNS: 'ФНС',
+        CUSTOMS: 'Таможня',
+        BUDGET_OTHER: 'Иные',
+        IP: 'ИП',
+        FL: 'ФЛ',
+        LE: 'ЮЛ',
+    }
+
+    @property
+    def name_ru(self) -> str:
+        return self._TO_RU[self]

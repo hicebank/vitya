@@ -8,507 +8,668 @@ from vitya.errors import (
     KPPValidationError,
     OKTMOValidationError,
 )
-from vitya.payment_order.payments.helpers import (
+from vitya.errors_base import VityaDescribedError
+from vitya.payment_order.enums import PaymentType
+from vitya.payment_order.payments.constants import (
     CHARS_FOR_PURPOSE,
+    CUSTOMS_REASONS,
     DOCUMENT_NUMBERS,
     PAYER_STATUSES,
-    REASONS,
 )
 
 
-class PaymentTypeValueError(PydanticValueError):
-    msg_template = 'invalid payment type: unknown payment type = '
+class PaymentTypeValueError(VityaDescribedError, PydanticValueError):
+    target = 'payment type'
+    target_ru = 'тип платежа'
+    description = 'неизвестный тип платежа '
+    description_ru = 'неизвестный тип платежа '
 
-    def __init__(self, payment_type: str, *args: Any, **kwargs: Any) -> None:  # pragma: no cover
+    def __init__(self, payment_type: PaymentType, *args: Any, **kwargs: Any) -> None:  # pragma: no cover
         super().__init__(*args, **kwargs)
-        self.msg_template += payment_type
+        self.description += payment_type.name
+        self.description_ru += payment_type.name_ru
 
 
-class AmountValidationError(PydanticValueError):
-    msg_template = 'invalid amount: base error'
+class AmountValidationError(VityaDescribedError, PydanticValueError):
+    target = 'amount'
+    target_ru = 'сумма'
+    description = 'base error'
+    description_ru = 'базовая ошибка'
 
 
 class AmountValidationLengthError(AmountValidationError):
-    msg_template = 'invalid amount: amount as str cannot contains more 18 chars'
+    description = 'str representation cannot contains more 18 chars'
+    description_ru = 'строковое представление не может содержать более 18 символов'
 
 
 class AmountValidationLessOrEqualZeroError(AmountValidationError):
-    msg_template = 'invalid amount: amount cannot be less than or equal to 0.0'
+    description = 'cannot be less than or equal to 0.0'
+    description_ru = 'не может быть меньше или равно 0.0'
 
 
-class CustomerValidationError(PydanticValueError):
-    msg_template = 'invalid customer: base error'
+class CustomerValidationError(VityaDescribedError, PydanticValueError):
+    target = 'customer'
+    target_ru = 'плательщик или получатель'
+    description = 'base error'
+    description_ru = 'базовая ошибка'
 
 
 class CustomerValidationSizeError(CustomerValidationError):
-    msg_template = 'invalid customer: customer name must sized from 1 to 160 chars'
+    description = 'name must sized from 1 to 160 chars'
+    description_ru = 'длина имени должно быть между 1 и 160 символами'
 
 
 class PayerValidationError(CustomerValidationError):
-    msg_template = 'invalid payer: base error'
+    target = 'payer'
+    target_ru = 'плательщик'
 
 
 class PayerValidationSizeError(PayerValidationError, CustomerValidationSizeError):
-    msg_template = 'invalid payer: payer name must sized from 1 to 160 chars'
+    pass
 
 
 class PayeeValidationError(CustomerValidationError):
-    msg_template = 'invalid payee: base error'
+    target = 'payee'
+    target_ru = 'получатель'
 
 
 class PayeeValidationSizeError(PayeeValidationError, CustomerValidationSizeError):
-    msg_template = 'invalid payee: payee name must sized from 1 to 160 chars'
+    pass
 
 
-class PayeeValidationNameError(CustomerValidationError):
-    msg_template = 'invalid payee: account in name'
+class PayeeValidationNameError(PayeeValidationError):
+    description = 'contains account number'
+    description_ru = 'содержит номер счета'
 
 
-class NumberValidationLenError(PydanticValueError):
-    msg_template = 'invalid number: number cannot be more 6'
+class NumberValidationLenError(VityaDescribedError, PydanticValueError):
+    target = 'number'
+    target_ru = 'номер'
+    description = 'cannot be longer than 6 chars'
+    description_ru = 'не может быть длиннее 6 символов'
 
 
-class PaymentOrderValidationError(PayerValidationError):
-    msg_template = 'invalid payment order: value must be in {1, 2, 3, 4, 5}'
+class PaymentOrderValidationError(VityaDescribedError, PydanticValueError):
+    target = 'payment order'
+    target_ru = 'очередность платежа'
+    description = 'value must be in {1, 2, 3, 4, 5}'
+    description_ru = 'значение должно быть одним из {1, 2, 3, 4, 5}'
 
 
-class OperationKindValidationError(PydanticValueError):
-    msg_template = 'invalid operation kind: base error'
+class OperationKindValidationError(VityaDescribedError, PydanticValueError):
+    target = 'operation kind'
+    target_ru = 'вид операции'
+    description = 'base error'
+    description_ru = 'базовая ошибка'
 
 
 class OperationKindValidationTypeError(OperationKindValidationError, PydanticTypeError):
-    msg_template = 'invalid operation kind: operation kind must be str'
+    description = 'must be str'
+    description_ru = 'должен быть строкой'
 
 
 class OperationKindValidationBudgetValueError(OperationKindValidationError):
-    msg_template = 'invalid operation kind: for budget must be one of {"01", "02", "06"}'
+    description = 'ior budget must be one of {"01", "02", "06"}'
+    description_ru = 'для бюджетных операций значение должно быть одним из {"01", "02", "06"}'
 
 
 class OperationKindValidationValueError(OperationKindValidationBudgetValueError):
-    msg_template = 'invalid operation kind: value must be str with len 2'
+    description = 'value must be str with len 2'
+    description_ru = 'значение должно быть длиной 2 символов'
 
 
-class PurposeCodeValidationError(PydanticValueError):
-    msg_template = 'invalid purpose code: base error'
+class PurposeCodeValidationError(VityaDescribedError, PydanticValueError):
+    target = 'purpose code'
+    target_ru = 'код назначения'
+    description = 'base error'
+    description_ru = 'базовая ошибка'
 
 
 class PurposeCodeValidationTypeError(PurposeCodeValidationError, PydanticTypeError):
-    msg_template = 'invalid purpose: must be int'
+    description = 'must be int'
+    description_ru = 'должен быть числом'
 
 
 class PurposeCodeValidationNullError(PurposeCodeValidationError):
-    msg_template = 'invalid purpose code: for non fl payment value must be null'
+    description = 'for non fl payment value must be null'
+    description_ru = 'должен отсутствовать для не ФЛ платежей'
 
 
 class PurposeCodeValidationFlError(PurposeCodeValidationError):
-    msg_template = 'invalid purpose code: for fl payment value must be in {1, 2, 3, 4, 5}'
+    description = 'for fl payment value must be in {1, 2, 3, 4, 5}'
+    description_ru = 'для ФЛ платежей должен быть одним из {1, 2, 3, 4, 5}'
 
 
-class UINValidationError(PydanticValueError):
-    msg_template = 'invalid uin: base error'
+class UINValidationError(VityaDescribedError, PydanticValueError):
+    target = 'uin'
+    target_ru = 'УИН'
+    description = 'base error'
+    description_ru = 'базовая ошибка'
 
 
 class UINValidationTypeError(UINValidationError, PydanticTypeError):
-    msg_template = 'invalid uin: must be str'
+    description = 'must be str'
+    description_ru = 'должен быть строкой'
 
 
 class UINValidationLenError(UINValidationError):
-    msg_template = 'invalid uin: len uin must be 4, 20 or 25 len'
+    description = 'len must be 4, 20 or 25 len'
+    description_ru = 'длина должна быть 4, 20 или 25 символов'
 
 
 class UINValidationDigitsOnlyError(UINValidationError):
-    msg_template = 'invalid uin: uin must contains only digits'
+    description = 'must contains only digits'
+    description_ru = 'должен содержать только числа'
 
 
 class UINValidationControlSumError(UINValidationError):
-    msg_template = 'invalid uin: control sum error'
+    description = 'control sum error'
+    description_ru = 'некорректная контрольная сумма'
 
 
 class UINValidationValueZeroError(UINValidationError):
-    msg_template = 'invalid uin: value cannot be zero'
+    description = 'value cannot be zero'
+    description_ru = 'значение не может быть нулем'
 
 
 class UINValidationBOLenError(UINValidationLenError):
-    msg_template = 'invalid uin: len uin for bo payment must be 4, 20 or 25 len'
+    description = 'len uin for bo payment must be 4, 20 or 25 len'
+    description_ru = 'длина для платежей с типом иные должна быть 4, 30 или 25'
 
 
 class UINValidationBOValueError(UINValidationError):
-    msg_template = (
-        'invalid uin: for bo payment with payee account start with '
+    description = (
+        'for bo payment with payee account start with '
         "('03212', '03222', '03232', '03242', '03252', '03262', '03272') uin must be non zero"
+    )
+    description_ru = (
+        'для платежей с типом иные номер счета получателя должно начинаться с '
+        "('03212', '03222', '03232', '03242', '03252', '03262', '03272') и ЮИН должен быть не нулевым"
     )
 
 
 class UINValidationFNSValueError(UINValidationError):
-    msg_template = 'invalid uin: FNS base error'
+    description = 'FNS base error'
+    description_ru = 'базовая ФНС ошибка'
 
 
 class UINValidationFNSValueZeroError(UINValidationFNSValueError):
-    msg_template = (
-        'invalid uin: for FNS with payer status = "13" and empty inn uin must be non zero'
+    description = (
+        'for FNS with payer status = "13" and empty inn uin must be non zero'
+    )
+    description_ru = (
+        'для платежей в ФНС со статусом плательщика "13" и пустым ИНН, УИН должен быть не нулевым'
     )
 
 
 class UINValidationFNSNotValueZeroError(UINValidationFNSValueError):
-    msg_template = 'invalid uin: for FNS with payer status = "02" uin must be zero'
+    description = 'for FNS with payer status = "02" uin must be zero'
+    description_ru = 'для платежей в ФНС со статусом плательщика "02" и пустым ИНН, УИН должен быть нулевым'
 
 
 class UINValidationFNSLenError(UINValidationLenError):
-    msg_template = 'invalid uin: len uin for FNS payment must be 20 or 25 len'
+    description = 'invalid uin: len uin for FNS payment must be 20 or 25 len'
+    description_ru = 'длина УИН для платежей в ФНС должна быть 20 или 15 символов'
 
 
 class UINValidationOnlyZeroError(UINValidationError):
-    msg_template = 'invalid uin: uin cannot contains only 0 chars'
+    description = 'cannot contains only 0 chars'
+    description_ru = 'не может состоять только из нулей'
 
 
-class PurposeValidationError(PydanticValueError):
-    msg_template = 'invalid purpose: base error'
+class PurposeValidationError(VityaDescribedError, PydanticValueError):
+    target = 'purpose'
+    target_ru = 'назначение'
+    description = 'base error'
+    description_ru = 'базовая ошибка'
 
 
 class PurposeValidationTypeError(PurposeValidationError, PydanticTypeError):
-    msg_template = 'invalid purpose: must be str'
+    description = 'must be str'
+    description_ru = 'должно быть строкой'
 
 
 class PurposeValidationMaxLenError(PydanticValueError):
-    msg_template = 'invalid purpose: purpose can be from 1 to 210 chars'
+    description = 'len can be from 1 to 210 chars'
+    description_ru = 'длина должна быть от 1 до 210 символов'
 
 
 class PurposeValidationCharactersError(PurposeValidationError):
-    msg_template = f'invalid purpose: the purpose can only consist of {CHARS_FOR_PURPOSE}'
+    description = f'can only consist of {CHARS_FOR_PURPOSE}'
+    description_ru = f'может состоять только из символов {CHARS_FOR_PURPOSE}'
 
 
 class PurposeValidationIPNDSError(PurposeValidationError):
-    msg_template = 'invalid purpose: for IP payment purpose must contains "НДС"'
-
-
-class PayerINNValidationCustomsLenError(INNValidationLenError):
-    msg_template = 'invalid inn: customs len inn base error'
+    description = 'for IP payment purpose must contains "НДС"'
+    description_ru = 'для платежей ИП назначение должно содержать "НДС"'
 
 
 class PayerINNValidationCustomsLen10Error(INNValidationLenError):
-    msg_template = 'invalid inn: for customs payment and payer status 06, inn must be 10'
+    description = 'for customs payment and payer status "06", inn must be 10'
+    description_ru = 'для платежей в таможню и со статусом плательщика "06" ИНН должно быть "10"'
 
 
 class PayerINNValidationCustomsLen12Error(INNValidationLenError):
-    msg_template = 'invalid inn: for customs payment and payer status 16 or 17, inn must be 12'
+    description = 'for customs payment and payer status 16 or 17, inn must be 12'
+    description_ru = 'для платежей таможню со статусом плательщика "16" или "17", значение ИНН должно быть "12"'
 
 
 class PayerINNValidationEmptyNotAllowedError(INNValidationError):
-    msg_template = 'invalid inn: inn cannot be empty'
+    description = 'inn cannot be empty'
+    description_ru = 'не может быть пустым'
 
 
 class PayerINNValidationStartWithZerosError(INNValidationError):
-    msg_template = 'invalid inn: inn cannot start with "00"'
+    description = 'cannot start with "00"'
+    description_ru = 'не может начинаться с "00"'
 
 
 class PayerINNValidationFiveOnlyZerosError(INNValidationError):
-    msg_template = 'invalid inn: inn with len 5 cannot be contains only zeros'
+    description = 'inn with len 5 cannot be contains only zeros'
+    description_ru = 'ИНН с длиной 5 символов не может содержать только нули'
 
 
 class PayeeINNValidationNonEmptyError(INNValidationError):
-    msg_template = 'invalid payee inn: payee inn cannot be empty'
+    target_ru = 'payee inn'
+    target = 'ИНН получателя'
+    description = 'cannot be empty'
+    description_ru = 'не может быть пустым'
 
 
 class PayeeINNValidationFLenError(INNValidationLenError):
-    msg_template = 'invalid payee inn: for fl payee inn must be 12'
+    description = 'for fl payee inn must be 12'
+    description_ru = 'для платежей ИП ИНН получателя должно быть длиной 12 символов'
 
 
 class PayeeINNValidationFLLenError(INNValidationLenError):
-    msg_template = 'invalid payee inn: for fl payee inn must be empty or 12 chars'
+    description = 'for fl payee inn must be empty or 12 chars'
+    description_ru = 'для платежей ИП ИНН получателя должно быть пустым или содержать 12 символов'
 
 
 class PayeeINNValidationIPLenError(INNValidationError):
-    msg_template = 'invalid payee inn: for ip payee inn must be 12'
+    description = 'for ip payee inn must be 12'
+    description_ru = 'для платежей ИП ИНН получателя должно быть 12 символов'
 
 
 class PayeeINNValidationLELenError(INNValidationError):
-    msg_template = 'invalid inn: for fns, customs, bo and le inn must be 10'
+    description = 'for fns, customs, bo and le inn must be 10'
+    description_ru = 'для платежей в бюджет и платежей ЮЛ, ИНН должно быть 10 символов'
 
 
-class PayerAccountValidationError(PydanticValueError):
-    msg_template = 'invalid payer account: base error'
+class PayerAccountValidationError(VityaDescribedError, PydanticValueError):
+    target = 'payer account'
+    target_ru = 'счет плательщика'
+    description = 'base error'
+    description_ru = 'базовая ошибка'
 
 
-class PayeeAccountValidationError(PydanticValueError):
-    msg_template = 'invalid payee account: base error'
+class PayeeAccountValidationError(VityaDescribedError, PydanticValueError):
+    target = 'payee account'
+    target_ru = 'счет получателя'
+    description = 'base error'
+    description_ru = 'базовая ошибка'
 
 
 class PayeeAccountValidationNonEmptyError(PayeeAccountValidationError):
-    msg_template = 'invalid payee account: account cannot be empty'
+    description = 'cannot be empty'
+    description_ru = 'не может быть пустым'
 
 
 class PayeeAccountValidationLenError(PayeeAccountValidationError):
-    msg_template = 'invalid payee account: account must be 20 digits'
+    description = 'must be 20 digits'
+    description_ru = 'должен состоять из 20 цифр'
 
 
 class PayeeAccountValidationFNSValueError(PayeeAccountValidationError):
-    msg_template = 'invalid payee account: for FNS payment account must be "03100643000000018500"'
+    description = 'for FNS payment account must be "03100643000000018500"'
+    description_ru = 'для платежей в ФНС счет должен быть "03100643000000018500"'
 
 
-class AccountNumberValidationError(PydanticValueError):
-    msg_template = 'invalid account number: base error'
+class AccountNumberValidationError(VityaDescribedError, PydanticValueError):
+    target = 'account number'
+    target_ru = 'номер счета'
+    description = 'base error'
+    description_ru = 'базовая ошибка'
 
 
 class AccountNumberValidationTypeError(AccountNumberValidationError, PydanticTypeError):
-    msg_template = 'invalid account number: account number must be str'
+    description = 'must be str'
+    description_ru = 'должен быть строкой'
 
 
 class AccountNumberValidationSizeError(AccountNumberValidationError):
-    msg_template = 'invalid account number: account number must be 20 chars'
+    description = 'must consist of 20 chars'
+    description_ru = 'должен состоять из 20 символов'
 
 
 class AccountNumberValidationDigitsOnlyError(AccountNumberValidationError):
-    msg_template = 'invalid account number: account number must be only digits'
+    description = 'must be only digits'
+    description_ru = 'должен состоять только из цифр'
 
 
 class AccountValidationBICValueError(AccountNumberValidationError):
-    msg_template = 'invalid account: account is not valid for bic'
+    description = 'account is not valid for bic'
+    description_ru = 'не ключуется с БИКом'
 
 
-class PayerAccountValidationBICValueError(PayerAccountValidationError, AccountValidationBICValueError):
-    msg_template = 'invalid payer account: value is invalid for received bic'
+class PayeeAccountValidationBICValueError(AccountValidationBICValueError, PayeeAccountValidationError):
+    pass
 
 
-class PayeeAccountValidationBICValueError(PayeeAccountValidationError, AccountValidationBICValueError):
-    msg_template = 'invalid payee account: value is invalid for received bic'
-
-
-class PayerStatusValidationError(PydanticValueError):
-    msg_template = 'invalid payer status: base error'
+class PayerStatusValidationError(VityaDescribedError, PydanticValueError):
+    target = 'payer status'
+    target_ru = 'статус плательщика'
+    description = 'base error'
+    description_ru = 'базовая ошибка'
 
 
 class PayerStatusValidationTypeError(PayerStatusValidationError, PydanticTypeError):
-    msg_template = 'invalid payer status: payer status must be str'
+    description = 'must be str'
+    description_ru = 'должен быть строкой'
 
 
 class PayerStatusValidationValueError(PayerStatusValidationError):
-    msg_template = f'invalid payer status: value can be only {PAYER_STATUSES}'
+    description = f'value can be only {PAYER_STATUSES}'
+    description_ru = f'должен быть одним из {PAYER_STATUSES}'
 
 
 class PayerStatusValidationNullNotAllowedError(PayerStatusValidationError):
-    msg_template = 'invalid payer status: for budget payments empty value is not allowed'
+    description = 'for budget payments empty value is not allowed'
+    description_ru = 'для платежей в бюджет значение не должно быть пустым'
 
 
 class PayerStatusValidationCustoms05NotAllowedError(PayerStatusValidationError):
-    msg_template = 'invalid payer status: for customs payment and for_third_face = true value "06" not allowed'
+    description = 'for customs payment and for_third_face = true value "06" not allowed'
+    description_ru = 'для платежей в таможню и для платежей за третьих лиц значение статуса не может быть "06"'
 
 
 class KPPValidationOnlyEmptyError(KPPValidationError):
-    msg_template = 'invalid kpp: only empty allowed'
+    description = 'only empty is allowed'
+    description_ru = 'должно быть пустым'
 
 
 class KPPValidationEmptyNotAllowed(KPPValidationError):
-    msg_template = 'invalid kpp: empty value is not allowed'
+    description = 'empty value is not allowed'
+    description_ru = 'пустое значение не разрешено'
 
 
 class PayerKPPValidationError(KPPValidationError):
-    msg_template = 'invalid payer kpp: base error'
+    target = 'payer kpp'
+    target_ru = 'КПП плательщика'
+    description = 'ase error'
+    description_ru = 'базовая ошибка'
 
 
 class PayerKPPValidationOnlyEmptyError(PayerKPPValidationError, KPPValidationOnlyEmptyError):
-    msg_template = 'invalid payer kpp: for ip, fl or le allowed empty value'
+    description = 'for ip, fl or le value must be empty'
+    description_ru = 'для платежей ИП, ФЛ, И ЮЛ значение должно быть пустым'
 
 
 class PayerKPPValidationINN10EmptyNotAllowed(PayerKPPValidationError, KPPValidationEmptyNotAllowed):
-    msg_template = 'invalid payer kpp: for tns, tms or bo with inn = 10 inn empty value is not allowed'
+    description = 'for budget payment with inn = 10 inn empty value is not allowed'
+    description_ru = 'для платежей в бюджет с ИНН = "10" значение КПП должно быть заполнено'
 
 
 class PayerKPPValidationINN12OnlyEmptyError(PayerKPPValidationOnlyEmptyError):
-    msg_template = 'invalid payer kpp: for fns, tms or bo with inn = 12 only empty allowed'
+    description = 'for budget with inn = 12 only empty allowed'
+    description_ru = 'для платежей в бюджет с ИНН = "10" значение КПП должно быть пустым'
 
 
 class PayeeKPPValidationError(KPPValidationError):
-    msg_template = 'invalid payee kpp: base error'
+    target = 'payee kpp'
+    target_ru = 'КПП получателя'
+    description = 'base error'
+    description_ru = 'базовая ошибка'
 
 
 class PayeeKPPValidationOnlyEmptyError(PayeeKPPValidationError, KPPValidationOnlyEmptyError):
-    msg_template = 'invalid payee kpp: for ip or fl only empty allowed'
+    description = 'for ip or fl only empty allowed'
+    description_ru = 'для платежей ИП и ФЛ значение должно быть пустым'
 
 
 class PayeeKPPValidationEmptyNotAllowed(PayeeKPPValidationError, KPPValidationEmptyNotAllowed):
-    msg_template = 'invalid payee kpp: for fns, customs, budget other or le empty value is not allowed'
+    description = 'for fns, customs, budget other or le empty value is not allowed'
+    description_ru = 'для платежей в бюджет или платежей ЮЛ пустое значение недопустимо'
 
 
 class PayeeKPPValidationStartsWithZeros(PayeeKPPValidationError):
-    msg_template = 'invalid payee kpp: for fns, customs, budget other or le kpp cannot starts with "00"'
+    description = 'for fns, customs, budget other or le kpp cannot starts with "00"'
+    description_ru = 'для платежей в бюджет или платежей ЮЛ значение не может начинаться с "00"'
 
 
-class CBCValidationError(PydanticValueError):
-    msg_template = 'invalid cbc: base error'
+class CBCValidationError(VityaDescribedError, PydanticValueError):
+    target = 'CBC'
+    target_ru = 'КБК'
+    description = 'base error'
+    description_ru = 'базовая ошибка'
 
 
 class CBCValidationTypeError(CBCValidationError, PydanticTypeError):
-    msg_template = 'invalid cbc: cbc must be str'
+    description = 'must be str'
+    description_ru = 'должен быть строкой'
 
 
 class CBCValidationEmptyNotAllowed(CBCValidationError):
-    msg_template = 'invalid cbc: for fns or tms empty value is not allowed'
+    description = 'for fns or customs empty value is not allowed'
+    description_ru = 'для платежей в ФНС или таможню значение не должно быть пустым'
 
 
 class CBCValidationValueLenError(CBCValidationError):
-    msg_template = 'invalid cbc: cbc must be 20 digits'
+    description = 'must be 20 digits'
+    description_ru = 'должен состоять из 20 цифр'
 
 
 class CBCValidationValueDigitsOnlyError(CBCValidationError):
-    msg_template = 'invalid cbc: only digits allowed'
+    description = 'only digits are allowed'
+    description_ru = 'должен состоять только из цифр'
 
 
 class CBCValidationValueCannotZerosOnly(CBCValidationError):
-    msg_template = 'invalid cbc: cannot contain only zeros'
+    description = 'cannot contain only zeros'
+    description_ru = 'не может состоять только из нулей'
 
 
 class OKTMOValidationEmptyNotAllowed(OKTMOValidationError):
-    msg_template = 'invalid oktmo: empty value is not allowed'
+    target = 'oktmo'
+    target_ru = 'ОКТМО'
+    description = 'empty value is not allowed'
+    description_ru = 'значение не должно быть пустым'
 
 
 class OKTMOValidationFNSEmptyNotAllowed(OKTMOValidationEmptyNotAllowed):
-    msg_template = 'invalid oktmo: for fns with payer status = "02" empty value is not allowed'
+    description = 'invalid oktmo: for fns with payer status = "02" empty value is not allowed'
+    description_ru = 'для платежей в фнс со статусом плательщика "02" значение не может быть пустым'
 
 
 class OKTMOValidationZerosNotAllowed(OKTMOValidationError):
-    msg_template = 'invalid oktmo: cannot be all zeros'
+    description = 'cannot be all zeros'
+    description_ru = 'не может состоять полностью из нулей'
 
 
-class ReasonValidationError(PydanticValueError):
-    msg_template = 'invalid reason: base error'
+class ReasonValidationError(VityaDescribedError, PydanticValueError):
+    target = 'reason'
+    target_ru = 'основание платежа'
+    description = 'base error'
+    description_ru = 'базовая ошибка'
 
 
 class ReasonValidationTypeError(ReasonValidationError, PydanticTypeError):
-    msg_template = 'invalid reason: must be str'
+    description = 'must be str'
+    description_ru = 'должно быть строкой'
 
 
 class ReasonValidationFNSOnlyEmptyError(ReasonValidationError):
-    msg_template = 'invalid reason: for fns only empty allowed'
+    description = 'for fns only empty allowed'
+    description_ru = 'для платежей в ФНС значение должно быть пустым'
 
 
 class ReasonValidationValueLenError(ReasonValidationError):
-    msg_template = 'invalid reason: reason must be 2 chars'
+    description = 'must be 2 chars'
+    description_ru = 'должно состоять из 2 символов'
 
 
-class ReasonValidationValueError(ReasonValidationError):
-    msg_template = f'invalid reason: value must be in {REASONS}'
+class ReasonValidationValueErrorCustoms(ReasonValidationError):
+    description = f'for customs payment value must be in {CUSTOMS_REASONS}'
+    description_ru = f'для платежей в таможню значение должно быть одним из {CUSTOMS_REASONS}'
 
 
-class TaxPeriodValidationError(PydanticValueError):
-    msg_template = 'invalid tax period: base error'
+class TaxPeriodValidationError(VityaDescribedError, PydanticValueError):
+    target = 'tax period'
+    target_ru = 'Периодичность платежа / Код таможенного органа'
+    description = 'base error'
+    description_ru = 'базовая ошибка'
 
 
 class TaxPeriodValidationTypeError(TaxPeriodValidationError, PydanticTypeError):
-    msg_template = 'invalid tax period: must be str'
+    description = 'must be str'
+    description_ru = 'должно быть строкой'
 
 
 class TaxPeriodValidationEmptyNotAllowed(TaxPeriodValidationError):
-    msg_template = 'invalid tax period: empty is not allowed'
+    description = 'empty is not allowed'
+    description_ru = 'значение не должно быть пустым'
 
 
 class TaxPeriodValidationValueLenError(TaxPeriodValidationError):
-    msg_template = 'invalid tax period: invalid len'
+    description = 'invalid len'
+    description_ru = 'некорректная длина'
 
 
 class TaxPeriodValidationBOValueLenError(TaxPeriodValidationValueLenError):
-    msg_template = 'invalid tax period: for bo must be 10'
+    description = 'for bo must be 10'
+    description_ru = 'для иных платежей в бюджет длина должны быть равна 10'
 
 
 class TaxPeriodValidationCustomsEmptyNotAllowed(TaxPeriodValidationEmptyNotAllowed):
-    msg_template = 'invalid tax period: for customs empty is not allowed'
+    pass
 
 
 class TaxPeriodValidationCustomsValueLenError(TaxPeriodValidationValueLenError):
-    msg_template = 'invalid tax period: for customs must be 8'
+    description = 'for customs len must be 8'
+    description_ru = 'для платежей в таможню длина должна быть 8 символов'
 
 
 class TaxPeriodValidationFNS02EmptyNotAllowed(TaxPeriodValidationError):
-    msg_template = 'invalid tax period: for fns with payer status = "02" empty is not allowed'
+    description = 'for fns with payer status = "02" empty is not allowed'
+    description_ru = 'для платежей в ФНС со статусом плательщика "02" пустое значение недопустимо'
 
 
 class TaxPeriodValidationFNS01OnlyEmpty(TaxPeriodValidationError):
-    msg_template = 'invalid tax period: for fns with payer status = "01" or "13" only empty allowed'
+    description = 'for fns with payer status = "01" or "13" only empty allowed'
+    description_ru = 'для платежей в ФНС со статусом плательщика "01" или "13" значение должно быть пустым'
 
 
 class TaxPeriodValidationFNSEmptyNotAllowed(TaxPeriodValidationEmptyNotAllowed):
-    msg_template = 'invalid tax period: for fns empty is not allowed'
+    description = 'for fns empty is not allowed'
+    description_ru = 'для платежей в ФНС пустое значение недопустимо'
 
 
 class TaxPeriodValidationFNSValueLenError(TaxPeriodValidationValueLenError):
-    msg_template = 'invalid tax period: for fns must be 10'
+    description = 'for fns len must be 10 chars'
+    description_ru = 'для платежей в ФНС длина значения должна быть 10 символов'
 
 
-class DocumentNumberValidationError(PydanticValueError):
-    msg_template = 'invalid document number: base error'
+class DocumentNumberValidationError(VityaDescribedError, PydanticValueError):
+    target = 'document number'
+    target_ru = 'номер документа'
+    description = 'base error'
+    description_ru = 'базовая ошибка'
 
 
 class DocumentNumberValidationTypeError(DocumentNumberValidationError, PydanticTypeError):
-    msg_template = 'invalid document number: must be str'
+    description = 'must be a str'
+    description_ru = 'должен быть строкой'
 
 
 class DocumentNumberValidationOnlyEmptyError(DocumentNumberValidationError):
-    msg_template = 'invalid document number: only empty allowed'
+    description = 'only empty allowed'
+    description_ru = 'должно быть пустым'
 
 
 class DocumentNumberValidationEmptyNotAllowed(DocumentNumberValidationError):
-    msg_template = 'invalid document number: empty is not allowed'
+    description = 'empty is not allowed'
+    description_ru = 'значение не должно быть пустым'
 
 
 class DocumentNumberValidationFNSOnlyEmptyError(DocumentNumberValidationOnlyEmptyError):
-    msg_template = 'invalid document number: for fns only empty allowed'
+    description = 'for fns only empty allowed'
+    description_ru = 'для платежей в ФНС значение должно быть пустым'
 
 
 class DocumentNumberValidationBOEmptyNotAllowed(DocumentNumberValidationEmptyNotAllowed):
-    msg_template = (
-        'invalid document number: for bo with payer status = "24", empty payer inn and empty uin empty is not allowed'
+    description = 'for bo with payer status = "24", empty payer inn and empty uin empty is not allowed'
+    description_ru = (
+        'для иных платежей в бюджет со статусом плательщика "24", пустое значение ИНН плательщика и УИН недопустимо'
     )
 
 
 class DocumentNumberValidationBOOnlyEmptyError(DocumentNumberValidationOnlyEmptyError):
-    msg_template = (
-        'invalid document number: for bo with payee account starts with "03212", '
-        'payer status = "31", uin is not empty - empty value is not allowed'
+    description = (
+        'for bo with payee account starts with "03212",'
+        ' payer status = "31", uin is not empty - empty value is not allowed'
+    )
+    description_ru = (
+        'для иных платежей в бюджет счет получателя должен начинаться с "03212",'
+        ' статус плательщика должен быть "31, а УИН быть заполнен'
     )
 
 
 class DocumentNumberValidationBOValueError(DocumentNumberValidationError):
-    msg_template = (
-        f'invalid document number: for bo first two chars should be in {DOCUMENT_NUMBERS}, and third is equal to ";"'
+    description = f'for bo first two chars should be in {DOCUMENT_NUMBERS}, and third is equal to ";"'
+    description_ru = (
+        f'для иных платежей в бюджет первые два символы должны быть в {DOCUMENT_NUMBERS},'
+        f' а третий символ должен быть равен ";"'
     )
 
 
 class DocumentNumberValidationBOValueLenError(DocumentNumberValidationError):
-    msg_template = 'invalid document number: for bo value len max 15'
+    description = 'for bo value len max 15'
+    description_ru = 'для иных платежей в бюджет максимальная длина должна быть равна 15'
 
 
 class DocumentNumberValidationCustoms00ValueError(DocumentNumberValidationError):
-    msg_template = 'invalid document number: for customs with reason = "00" value must starts with "00"'
+    description = 'for customs with reason = "00" value must starts with "00"'
+    description_ru = 'для платежей в таможню основание платежа должно быть равно "00", а номер должен начинаться с "00"'
 
 
 class DocumentNumberValidationCustomsValueLen7Error(DocumentNumberValidationError):
-    msg_template = (
-        'invalid document number: for customs with '
-        'reason in {"ПК", "УВ", "ТГ", "ТБ", "ТД", "ПВ"} value len max 7'
+    description = 'for customs with reason in {"ПК", "УВ", "ТГ", "ТБ", "ТД", "ПВ"} value len max 7'
+    description_ru = (
+        'для платежей в таможню с основанием платежа в {"ПК", "УВ", "ТГ", "ТБ", "ТД", "ПВ"}'
+        ' длина значения должна быть не более 7 символов'
     )
 
 
 class DocumentNumberValidationCustomsValueLen15Error(DocumentNumberValidationError):
-    msg_template = (
-        'invalid document number: for customs with reason in {"ИЛ", "ИН", "ПБ", "КЭ"} '
-        'value len from 1 to 15 chars'
+    description = 'for customs with reason in {"ИЛ", "ИН", "ПБ", "КЭ"} value len from 1 to 15 chars'
+    description_ru = (
+        'для платежей в таможню с основанием платежа в {"ИЛ", "ИН", "ПБ", "КЭ"}'
+        ' длина значения должна быть от 1 до 15 символов'
     )
 
 
-class DocumentDateValidationError(PydanticValueError):
-    msg_template = 'invalid document date: base error'
+class DocumentDateValidationError(VityaDescribedError, PydanticValueError):
+    target = 'document date'
+    target_ru = 'дата документа'
+    description = 'base error'
+    description_ru = 'базовая ошибка'
 
 
-class DocumentDateValidationTypeError(PydanticValueError, PydanticTypeError):
-    msg_template = 'invalid document date: must be str'
+class DocumentDateValidationTypeError(DocumentDateValidationError, PydanticTypeError):
+    description = 'must be str'
+    description_ru = 'должна быть строкой'
 
 
 class DocumentDateValidationFNSOnlyEmptyError(DocumentDateValidationError):
-    msg_template = 'invalid document date: for fns only empty allowed'
+    description = 'for fns only empty allowed'
+    description_ru = 'для платежей в ФНС значение должно быть пустым'
 
 
 class DocumentDateValidationCustomsLenError(DocumentDateValidationError):
-    msg_template = 'invalid document date: for customs value must be equal 10 chars'
+    description = 'for customs value must be equal 10 chars'
+    description_ru = 'для платежей в таможню длина значения должна быть 10 символов'
 
 
 class DocumentDateValidationBOLenError(DocumentDateValidationError):
-    msg_template = 'invalid document date: for customs value max 10 chars'
+    description = 'for bo value max 10 chars'
+    description_ru = 'для иных платежей в бюджет значение не должно быть длиннее 10 символов'

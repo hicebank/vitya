@@ -88,7 +88,7 @@ from vitya.payment_order.payments.checkers import (
     TaxPeriodChecker,
     UINChecker,
 )
-from vitya.payment_order.payments.helpers import FNS_PAYEE_ACCOUNT_NUMBER
+from vitya.payment_order.payments.constants import FNS_PAYEE_ACCOUNT_NUMBER
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 

@@ -29,7 +29,6 @@ from vitya.payment_order.errors import (
     PurposeValidationMaxLenError,
     PurposeValidationTypeError,
     ReasonValidationTypeError,
-    ReasonValidationValueError,
     ReasonValidationValueLenError,
     TaxPeriodValidationTypeError,
     UINValidationControlSumError,
@@ -38,10 +37,9 @@ from vitya.payment_order.errors import (
     UINValidationOnlyZeroError,
     UINValidationTypeError,
 )
-from vitya.payment_order.payments.helpers import (
+from vitya.payment_order.payments.constants import (
     CHARS_FOR_PURPOSE,
     PAYER_STATUSES,
-    REASONS,
     REPLACE_CHARS_FOR_SPACE,
 )
 
@@ -163,7 +161,7 @@ def validate_uin_control_sum(
 def validate_uin(value: str) -> Optional[str]:
     if not isinstance(value, str):
         raise UINValidationTypeError
-    if value == '':
+    if value in {'', '0'}:
         return None
     if not (len(value) == 4 or len(value) == 20 or len(value) == 25):
         raise UINValidationLenError
@@ -231,8 +229,6 @@ def validate_reason(value: str) -> Optional[str]:
         return None
     elif len(value) != 2:
         raise ReasonValidationValueLenError
-    elif value not in REASONS:
-        raise ReasonValidationValueError
     return value
 
 

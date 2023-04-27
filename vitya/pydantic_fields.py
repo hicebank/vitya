@@ -43,6 +43,8 @@ def _validate_wrapper(func: Callable[[str], None], name: str, value: str) -> str
 
 class FieldMixin(ABC):
     def __new__(cls, value: Any) -> 'FieldMixin':
+        if type(value) == cls:
+            return value  # type: ignore
         value = cls._validate(value)
         if value is None:
             raise EmptyError

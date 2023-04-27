@@ -5,6 +5,7 @@ from vitya.payment_order.validators import (
     validate_account_number,
     validate_amount,
     validate_cbc,
+    validate_customer,
     validate_document_date,
     validate_document_number,
     validate_number,
@@ -45,11 +46,15 @@ class Customer(FieldMixin, str):
 
     @classmethod
     def _validate(cls, value: str) -> str:
-        return validate_payer(value)
+        return validate_customer(value)
 
 
 class Payer(Customer):
     """Плательщик (8)"""
+
+    @classmethod
+    def _validate(cls, value: str) -> str:
+        return validate_payer(value)
 
 
 class Payee(Customer):
