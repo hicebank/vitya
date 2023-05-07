@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, ClassVar, Dict, List, Tuple, Type, cast
+from typing import Any, ClassVar, Dict, List, Tuple, Type, cast, Sequence
 
 from pydantic import BaseModel, root_validator
 from pydantic.errors import PydanticValueError
@@ -39,9 +39,12 @@ from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 
 class CheckerError(ValueError):
+    def __init__(self, errors: Sequence[PydanticValueError]):
+        self._errors = errors
+
     @property
-    def errors(self) -> List[Type[PydanticValueError]]:
-        return cast(List[Type[PydanticValueError]], self.args[0])
+    def errors(self) -> Sequence[PydanticValueError]:
+        return self._errors
 
 
 class BaseChecker(ABC):

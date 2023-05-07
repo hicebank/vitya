@@ -406,13 +406,13 @@ class PayerKPPValidationOnlyEmptyError(PayerKPPValidationError, KPPValidationOnl
 
 
 class PayerKPPValidationINN10EmptyNotAllowed(PayerKPPValidationError, KPPValidationEmptyNotAllowed):
-    description = 'for budget payment with inn = 10 inn empty value is not allowed'
-    description_ru = 'для платежей в бюджет с ИНН = "10" значение КПП должно быть заполнено'
+    description = 'for budget payment with inn length 10 kpp empty value is not allowed'
+    description_ru = 'для платежей в бюджет с длиной ИНН равной 10 значение КПП должно быть заполнено'
 
 
 class PayerKPPValidationINN12OnlyEmptyError(PayerKPPValidationOnlyEmptyError):
-    description = 'for budget with inn = 12 only empty allowed'
-    description_ru = 'для платежей в бюджет с ИНН = "10" значение КПП должно быть пустым'
+    description = 'for budget with inn length 12 kpp only empty allowed'
+    description_ru = 'для платежей в бюджет с длиной ИНН равной 12 значение КПП должно быть пустым'
 
 
 class PayeeKPPValidationError(KPPValidationError):
