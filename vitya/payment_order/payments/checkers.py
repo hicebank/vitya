@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, ClassVar, Dict, List, Tuple, Type, Sequence
+from typing import Any, ClassVar, Dict, List, Sequence, Tuple, Type
 
 from pydantic import BaseModel, root_validator
 from pydantic.errors import PydanticValueError
@@ -39,11 +39,11 @@ from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 
 class CheckerError(ValueError):
-    def __init__(self, errors: Sequence[PydanticValueError]):
+    def __init__(self, errors: Sequence[Exception]):
         self._errors = errors
 
     @property
-    def errors(self) -> Sequence[PydanticValueError]:
+    def errors(self) -> Sequence[Exception]:
         return self._errors
 
 
@@ -62,9 +62,9 @@ class BaseModelChecker(BaseModel):
         for checker, fields in cls.__checkers__:
             wild_fields = set(fields) - cls.__fields__.keys()
             if wild_fields:
-                errors.append(ValueError(f'Checker {checker} require unknown model fields {wild_fields}'))
+                errors.append(f'Checker {checker} require unknown model fields {wild_fields}')
         if errors:
-            raise CheckerError(errors)
+            raise ValueError(errors)
 
     @root_validator(pre=False)
     def run_checkers(cls, values: Dict[str, Any]) -> Dict[str, Any]:
