@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, ClassVar, Dict, List, Tuple, Type, cast, Sequence
+from typing import Any, ClassVar, Dict, List, Tuple, Type, Sequence
 
 from pydantic import BaseModel, root_validator
 from pydantic.errors import PydanticValueError
