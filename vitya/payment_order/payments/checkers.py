@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import Any, ClassVar, Dict, List, Sequence, Tuple, Type
 
 from pydantic import BaseModel, root_validator
-from pydantic.errors import PydanticValueError
 
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.fields import (
