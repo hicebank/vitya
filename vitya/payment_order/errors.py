@@ -244,54 +244,62 @@ class PurposeValidationIPNDSError(PurposeValidationError):
     description_ru = 'для платежей ИП назначение должно содержать "НДС"'
 
 
-class PayerINNValidationCustomsLen10Error(INNValidationLenError):
+class PayerINNValidationError(INNValidationError):
+    target = 'payer inn'
+    target_ru = 'ИНН плательщика'
+
+
+class PayerINNValidationCustomsLen10Error(INNValidationLenError, PayerINNValidationError):
     description = 'for customs payment and payer status "06", inn must be 10'
     description_ru = 'для платежей в таможню и со статусом плательщика "06" ИНН должно быть "10"'
 
 
-class PayerINNValidationCustomsLen12Error(INNValidationLenError):
+class PayerINNValidationCustomsLen12Error(INNValidationLenError, PayerINNValidationError):
     description = 'for customs payment and payer status 16 or 17, inn must be 12'
     description_ru = 'для платежей таможню со статусом плательщика "16" или "17", значение ИНН должно быть "12"'
 
 
-class PayerINNValidationEmptyNotAllowedError(INNValidationError):
+class PayerINNValidationEmptyNotAllowedError(PayerINNValidationError):
     description = 'inn cannot be empty'
     description_ru = 'не может быть пустым'
 
 
-class PayerINNValidationStartWithZerosError(INNValidationError):
+class PayerINNValidationStartWithZerosError(PayerINNValidationError):
     description = 'cannot start with "00"'
     description_ru = 'не может начинаться с "00"'
 
 
-class PayerINNValidationFiveOnlyZerosError(INNValidationError):
+class PayerINNValidationFiveOnlyZerosError(PayerINNValidationError):
     description = 'inn with len 5 cannot be contains only zeros'
     description_ru = 'ИНН с длиной 5 символов не может содержать только нули'
 
 
-class PayeeINNValidationNonEmptyError(INNValidationError):
-    target_ru = 'payee inn'
-    target = 'ИНН получателя'
+class PayeeINNValidationError(INNValidationError):
+    target = 'payee inn'
+    target_ru = 'ИНН получателя'
+
+
+class PayeeINNValidationNonEmptyError(PayeeINNValidationError):
     description = 'cannot be empty'
     description_ru = 'не может быть пустым'
 
 
-class PayeeINNValidationFLenError(INNValidationLenError):
+class PayeeINNValidationFLenError(INNValidationLenError, PayeeINNValidationError):
     description = 'for fl payee inn must be 12'
     description_ru = 'для платежей ИП ИНН получателя должно быть длиной 12 символов'
 
 
-class PayeeINNValidationFLLenError(INNValidationLenError):
+class PayeeINNValidationFLLenError(INNValidationLenError, PayeeINNValidationError):
     description = 'for fl payee inn must be empty or 12 chars'
     description_ru = 'для платежей ИП ИНН получателя должно быть пустым или содержать 12 символов'
 
 
-class PayeeINNValidationIPLenError(INNValidationError):
+class PayeeINNValidationIPLenError(INNValidationError, PayeeINNValidationError):
     description = 'for ip payee inn must be 12'
     description_ru = 'для платежей ИП ИНН получателя должно быть 12 символов'
 
 
-class PayeeINNValidationLELenError(INNValidationError):
+class PayeeINNValidationLELenError(INNValidationError, PayeeINNValidationError):
     description = 'for fns, customs, bo and le inn must be 10'
     description_ru = 'для платежей в бюджет и платежей ЮЛ, ИНН должно быть 10 символов'
 
@@ -396,7 +404,7 @@ class KPPValidationEmptyNotAllowed(KPPValidationError):
 class PayerKPPValidationError(KPPValidationError):
     target = 'payer kpp'
     target_ru = 'КПП плательщика'
-    description = 'ase error'
+    description = 'base error'
     description_ru = 'базовая ошибка'
 
 
