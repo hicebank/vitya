@@ -294,12 +294,12 @@ class PayeeINNValidationFLLenError(INNValidationLenError, PayeeINNValidationErro
     description_ru = 'для платежей ИП ИНН получателя должно быть пустым или содержать 12 символов'
 
 
-class PayeeINNValidationIPLenError(INNValidationError, PayeeINNValidationError):
+class PayeeINNValidationIPLenError(PayeeINNValidationError):
     description = 'for ip payee inn must be 12'
     description_ru = 'для платежей ИП ИНН получателя должно быть 12 символов'
 
 
-class PayeeINNValidationLELenError(INNValidationError, PayeeINNValidationError):
+class PayeeINNValidationLELenError(PayeeINNValidationError):
     description = 'for fns, customs, bo and le inn must be 10'
     description_ru = 'для платежей в бюджет и платежей ЮЛ, ИНН должно быть 10 символов'
 
