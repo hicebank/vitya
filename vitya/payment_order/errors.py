@@ -229,7 +229,7 @@ class PurposeValidationTypeError(PurposeValidationError, PydanticTypeError):
     description_ru = 'должно быть строкой'
 
 
-class PurposeValidationMaxLenError(PydanticValueError):
+class PurposeValidationMaxLenError(PurposeValidationError):
     description = 'len can be from 1 to 210 chars'
     description_ru = 'длина должна быть от 1 до 210 символов'
 
