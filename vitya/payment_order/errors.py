@@ -177,17 +177,6 @@ class UINValidationBOLenError(UINValidationLenError):
     description_ru = 'длина для платежей с типом иные должна быть 4, 30 или 25'
 
 
-class UINValidationBOValueError(UINValidationError):
-    description = (
-        'for bo payment with payee account start with '
-        "('03212', '03222', '03232', '03242', '03252', '03262', '03272') uin must be non zero"
-    )
-    description_ru = (
-        'для платежей с типом иные номер счета получателя должно начинаться с '
-        "('03212', '03222', '03232', '03242', '03252', '03262', '03272') и ЮИН должен быть не нулевым"
-    )
-
-
 class UINValidationFNSValueError(UINValidationError):
     description = 'FNS base error'
     description_ru = 'базовая ФНС ошибка'
@@ -205,6 +194,13 @@ class UINValidationFNSValueZeroError(UINValidationFNSValueError):
 class UINValidationFNSNotValueZeroError(UINValidationFNSValueError):
     description = 'for FNS with payer status = "02" uin must be zero'
     description_ru = 'для платежей в ФНС со статусом плательщика "02" и пустым ИНН, УИН должен быть нулевым'
+
+
+class UINValidationBONotEmpty(UINValidationFNSValueError):
+    description = 'for budget other and payee number starting with 03212 uin must be filled'
+    description_ru = (
+        'для платежей в бюджет иные с номером счёта получателя, который начинается с "03212", УИН должен быть заполен'
+    )
 
 
 class UINValidationFNSLenError(UINValidationLenError):

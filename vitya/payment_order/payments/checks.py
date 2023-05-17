@@ -52,7 +52,7 @@ from vitya.payment_order.errors import (
     TaxPeriodValidationFNSValueLenError,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
-    UINValidationValueZeroError,
+    UINValidationValueZeroError, UINValidationBONotEmpty,
 )
 from vitya.payment_order.fields import (
     CBC,
@@ -64,7 +64,7 @@ from vitya.payment_order.fields import (
     PayerStatus,
     Purpose,
     Reason,
-    TaxPeriod,
+    TaxPeriod, PurposeCode,
 )
 from vitya.payment_order.payments.constants import (
     CUSTOMS_REASONS,
@@ -113,9 +113,9 @@ def check_operation_kind(
 
 
 def check_purpose_code(
-    value: Optional[int],
+    value: Optional[PurposeCode],
     payment_type: PaymentType,
-) -> Optional[int]:
+) -> Optional[PurposeCode]:
     if payment_type != PaymentType.FL:
         if value is not None:
             raise PurposeCodeValidationNullError
@@ -127,10 +127,11 @@ def check_purpose_code(
 
 def check_uin(
     value: Optional[UIN],
+    payee_account: AccountNumber,
     payment_type: PaymentType,
     payer_status: Optional[PayerStatus],
     payer_inn: Optional[str],
-) -> Optional[str]:
+) -> Optional[UIN]:
     if not payment_type.is_budget:
         return None
 
@@ -138,6 +139,8 @@ def check_uin(
         raise UINValidationValueZeroError
 
     if payment_type == PaymentType.BUDGET_OTHER:
+        if payee_account.startswith('03212') and value is None:
+            raise UINValidationBONotEmpty
         return value
 
     if payment_type == PaymentType.FNS:
@@ -153,7 +156,7 @@ def check_uin(
 def check_purpose(
     value: Optional[Purpose],
     payee_account: AccountNumber,
-) -> Optional[str]:
+) -> Optional[Purpose]:
     if value is None:
         return None
 
@@ -168,7 +171,7 @@ def check_payer_inn(
     payment_type: PaymentType,
     payer_status: Optional[PayerStatus],
     for_third_face: bool,
-) -> Optional[str]:
+) -> Optional[INN]:
     if not payment_type.is_budget:
         return value
 
@@ -197,7 +200,7 @@ def check_payer_inn(
 def check_payee_inn(
     value: Optional[INN],
     payment_type: PaymentType,
-) -> Optional[str]:
+) -> Optional[INN]:
     if payment_type == PaymentType.IP:
         if value is None or len(value) != 12:
             raise PayeeINNValidationIPLenError
@@ -217,7 +220,7 @@ def check_payer_status(
     value: Optional[PayerStatus],
     payment_type: PaymentType,
     for_third_face: bool,
-) -> Optional[str]:
+) -> Optional[PayerStatus]:
     if not payment_type.is_budget:
         return None
 
