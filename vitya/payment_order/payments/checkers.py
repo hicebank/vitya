@@ -134,8 +134,16 @@ class PayerINNChecker(BaseChecker):
 
 
 class UINChecker(BaseChecker):
-    def __init__(self, uin: UIN, payer_inn: INN, payer_status: PayerStatus, payment_type: PaymentType) -> None:
+    def __init__(
+        self,
+        uin: UIN,
+        payee_account: AccountNumber,
+        payer_inn: INN,
+        payer_status: PayerStatus,
+        payment_type: PaymentType,
+    ) -> None:
         self.uin = uin
+        self.payee_account = payee_account
         self.payer_inn = payer_inn
         self.payer_status = payer_status
         self.payment_type = payment_type
@@ -143,6 +151,7 @@ class UINChecker(BaseChecker):
     def check(self) -> None:
         check_uin(
             value=self.uin,
+            payee_account=self.payee_account,
             payment_type=self.payment_type,
             payer_status=self.payer_status,
             payer_inn=self.payer_inn,

@@ -67,6 +67,7 @@ from vitya.payment_order.errors import (
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
     UINValidationValueZeroError,
+    UINValidationBONotEmpty,
 )
 from vitya.payment_order.fields import (
     CBC,
@@ -175,20 +176,22 @@ def test_check_purpose_code(
 
 
 @pytest.mark.parametrize(
-    'value, payment_type, payer_status, payer_inn, exception_handler, expected_value',
+    'value, payment_type, payee_account, payer_status, payer_inn, exception_handler, expected_value',
     [
-        ('', PaymentType.FL, '', '', nullcontext(), None),
-        (None, PaymentType.FL, '', '', nullcontext(), None),
-        (None, PaymentType.FNS, '31', '', pytest.raises(UINValidationValueZeroError), None),
-        (VALID_UIN, PaymentType.BUDGET_OTHER, '', '', nullcontext(), VALID_UIN),
-        (None, PaymentType.FNS, '13', None, pytest.raises(UINValidationFNSValueZeroError), None),
-        (VALID_UIN, PaymentType.FNS, '13', '', nullcontext(), VALID_UIN),
-        (VALID_UIN, PaymentType.FNS, '02', '', pytest.raises(UINValidationFNSNotValueZeroError), None),
-        (None, PaymentType.FNS, '02', '', nullcontext(), None),
+        ('', PaymentType.FL, AccountNumber(IP_ACCOUNT), '', '', nullcontext(), None),
+        (None, PaymentType.FL, AccountNumber(IP_ACCOUNT), '', '', nullcontext(), None),
+        (None, PaymentType.FNS, AccountNumber(IP_ACCOUNT), '31', '', pytest.raises(UINValidationValueZeroError), None),
+        (VALID_UIN, PaymentType.BUDGET_OTHER, AccountNumber(IP_ACCOUNT), '', '', nullcontext(), VALID_UIN),
+        (None, PaymentType.BUDGET_OTHER, AccountNumber('03212810722200035222'), '', '', pytest.raises(UINValidationBONotEmpty), VALID_UIN),
+        (None, PaymentType.FNS, AccountNumber(IP_ACCOUNT), '13', None, pytest.raises(UINValidationFNSValueZeroError), None),
+        (VALID_UIN, PaymentType.FNS, AccountNumber(IP_ACCOUNT), '13', '', nullcontext(), VALID_UIN),
+        (VALID_UIN, PaymentType.FNS, AccountNumber(IP_ACCOUNT), '02', '', pytest.raises(UINValidationFNSNotValueZeroError), None),
+        (None, PaymentType.FNS, AccountNumber(IP_ACCOUNT), '02', '', nullcontext(), None),
     ]
 )
 def test_check_uin(
     value: Optional[str],
+    payee_account: AccountNumber,
     payment_type: PaymentType,
     payer_status: PayerStatus,
     payer_inn: str,
@@ -198,6 +201,7 @@ def test_check_uin(
     with exception_handler:
         assert check_uin(
             value=value,
+            payee_account=payee_account,
             payment_type=payment_type,
             payer_inn=payer_inn,
             payer_status=payer_status,
@@ -207,9 +211,9 @@ def test_check_uin(
 @pytest.mark.parametrize(
     'value, payee_account, exception_handler, expected_value',
     [
-        (None, AccountNumber('40802810522200037352'), nullcontext(), None),
-        ('some', AccountNumber('40802810522200037352'), pytest.raises(PurposeValidationIPNDSError), None),
-        ('some with НДС', AccountNumber('40802810522200037352'), nullcontext(), 'some with НДС'),
+        (None, AccountNumber(IP_ACCOUNT), nullcontext(), None),
+        ('some', AccountNumber(IP_ACCOUNT), pytest.raises(PurposeValidationIPNDSError), None),
+        ('some with НДС', AccountNumber(IP_ACCOUNT), nullcontext(), 'some with НДС'),
     ]
 )
 def test_check_purpose(
