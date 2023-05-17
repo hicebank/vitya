@@ -127,7 +127,7 @@ def check_purpose_code(
 def check_uin(
     value: Optional[UIN],
     payment_type: PaymentType,
-    payer_status: PayerStatus,
+    payer_status: Optional[PayerStatus],
     payer_inn: Optional[str],
 ) -> Optional[str]:
     if not payment_type.is_budget:
@@ -165,8 +165,8 @@ def check_purpose(
 def check_payer_inn(
     value: Optional[INN],
     payment_type: PaymentType,
-    payer_status: PayerStatus,
-    for_third_face: bool = False,
+    payer_status: Optional[PayerStatus],
+    for_third_face: bool,
 ) -> Optional[str]:
     if not payment_type.is_budget:
         return value
@@ -232,14 +232,14 @@ def check_payer_status(
 def check_payer_kpp(
     value: Optional[KPP],
     payment_type: PaymentType,
-    payer_inn: str,
+    payer_inn: Optional[str],
 ) -> Optional[KPP]:
     if not payment_type.is_budget:
         return None
 
-    if len(payer_inn) == 10 and value is None:
+    if payer_inn is not None and len(payer_inn) == 10 and value is None:
         raise PayerKPPValidationINN10EmptyNotAllowed
-    elif len(payer_inn) == 12 and value is not None:
+    elif payer_inn is not None and len(payer_inn) == 12 and value is not None:
         raise PayerKPPValidationINN12OnlyEmptyError
     return value
 
@@ -279,7 +279,7 @@ def check_cbc(
 def check_oktmo(
     value: Optional[OKTMO],
     payment_type: PaymentType,
-    payer_status: PayerStatus,
+    payer_status: Optional[PayerStatus],
 ) -> Optional[OKTMO]:
     if not payment_type.is_budget:
         return None
@@ -322,7 +322,7 @@ def check_reason(
 def check_tax_period(
     value: Optional[TaxPeriod],
     payment_type: PaymentType,
-    payer_status: PayerStatus,
+    payer_status: Optional[PayerStatus],
 ) -> Optional[TaxPeriod]:
     if not payment_type.is_budget:
         return None
