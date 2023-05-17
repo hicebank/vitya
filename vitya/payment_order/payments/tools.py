@@ -1,5 +1,5 @@
-from contracted import AccountNumber
 from vitya.payment_order.enums import AccountKind
+from vitya.payment_order.fields import AccountNumber
 
 IP_ACCOUNTS_PREFIXES = {'40802', *[str(prefix) for prefix in range(42018, 42113 + 1)]}
 FL_ACCOUNTS_PREFIXES = ('40817', '40820', '40911', '423', '426')

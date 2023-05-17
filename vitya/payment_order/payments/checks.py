@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-from vitya.payment_order.enums import PaymentType, AccountKind
+from vitya.payment_order.enums import AccountKind, PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
     CBCValidationEmptyNotAllowed,
@@ -50,9 +50,10 @@ from vitya.payment_order.errors import (
     TaxPeriodValidationFNS02EmptyNotAllowed,
     TaxPeriodValidationFNSEmptyNotAllowed,
     TaxPeriodValidationFNSValueLenError,
+    UINValidationBONotEmpty,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
-    UINValidationValueZeroError, UINValidationBONotEmpty,
+    UINValidationValueZeroError,
 )
 from vitya.payment_order.fields import (
     CBC,
@@ -63,8 +64,9 @@ from vitya.payment_order.fields import (
     OperationKind,
     PayerStatus,
     Purpose,
+    PurposeCode,
     Reason,
-    TaxPeriod, PurposeCode,
+    TaxPeriod,
 )
 from vitya.payment_order.payments.constants import (
     CUSTOMS_REASONS,
