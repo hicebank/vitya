@@ -205,21 +205,21 @@ def test_check_uin(
 
 
 @pytest.mark.parametrize(
-    'value, payment_type, exception_handler, expected_value',
+    'value, payee_account, exception_handler, expected_value',
     [
-        (None, PaymentType.FNS, nullcontext(), None),
-        ('some', PaymentType.IP, pytest.raises(PurposeValidationIPNDSError), None),
-        ('some with НДС', PaymentType.IP, nullcontext(), 'some with НДС'),
+        (None, AccountNumber('40802810522200037352'), nullcontext(), None),
+        ('some', AccountNumber('40802810522200037352'), pytest.raises(PurposeValidationIPNDSError), None),
+        ('some with НДС', AccountNumber('40802810522200037352'), nullcontext(), 'some with НДС'),
     ]
 )
 def test_check_purpose(
     value: Optional[str],
-    payment_type: PaymentType,
+    payee_account: AccountNumber,
     exception_handler: ContextManager,
     expected_value: str
 ) -> None:
     with exception_handler:
-        assert check_purpose(value=value, payment_type=payment_type) == expected_value
+        assert check_purpose(value=value, payee_account=payee_account) == expected_value
 
 
 @pytest.mark.parametrize(

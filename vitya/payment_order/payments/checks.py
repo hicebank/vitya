@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-from vitya.payment_order.enums import PaymentType
+from vitya.payment_order.enums import PaymentType, AccountKind
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
     CBCValidationEmptyNotAllowed,
@@ -71,6 +71,7 @@ from vitya.payment_order.payments.constants import (
     DOCUMENT_NUMBERS,
     FNS_PAYEE_ACCOUNT_NUMBER,
 )
+from vitya.payment_order.payments.tools import get_account_kind
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 
@@ -151,12 +152,12 @@ def check_uin(
 
 def check_purpose(
     value: Optional[Purpose],
-    payment_type: PaymentType,
+    payee_account: AccountNumber,
 ) -> Optional[str]:
     if value is None:
         return None
 
-    if payment_type == PaymentType.IP:
+    if get_account_kind(payee_account) == AccountKind.IP:
         if not re.search(r'(?i)\bНДС\b', value):
             raise PurposeValidationIPNDSError
     return value

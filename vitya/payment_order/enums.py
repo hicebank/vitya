@@ -2,6 +2,12 @@ from enum import Enum
 from typing import List
 
 
+class AccountKind(str, Enum):
+    IP = 'ip'                           # счет ИП
+    FL = 'fl'                           # счет ФЛ
+    LE = 'le'                           # счет ЮР
+
+
 class PaymentType(str, Enum):
     FNS = 'fns'                         # бюджетный платеж в ФНС
     CUSTOMS = 'customs'                 # бюджетный платеж в таможню
