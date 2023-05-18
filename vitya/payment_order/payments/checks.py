@@ -157,12 +157,12 @@ def check_uin(
 
 def check_purpose(
     value: Optional[Purpose],
-    payee_account: AccountNumber,
+    payer_account: AccountNumber,
 ) -> Optional[Purpose]:
     if value is None:
         return None
 
-    if get_account_kind(payee_account) == AccountKind.IP:
+    if get_account_kind(payer_account) == AccountKind.IP:
         if not re.search(r'(?i)\bНДС\b', value):
             raise PurposeValidationIPNDSError
     return value

@@ -249,7 +249,7 @@ def test_check_uin(
 
 
 @pytest.mark.parametrize(
-    'value, payee_account, exception_handler, expected_value',
+    'value, payer_account, exception_handler, expected_value',
     [
         (None, AccountNumber(IP_ACCOUNT), nullcontext(), None),
         ('some', AccountNumber(IP_ACCOUNT), pytest.raises(PurposeValidationIPNDSError), None),
@@ -258,12 +258,12 @@ def test_check_uin(
 )
 def test_check_purpose(
     value: Optional[str],
-    payee_account: AccountNumber,
+    payer_account: AccountNumber,
     exception_handler: ContextManager,
     expected_value: str
 ) -> None:
     with exception_handler:
-        assert check_purpose(value=value, payee_account=payee_account) == expected_value
+        assert check_purpose(value=value, payer_account=payer_account) == expected_value
 
 
 @pytest.mark.parametrize(

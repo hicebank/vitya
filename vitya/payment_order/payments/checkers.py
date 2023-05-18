@@ -159,12 +159,12 @@ class UINChecker(BaseChecker):
 
 
 class PurposeChecker(BaseChecker):
-    def __init__(self, purpose: Purpose, payee_account: AccountNumber) -> None:
+    def __init__(self, purpose: Purpose, payer_account: AccountNumber) -> None:
         self.purpose = purpose
-        self.payee_account = payee_account
+        self.payer_account = payer_account
 
     def check(self) -> None:
-        check_purpose(value=self.purpose, payee_account=self.payee_account)
+        check_purpose(value=self.purpose, payer_account=self.payer_account)
 
 
 class PayeeINNChecker(BaseChecker):
