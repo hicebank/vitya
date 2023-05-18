@@ -1,3 +1,4 @@
+from contextlib import nullcontext
 from typing import Optional, Tuple, Type
 
 import pytest
@@ -265,26 +266,30 @@ def test_uin_checker(
 
 class TestPurposeChecker(BaseModelChecker):
     purpose: Purpose
+    payment_type: PaymentType
     payer_account: AccountNumber
 
     __checkers__ = [
-        (PurposeChecker, ['purpose', 'payer_account']),
+        (PurposeChecker, ['purpose', 'payment_type', 'payer_account']),
     ]
 
 
 @pytest.mark.parametrize(
-    'purpose, payer_account, exception',
+    'purpose, payment_type, payer_account, exception',
     [
-        ('some', AccountNumber(IP_ACCOUNT), PurposeValidationIPNDSError),
+        ('some', PaymentType.IP, AccountNumber(IP_ACCOUNT), PurposeValidationIPNDSError),
+        ('some', PaymentType.BUDGET_OTHER, AccountNumber(IP_ACCOUNT), None),
+        ('some НДС', PaymentType.IP, AccountNumber(IP_ACCOUNT), None),
     ]
 )
 def test_purpose_checker(
     purpose: Purpose,
+    payment_type: PaymentType,
     payer_account: AccountNumber,
     exception: Type[Exception]
 ) -> None:
     try:
-        TestPurposeChecker(purpose=purpose, payer_account=payer_account)
+        TestPurposeChecker(purpose=purpose, payment_type=payment_type, payer_account=payer_account)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:
