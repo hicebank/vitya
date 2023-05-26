@@ -160,9 +160,15 @@ def check_purpose(
     payer_account: AccountNumber,
     payment_type: PaymentType,
 ) -> Optional[Purpose]:
-    if not payment_type.is_budget and get_account_kind(payer_account) == AccountKind.IP:
-        if not re.search(r'(?i)\bНДС\b', value):
-            raise PurposeValidationIPNDSError
+    if (
+        not payment_type.is_budget
+        and get_account_kind(payer_account) == AccountKind.IP
+        and (
+            value is None
+            or not re.search(r'(?i)\bНДС\b', value)
+        )
+    ):
+        raise PurposeValidationIPNDSError
     return value
 
 
