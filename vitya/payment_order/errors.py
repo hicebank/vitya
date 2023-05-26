@@ -47,6 +47,11 @@ class AmountValidationLessOrEqualZeroError(AmountValidationError):
     description_ru = 'не может быть меньше или равно 0.0'
 
 
+class AmountNotANumber(AmountValidationError):
+    description = 'require to be a number'
+    description_ru = 'должно быть числом'
+
+
 class CustomerValidationError(VityaDescribedError, PydanticValueError):
     target = 'customer'
     target_ru = 'плательщик или получатель'
