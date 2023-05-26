@@ -1,5 +1,5 @@
 import re
-from decimal import ConversionSyntax, Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Optional
 
 from vitya.payment_order.errors import (
@@ -60,7 +60,7 @@ def validate_amount(amount: str) -> Decimal:
 
     try:
         value = Decimal(amount)
-    except ConversionSyntax:
+    except InvalidOperation:
         raise AmountNotANumber
     if value <= Decimal(0.0):
         raise AmountValidationLessOrEqualZeroError
