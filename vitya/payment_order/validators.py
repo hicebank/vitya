@@ -1,11 +1,12 @@
 import re
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Optional
 
 from vitya.payment_order.errors import (
     AccountNumberValidationDigitsOnlyError,
     AccountNumberValidationSizeError,
     AccountNumberValidationTypeError,
+    AmountNotANumber,
     AmountValidationLengthError,
     AmountValidationLessOrEqualZeroError,
     CBCValidationTypeError,
@@ -57,7 +58,10 @@ def validate_amount(amount: str) -> Decimal:
         if len(amount) > 18:
             raise AmountValidationLengthError
 
-    value = Decimal(amount)
+    try:
+        value = Decimal(amount)
+    except InvalidOperation:
+        raise AmountNotANumber
     if value <= Decimal(0.0):
         raise AmountValidationLessOrEqualZeroError
 

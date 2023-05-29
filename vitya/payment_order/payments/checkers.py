@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Any, ClassVar, Dict, List, Tuple, Type, cast
+from typing import Any, ClassVar, Dict, List, Sequence, Tuple, Type
 
 from pydantic import BaseModel, root_validator
-from pydantic.errors import PydanticValueError
 
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.fields import (
@@ -39,9 +38,12 @@ from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 
 class CheckerError(ValueError):
+    def __init__(self, errors: Sequence[Exception]):
+        self._errors = errors
+
     @property
-    def errors(self) -> List[Type[PydanticValueError]]:
-        return cast(List[Type[PydanticValueError]], self.args[0])
+    def errors(self) -> Sequence[Exception]:
+        return self._errors
 
 
 class BaseChecker(ABC):
@@ -59,9 +61,9 @@ class BaseModelChecker(BaseModel):
         for checker, fields in cls.__checkers__:
             wild_fields = set(fields) - cls.__fields__.keys()
             if wild_fields:
-                errors.append(ValueError(f'Checker {checker} require unknown model fields {wild_fields}'))
+                errors.append(f'Checker {checker} require unknown model fields {wild_fields}')
         if errors:
-            raise CheckerError(errors)
+            raise ValueError(errors)
 
     @root_validator(pre=False)
     def run_checkers(cls, values: Dict[str, Any]) -> Dict[str, Any]:
@@ -132,8 +134,16 @@ class PayerINNChecker(BaseChecker):
 
 
 class UINChecker(BaseChecker):
-    def __init__(self, uin: UIN, payer_inn: INN, payer_status: PayerStatus, payment_type: PaymentType) -> None:
+    def __init__(
+        self,
+        uin: UIN,
+        payee_account: AccountNumber,
+        payer_inn: INN,
+        payer_status: PayerStatus,
+        payment_type: PaymentType,
+    ) -> None:
         self.uin = uin
+        self.payee_account = payee_account
         self.payer_inn = payer_inn
         self.payer_status = payer_status
         self.payment_type = payment_type
@@ -141,6 +151,7 @@ class UINChecker(BaseChecker):
     def check(self) -> None:
         check_uin(
             value=self.uin,
+            payee_account=self.payee_account,
             payment_type=self.payment_type,
             payer_status=self.payer_status,
             payer_inn=self.payer_inn,
@@ -148,12 +159,13 @@ class UINChecker(BaseChecker):
 
 
 class PurposeChecker(BaseChecker):
-    def __init__(self, purpose: Purpose, payment_type: PaymentType) -> None:
+    def __init__(self, purpose: Purpose, payment_type: PaymentType, payer_account: AccountNumber) -> None:
         self.purpose = purpose
         self.payment_type = payment_type
+        self.payer_account = payer_account
 
     def check(self) -> None:
-        check_purpose(value=self.purpose, payment_type=self.payment_type)
+        check_purpose(value=self.purpose, payment_type=self.payment_type, payer_account=self.payer_account)
 
 
 class PayeeINNChecker(BaseChecker):

@@ -224,24 +224,26 @@ def test_payer_inn_checker(
 
 class TestUinChecker(BaseModelChecker):
     uin: Optional[UIN]
+    payee_account: AccountNumber
     payer_inn: Optional[INN]
     payer_status: PayerStatus
     payment_type: PaymentType
 
     __checkers__ = [
-        (UINChecker, ['uin', 'payer_inn', 'payer_status', 'payment_type']),
+        (UINChecker, ['uin', 'payee_account', 'payer_inn', 'payer_status', 'payment_type']),
     ]
 
 
 @pytest.mark.parametrize(
-    'uin, payer_inn, payer_status, payment_type, exception',
+    'uin, payee_account, payer_inn, payer_status, payment_type, exception',
     [
-        (VALID_UIN, VALID_INN, '13', PaymentType.IP, None),
-        (None, VALID_INN, '31', PaymentType.FNS, UINValidationValueZeroError)
+        (VALID_UIN, AccountNumber(IP_ACCOUNT), VALID_INN, '13', PaymentType.IP, None),
+        (None, AccountNumber(IP_ACCOUNT), VALID_INN, '31', PaymentType.FNS, UINValidationValueZeroError)
     ]
 )
 def test_uin_checker(
     uin: UIN,
+    payee_account: AccountNumber,
     payer_inn: INN,
     payer_status: PayerStatus,
     payment_type: PaymentType,
@@ -250,6 +252,7 @@ def test_uin_checker(
     try:
         TestUinChecker(
             uin=uin,
+            payee_account=payee_account,
             payer_inn=payer_inn,
             payer_status=payer_status,
             payment_type=payment_type
@@ -263,25 +266,29 @@ def test_uin_checker(
 class TestPurposeChecker(BaseModelChecker):
     purpose: Purpose
     payment_type: PaymentType
+    payer_account: AccountNumber
 
     __checkers__ = [
-        (PurposeChecker, ['purpose', 'payment_type']),
+        (PurposeChecker, ['purpose', 'payment_type', 'payer_account']),
     ]
 
 
 @pytest.mark.parametrize(
-    'purpose, payment_type, exception',
+    'purpose, payment_type, payer_account, exception',
     [
-        ('some', PaymentType.IP, PurposeValidationIPNDSError),
+        ('some', PaymentType.IP, AccountNumber(IP_ACCOUNT), PurposeValidationIPNDSError),
+        ('some', PaymentType.BUDGET_OTHER, AccountNumber(IP_ACCOUNT), None),
+        ('some НДС', PaymentType.IP, AccountNumber(IP_ACCOUNT), None),
     ]
 )
 def test_purpose_checker(
     purpose: Purpose,
     payment_type: PaymentType,
+    payer_account: AccountNumber,
     exception: Type[Exception]
 ) -> None:
     try:
-        TestPurposeChecker(purpose=purpose, payment_type=payment_type)
+        TestPurposeChecker(purpose=purpose, payment_type=payment_type, payer_account=payer_account)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:

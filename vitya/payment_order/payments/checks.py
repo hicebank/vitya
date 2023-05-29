@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-from vitya.payment_order.enums import PaymentType
+from vitya.payment_order.enums import AccountKind, PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
     CBCValidationEmptyNotAllowed,
@@ -50,6 +50,7 @@ from vitya.payment_order.errors import (
     TaxPeriodValidationFNS02EmptyNotAllowed,
     TaxPeriodValidationFNSEmptyNotAllowed,
     TaxPeriodValidationFNSValueLenError,
+    UINValidationBONotEmpty,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
     UINValidationValueZeroError,
@@ -63,6 +64,7 @@ from vitya.payment_order.fields import (
     OperationKind,
     PayerStatus,
     Purpose,
+    PurposeCode,
     Reason,
     TaxPeriod,
 )
@@ -71,6 +73,7 @@ from vitya.payment_order.payments.constants import (
     DOCUMENT_NUMBERS,
     FNS_PAYEE_ACCOUNT_NUMBER,
 )
+from vitya.payment_order.payments.tools import get_account_kind
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 
@@ -112,9 +115,9 @@ def check_operation_kind(
 
 
 def check_purpose_code(
-    value: Optional[int],
+    value: Optional[PurposeCode],
     payment_type: PaymentType,
-) -> Optional[int]:
+) -> Optional[PurposeCode]:
     if payment_type != PaymentType.FL:
         if value is not None:
             raise PurposeCodeValidationNullError
@@ -126,10 +129,11 @@ def check_purpose_code(
 
 def check_uin(
     value: Optional[UIN],
+    payee_account: AccountNumber,
     payment_type: PaymentType,
-    payer_status: PayerStatus,
+    payer_status: Optional[PayerStatus],
     payer_inn: Optional[str],
-) -> Optional[str]:
+) -> Optional[UIN]:
     if not payment_type.is_budget:
         return None
 
@@ -137,6 +141,8 @@ def check_uin(
         raise UINValidationValueZeroError
 
     if payment_type == PaymentType.BUDGET_OTHER:
+        if payee_account.startswith('03212') and value is None:
+            raise UINValidationBONotEmpty
         return value
 
     if payment_type == PaymentType.FNS:
@@ -151,23 +157,27 @@ def check_uin(
 
 def check_purpose(
     value: Optional[Purpose],
+    payer_account: AccountNumber,
     payment_type: PaymentType,
-) -> Optional[str]:
-    if value is None:
-        return None
-
-    if payment_type == PaymentType.IP:
-        if not re.search(r'(?i)\bНДС\b', value):
-            raise PurposeValidationIPNDSError
+) -> Optional[Purpose]:
+    if (
+        not payment_type.is_budget
+        and get_account_kind(payer_account) == AccountKind.IP
+        and (
+            value is None
+            or not re.search(r'(?i)\bНДС\b', value)
+        )
+    ):
+        raise PurposeValidationIPNDSError
     return value
 
 
 def check_payer_inn(
     value: Optional[INN],
     payment_type: PaymentType,
-    payer_status: PayerStatus,
-    for_third_face: bool = False,
-) -> Optional[str]:
+    payer_status: Optional[PayerStatus],
+    for_third_face: bool,
+) -> Optional[INN]:
     if not payment_type.is_budget:
         return value
 
@@ -196,7 +206,7 @@ def check_payer_inn(
 def check_payee_inn(
     value: Optional[INN],
     payment_type: PaymentType,
-) -> Optional[str]:
+) -> Optional[INN]:
     if payment_type == PaymentType.IP:
         if value is None or len(value) != 12:
             raise PayeeINNValidationIPLenError
@@ -216,7 +226,7 @@ def check_payer_status(
     value: Optional[PayerStatus],
     payment_type: PaymentType,
     for_third_face: bool,
-) -> Optional[str]:
+) -> Optional[PayerStatus]:
     if not payment_type.is_budget:
         return None
 
@@ -232,14 +242,14 @@ def check_payer_status(
 def check_payer_kpp(
     value: Optional[KPP],
     payment_type: PaymentType,
-    payer_inn: str,
+    payer_inn: Optional[str],
 ) -> Optional[KPP]:
     if not payment_type.is_budget:
         return None
 
-    if len(payer_inn) == 10 and value is None:
+    if payer_inn is not None and len(payer_inn) == 10 and value is None:
         raise PayerKPPValidationINN10EmptyNotAllowed
-    elif len(payer_inn) == 12 and value is not None:
+    elif payer_inn is not None and len(payer_inn) == 12 and value is not None:
         raise PayerKPPValidationINN12OnlyEmptyError
     return value
 
@@ -279,7 +289,7 @@ def check_cbc(
 def check_oktmo(
     value: Optional[OKTMO],
     payment_type: PaymentType,
-    payer_status: PayerStatus,
+    payer_status: Optional[PayerStatus],
 ) -> Optional[OKTMO]:
     if not payment_type.is_budget:
         return None
@@ -322,7 +332,7 @@ def check_reason(
 def check_tax_period(
     value: Optional[TaxPeriod],
     payment_type: PaymentType,
-    payer_status: PayerStatus,
+    payer_status: Optional[PayerStatus],
 ) -> Optional[TaxPeriod]:
     if not payment_type.is_budget:
         return None

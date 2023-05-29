@@ -2,6 +2,12 @@ from enum import Enum
 from typing import List
 
 
+class AccountKind(str, Enum):
+    IP = 'ip'                           # счет ИП
+    FL = 'fl'                           # счет ФЛ
+    LE = 'le'                           # счет ЮР
+
+
 class PaymentType(str, Enum):
     FNS = 'fns'                         # бюджетный платеж в ФНС
     CUSTOMS = 'customs'                 # бюджетный платеж в таможню
@@ -18,15 +24,16 @@ class PaymentType(str, Enum):
     def is_budget(self) -> bool:
         return self in self.budget_types()
 
-    _TO_RU = {
-        FNS: 'ФНС',
-        CUSTOMS: 'Таможня',
-        BUDGET_OTHER: 'Иные',
-        IP: 'ИП',
-        FL: 'ФЛ',
-        LE: 'ЮЛ',
-    }
-
     @property
     def name_ru(self) -> str:
-        return self._TO_RU[self]
+        return _PAYMENT_TYPE_TO_RU[self]
+
+
+_PAYMENT_TYPE_TO_RU = {
+    PaymentType.FNS: 'ФНС',
+    PaymentType.CUSTOMS: 'Таможня',
+    PaymentType.BUDGET_OTHER: 'Иные',
+    PaymentType.IP: 'ИП',
+    PaymentType.FL: 'ФЛ',
+    PaymentType.LE: 'ЮЛ',
+}

@@ -15,12 +15,12 @@ class OKTMOValidationTypeError(OKTMOValidationError, PydanticTypeError):
     description_ru = 'должен быть строкой'
 
 
-class OKTMOValidationValueLenError(PydanticValueError):
+class OKTMOValidationValueLenError(OKTMOValidationError):
     description = 'must be match 8 or 11 digits'
     description_ru = 'должен состоять из 8 или 11 цифр'
 
 
-class OKTMOValidationValueError(PydanticValueError):
+class OKTMOValidationValueError(OKTMOValidationError):
     description = 'must be match as ([0-9]{11}|[0-9]{8})'
     description_ru = 'должен матчиться с ([0-9]{11}|[0-9]{8})'
 
