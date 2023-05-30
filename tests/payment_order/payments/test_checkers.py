@@ -47,6 +47,7 @@ from vitya.payment_order.errors import (
     PayerStatusValidationCustoms05NotAllowedError,
     PayerStatusValidationNullNotAllowedError,
     PurposeValidationIPNDSError,
+    ReasonValidationValueErrorCustoms,
     TaxPeriodValidationBOValueLenError,
     TaxPeriodValidationCustomsEmptyNotAllowed,
     TaxPeriodValidationCustomsValueLenError,
@@ -54,7 +55,7 @@ from vitya.payment_order.errors import (
     TaxPeriodValidationFNS02EmptyNotAllowed,
     TaxPeriodValidationFNSEmptyNotAllowed,
     TaxPeriodValidationFNSValueLenError,
-    UINValidationValueZeroError, ReasonValidationValueErrorCustoms,
+    UINValidationValueZeroError,
 )
 from vitya.payment_order.fields import (
     CBC,
