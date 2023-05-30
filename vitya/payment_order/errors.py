@@ -507,11 +507,6 @@ class ReasonValidationTypeError(ReasonValidationError, PydanticTypeError):
     description_ru = 'должно быть строкой'
 
 
-class ReasonValidationFNSOnlyEmptyError(ReasonValidationError):
-    description = 'for fns only empty allowed'
-    description_ru = 'для платежей в ФНС значение должно быть пустым'
-
-
 class ReasonValidationValueLenError(ReasonValidationError):
     description = 'must be 2 chars'
     description_ru = 'должно состоять из 2 символов'

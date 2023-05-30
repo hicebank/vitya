@@ -41,7 +41,6 @@ from vitya.payment_order.errors import (
     PurposeCodeValidationFlError,
     PurposeCodeValidationNullError,
     PurposeValidationIPNDSError,
-    ReasonValidationFNSOnlyEmptyError,
     ReasonValidationValueErrorCustoms,
     TaxPeriodValidationBOValueLenError,
     TaxPeriodValidationCustomsEmptyNotAllowed,
@@ -318,11 +317,7 @@ def check_reason(
     if not payment_type.is_budget:
         return None
 
-    if payment_type in {PaymentType.CUSTOMS, PaymentType.BUDGET_OTHER} and value is None:
-        return None
-    if payment_type == PaymentType.FNS:
-        if value is not None:
-            raise ReasonValidationFNSOnlyEmptyError
+    if payment_type.is_budget and value is None:
         return None
     if payment_type == PaymentType.CUSTOMS and value not in CUSTOMS_REASONS:
         raise ReasonValidationValueErrorCustoms

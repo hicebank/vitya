@@ -47,7 +47,7 @@ from vitya.payment_order.errors import (
     PayerStatusValidationCustoms05NotAllowedError,
     PayerStatusValidationNullNotAllowedError,
     PurposeValidationIPNDSError,
-    ReasonValidationFNSOnlyEmptyError,
+    ReasonValidationValueErrorCustoms,
     TaxPeriodValidationBOValueLenError,
     TaxPeriodValidationCustomsEmptyNotAllowed,
     TaxPeriodValidationCustomsValueLenError,
@@ -532,7 +532,7 @@ class TestReasonChecker(BaseModelChecker):
 @pytest.mark.parametrize(
     'reason, payment_type, exception',
     [
-        ('ПК', PaymentType.FNS, ReasonValidationFNSOnlyEmptyError),
+        ('ЦЦ', PaymentType.CUSTOMS, ReasonValidationValueErrorCustoms),
     ]
 )
 def test_reason_checker(
