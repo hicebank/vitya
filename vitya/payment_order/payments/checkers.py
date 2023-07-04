@@ -29,10 +29,11 @@ from vitya.payment_order.payments.checks import (
     check_payer_inn,
     check_payer_kpp,
     check_payer_status,
+    check_payment_type_and_for_third_person,
     check_purpose,
     check_reason,
     check_tax_period,
-    check_uin, check_payment_type_and_for_third_person,
+    check_uin,
 )
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 

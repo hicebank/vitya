@@ -4,6 +4,7 @@ from typing import Optional
 from vitya.payment_order.enums import AccountKind, PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
+    BudgetPaymentForThirdPersonError,
     CBCValidationEmptyNotAllowed,
     DocumentDateValidationBOLenError,
     DocumentDateValidationCustomsLenError,
@@ -52,7 +53,7 @@ from vitya.payment_order.errors import (
     UINValidationBONotEmpty,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
-    UINValidationValueZeroError, BudgetPaymentForThirdPersonError,
+    UINValidationValueZeroError,
 )
 from vitya.payment_order.fields import (
     CBC,
