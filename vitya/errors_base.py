@@ -1,15 +1,17 @@
-from typing import Any
+from typing import Any, Optional
 
 
 class VityaDescribedError(Exception):
-    target: str
+    target: Optional[str]
     description: str
 
-    target_ru: str
+    target_ru: Optional[str]
     description_ru: str
 
     def __str__(self) -> str:
-        return f"invalid {self.target}: {self.description}"
+        if self.target:
+            return f"invalid {self.target}: {self.description}"
+        return f"{self.description}"
 
     def __getattr__(self, item: str) -> Any:
         if item.endswith('_ru'):

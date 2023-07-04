@@ -52,7 +52,7 @@ from vitya.payment_order.errors import (
     UINValidationBONotEmpty,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
-    UINValidationValueZeroError,
+    UINValidationValueZeroError, BudgetPaymentForThirdPersonError,
 )
 from vitya.payment_order.fields import (
     CBC,
@@ -175,7 +175,7 @@ def check_payer_inn(
     value: Optional[INN],
     payment_type: PaymentType,
     payer_status: Optional[PayerStatus],
-    for_third_face: bool,
+    for_third_person: bool,
 ) -> Optional[INN]:
     if not payment_type.is_budget:
         return value
@@ -190,7 +190,7 @@ def check_payer_inn(
         raise PayerINNValidationEmptyNotAllowedError
 
     if payment_type == PaymentType.CUSTOMS:
-        if payer_status == '06' and for_third_face and len(value) != 10:
+        if payer_status == '06' and for_third_person and len(value) != 10:
             raise PayerINNValidationCustomsLen10Error
 
         if payer_status in {'16', '17'} and len(value) != 12:
@@ -221,10 +221,18 @@ def check_payee_inn(
     return value
 
 
+def check_payment_type_and_for_third_person(
+    payment_type: PaymentType,
+    for_third_person: bool,
+) -> None:
+    if for_third_person and not payment_type.is_budget:
+        raise BudgetPaymentForThirdPersonError
+
+
 def check_payer_status(
     value: Optional[PayerStatus],
     payment_type: PaymentType,
-    for_third_face: bool,
+    for_third_person: bool,
 ) -> Optional[PayerStatus]:
     if not payment_type.is_budget:
         return None
@@ -232,7 +240,7 @@ def check_payer_status(
     if value is None:
         raise PayerStatusValidationNullNotAllowedError
 
-    if payment_type == PaymentType.CUSTOMS and for_third_face and value == '06':
+    if payment_type == PaymentType.CUSTOMS and for_third_person and value == '06':
         raise PayerStatusValidationCustoms05NotAllowedError
 
     return value

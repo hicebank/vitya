@@ -32,7 +32,7 @@ from vitya.payment_order.payments.checks import (
     check_purpose,
     check_reason,
     check_tax_period,
-    check_uin,
+    check_uin, check_payment_type_and_for_third_person,
 )
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
@@ -116,12 +116,12 @@ class PayerINNChecker(BaseChecker):
         self,
         payer_inn: INN,
         payer_status: PayerStatus,
-        for_third_face: bool,
+        for_third_person: bool,
         payment_type: PaymentType
     ) -> None:
         self.payer_inn = payer_inn
         self.payer_status = payer_status
-        self.for_third_face = for_third_face
+        self.for_third_person = for_third_person
         self.payment_type = payment_type
 
     def check(self) -> None:
@@ -129,7 +129,7 @@ class PayerINNChecker(BaseChecker):
             value=self.payer_inn,
             payment_type=self.payment_type,
             payer_status=self.payer_status,
-            for_third_face=self.for_third_face
+            for_third_person=self.for_third_person
         )
 
 
@@ -186,14 +186,34 @@ class PayerStatusChecker(BaseChecker):
         self,
         payer_status: PayerStatus,
         payment_type: PaymentType,
-        for_third_face: bool,
+        for_third_person: bool,
     ) -> None:
         self.payer_status = payer_status
         self.payment_type = payment_type
-        self.for_third_face = for_third_face
+        self.for_third_person = for_third_person
 
     def check(self) -> None:
-        check_payer_status(value=self.payer_status, payment_type=self.payment_type, for_third_face=self.for_third_face)
+        check_payer_status(
+            value=self.payer_status,
+            payment_type=self.payment_type,
+            for_third_person=self.for_third_person
+        )
+
+
+class PaymentTypeAndForThirdPersonChecker(BaseChecker):
+    def __init__(
+        self,
+        payment_type: PaymentType,
+        for_third_person: bool,
+    ) -> None:
+        self.payment_type = payment_type
+        self.for_third_person = for_third_person
+
+    def check(self) -> None:
+        check_payment_type_and_for_third_person(
+            payment_type=self.payment_type,
+            for_third_person=self.for_third_person
+        )
 
 
 class PayerKPPChecker(BaseChecker):

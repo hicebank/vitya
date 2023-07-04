@@ -66,7 +66,7 @@ from vitya.payment_order.errors import (
     UINValidationBONotEmpty,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
-    UINValidationValueZeroError,
+    UINValidationValueZeroError, BudgetPaymentForThirdPersonError,
 )
 from vitya.payment_order.fields import (
     CBC,
@@ -95,7 +95,7 @@ from vitya.payment_order.payments.checks import (
     check_purpose_code,
     check_reason,
     check_tax_period,
-    check_uin,
+    check_uin, check_payment_type_and_for_third_person,
 )
 from vitya.payment_order.payments.constants import FNS_PAYEE_ACCOUNT_NUMBER
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
@@ -705,3 +705,32 @@ def test_check_document_date(
 ) -> None:
     with exception_handler:
         assert expected_value == check_document_date(value=value, payment_type=payment_type)
+
+
+@pytest.mark.parametrize(
+    'payment_type, for_third_person, exception_handler',
+    [
+        (PaymentType.FL, True, pytest.raises(BudgetPaymentForThirdPersonError)),
+        (PaymentType.IP, True, pytest.raises(BudgetPaymentForThirdPersonError)),
+        (PaymentType.LE, True, pytest.raises(BudgetPaymentForThirdPersonError)),
+        (PaymentType.FNS, True, nullcontext()),
+        (PaymentType.CUSTOMS, True, nullcontext()),
+        (PaymentType.BUDGET_OTHER, True, nullcontext()),
+        (PaymentType.FL, False, nullcontext()),
+        (PaymentType.IP, False, nullcontext()),
+        (PaymentType.LE, False, nullcontext()),
+        (PaymentType.FNS, False, nullcontext()),
+        (PaymentType.CUSTOMS, False, nullcontext()),
+        (PaymentType.BUDGET_OTHER, False, nullcontext()),
+    ]
+)
+def test_check_payment_type_and_for_third_person(
+    payment_type: PaymentType,
+    for_third_person: bool,
+    exception_handler: ContextManager,
+) -> None:
+    with exception_handler:
+        check_payment_type_and_for_third_person(
+            payment_type=payment_type,
+            for_third_person=for_third_person,
+        )
