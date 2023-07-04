@@ -19,6 +19,7 @@ from tests.payment_order.testdata import (
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
+    BudgetPaymentForThirdPersonError,
     CBCValidationEmptyNotAllowed,
     DocumentDateValidationBOLenError,
     DocumentDateValidationCustomsLenError,
@@ -91,6 +92,7 @@ from vitya.payment_order.payments.checks import (
     check_payer_inn,
     check_payer_kpp,
     check_payer_status,
+    check_payment_type_and_for_third_person,
     check_purpose,
     check_purpose_code,
     check_reason,
@@ -268,7 +270,7 @@ def test_check_purpose(
 
 
 @pytest.mark.parametrize(
-    'value, payment_type, payer_status, for_third_face, exception_handler, expected_value',
+    'value, payment_type, payer_status, for_third_person, exception_handler, expected_value',
     [
         (VALID_INN, PaymentType.FL, '', False, nullcontext(), VALID_INN),
         (None, PaymentType.BUDGET_OTHER, '', False, nullcontext(), None),
@@ -287,13 +289,13 @@ def test_check_payer_inn(
     value: Optional[str],
     payment_type: PaymentType,
     payer_status: PayerStatus,
-    for_third_face: bool,
+    for_third_person: bool,
     exception_handler: ContextManager,
     expected_value: str
 ) -> None:
     with exception_handler:
         assert expected_value == check_payer_inn(
-            value=value, payment_type=payment_type, payer_status=payer_status, for_third_face=for_third_face
+            value=value, payment_type=payment_type, payer_status=payer_status, for_third_person=for_third_person
         )
 
 
@@ -324,7 +326,7 @@ def test_check_payee_inn(
 
 
 @pytest.mark.parametrize(
-    'value, payment_type, for_third_face, exception_handler, expected_value',
+    'value, payment_type, for_third_person, exception_handler, expected_value',
     [
         ('01', PaymentType.FL, False, nullcontext(), None),
         (None, PaymentType.FL, False, nullcontext(), None),
@@ -338,7 +340,7 @@ def test_check_payee_inn(
 def test_check_payer_status(
     value: Optional[PayerStatus],
     payment_type: PaymentType,
-    for_third_face: bool,
+    for_third_person: bool,
     exception_handler: ContextManager,
     expected_value: Optional[PayerStatus],
 ) -> None:
@@ -346,7 +348,7 @@ def test_check_payer_status(
         assert expected_value == check_payer_status(
             value=value,
             payment_type=payment_type,
-            for_third_face=for_third_face,
+            for_third_person=for_third_person,
         )
 
 
@@ -705,3 +707,32 @@ def test_check_document_date(
 ) -> None:
     with exception_handler:
         assert expected_value == check_document_date(value=value, payment_type=payment_type)
+
+
+@pytest.mark.parametrize(
+    'payment_type, for_third_person, exception_handler',
+    [
+        (PaymentType.FL, True, pytest.raises(BudgetPaymentForThirdPersonError)),
+        (PaymentType.IP, True, pytest.raises(BudgetPaymentForThirdPersonError)),
+        (PaymentType.LE, True, pytest.raises(BudgetPaymentForThirdPersonError)),
+        (PaymentType.FNS, True, nullcontext()),
+        (PaymentType.CUSTOMS, True, nullcontext()),
+        (PaymentType.BUDGET_OTHER, True, nullcontext()),
+        (PaymentType.FL, False, nullcontext()),
+        (PaymentType.IP, False, nullcontext()),
+        (PaymentType.LE, False, nullcontext()),
+        (PaymentType.FNS, False, nullcontext()),
+        (PaymentType.CUSTOMS, False, nullcontext()),
+        (PaymentType.BUDGET_OTHER, False, nullcontext()),
+    ]
+)
+def test_check_payment_type_and_for_third_person(
+    payment_type: PaymentType,
+    for_third_person: bool,
+    exception_handler: ContextManager,
+) -> None:
+    with exception_handler:
+        check_payment_type_and_for_third_person(
+            payment_type=payment_type,
+            for_third_person=for_third_person,
+        )

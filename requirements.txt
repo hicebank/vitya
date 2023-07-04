@@ -1,4 +1,4 @@
-pydantic # Optional dependency for this package
+pydantic<2.0 # Optional dependency for this package
 
 # CI
 pytest==6.2.2

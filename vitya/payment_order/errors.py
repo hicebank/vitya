@@ -305,13 +305,6 @@ class PayeeINNValidationLELenError(PayeeINNValidationError):
     description_ru = 'для платежей в бюджет и платежей ЮЛ, ИНН должно быть 10 символов'
 
 
-class PayerAccountValidationError(VityaDescribedError, PydanticValueError):
-    target = 'payer account'
-    target_ru = 'счет плательщика'
-    description = 'base error'
-    description_ru = 'базовая ошибка'
-
-
 class PayeeAccountValidationError(VityaDescribedError, PydanticValueError):
     target = 'payee account'
     target_ru = 'счет получателя'
@@ -677,3 +670,10 @@ class DocumentDateValidationCustomsLenError(DocumentDateValidationError):
 class DocumentDateValidationBOLenError(DocumentDateValidationError):
     description = 'for bo value max 10 chars'
     description_ru = 'для иных платежей в бюджет значение не должно быть длиннее 10 символов'
+
+
+class BudgetPaymentForThirdPersonError(VityaDescribedError, PydanticValueError):
+    target = None
+    target_ru = None
+    description = 'budget payment can not for third person'
+    description_ru = 'платеж в бюджет не может быть за третье лицо'
