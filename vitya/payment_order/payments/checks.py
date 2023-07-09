@@ -53,7 +53,7 @@ from vitya.payment_order.errors import (
     UINValidationBONotEmpty,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
-    UINValidationValueZeroError,
+    UINValidationValueZeroError, PayeeINNValidationChameleonLenError, PurposeCodeValidationChameleonError,
 )
 from vitya.payment_order.fields import (
     CBC,
@@ -108,9 +108,8 @@ def check_operation_kind(
     value: OperationKind,
     payment_type: PaymentType
 ) -> OperationKind:
-    if payment_type.is_budget:
-        if value not in {'01', '02', '06'}:
-            raise OperationKindValidationBudgetValueError
+    if payment_type.is_budget and value not in {'01', '02', '06'}:
+        raise OperationKindValidationBudgetValueError
     return value
 
 
@@ -118,12 +117,14 @@ def check_purpose_code(
     value: Optional[PurposeCode],
     payment_type: PaymentType,
 ) -> Optional[PurposeCode]:
-    if payment_type != PaymentType.FL:
+    if payment_type not in (PaymentType.FL, PaymentType.CHAMELEON):
         if value is not None:
             raise PurposeCodeValidationNullError
         return None
     if value is not None and value not in {1, 2, 3, 4, 5}:
-        raise PurposeCodeValidationFlError
+        if payment_type == PaymentType.FL:
+            raise PurposeCodeValidationFlError
+        raise PurposeCodeValidationChameleonError
     return value
 
 
@@ -214,6 +215,10 @@ def check_payee_inn(
     elif payment_type == PaymentType.FL:
         if value is not None and len(value) != 12:
             raise PayeeINNValidationFLLenError
+        return value
+    elif payment_type == PaymentType.CHAMELEON:
+        if value is not None and len(value) not in (10, 12):
+            raise PayeeINNValidationChameleonLenError
         return value
     if value is None:
         raise PayeeINNValidationNonEmptyError

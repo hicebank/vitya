@@ -6,6 +6,7 @@ class AccountKind(str, Enum):
     IP = 'ip'                           # счет ИП
     FL = 'fl'                           # счет ФЛ
     LE = 'le'                           # счет ЮР
+    CHAMELEON = 'chameleon'             # счет Хамелиона
 
 
 class PaymentType(str, Enum):
@@ -15,6 +16,7 @@ class PaymentType(str, Enum):
     IP = 'ip'                           # платеж на ИП
     FL = 'fl'                           # платеж на ФЛ
     LE = 'le'                           # платеж на ЮР
+    CHAMELEON = 'chameleon'             # платеж на Хамелиона
 
     @classmethod
     def budget_types(cls) -> List['PaymentType']:
@@ -36,4 +38,5 @@ _PAYMENT_TYPE_TO_RU = {
     PaymentType.IP: 'ИП',
     PaymentType.FL: 'ФЛ',
     PaymentType.LE: 'ЮЛ',
+    PaymentType.CHAMELEON: 'Хамелион',
 }

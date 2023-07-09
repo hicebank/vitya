@@ -137,12 +137,21 @@ class PurposeCodeValidationTypeError(PurposeCodeValidationError, PydanticTypeErr
 
 class PurposeCodeValidationNullError(PurposeCodeValidationError):
     description = 'for non fl payment value must be null'
-    description_ru = 'должен отсутствовать для не ФЛ платежей'
+    description_ru = 'должен отсутствовать для не ФЛ платежей и не хамелиона'
+
+
+class PurposeCodeValidationError(PurposeCodeValidationError):
+    pass
 
 
 class PurposeCodeValidationFlError(PurposeCodeValidationError):
     description = 'for fl payment value must be in {1, 2, 3, 4, 5}'
-    description_ru = 'для ФЛ платежей должен быть одним из {1, 2, 3, 4, 5}'
+    description_ru = 'для платежей ФЛ должен быть одним из {1, 2, 3, 4, 5}'
+
+
+class PurposeCodeValidationChameleonError(PurposeCodeValidationError):
+    description = 'for chameleon payment value must be in {1, 2, 3, 4, 5}'
+    description_ru = 'для платежей хамелиону должен быть одним из {1, 2, 3, 4, 5}'
 
 
 class UINValidationError(VityaDescribedError, PydanticValueError):
@@ -293,6 +302,11 @@ class PayeeINNValidationFLenError(INNValidationLenError, PayeeINNValidationError
 class PayeeINNValidationFLLenError(INNValidationLenError, PayeeINNValidationError):
     description = 'for fl payee inn must be empty or 12 chars'
     description_ru = 'для платежей ИП ИНН получателя должно быть пустым или содержать 12 символов'
+
+
+class PayeeINNValidationChameleonLenError(INNValidationLenError, PayeeINNValidationError):
+    description = 'for chameleon payee inn must be empty or 12 or 10 chars'
+    description_ru = 'для платежей Хамелиону ИНН получателя должно быть пустым или содержать 12 или 10 символов'
 
 
 class PayeeINNValidationIPLenError(PayeeINNValidationError):

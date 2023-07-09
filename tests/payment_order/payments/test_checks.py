@@ -67,7 +67,7 @@ from vitya.payment_order.errors import (
     UINValidationBONotEmpty,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
-    UINValidationValueZeroError,
+    UINValidationValueZeroError, PurposeCodeValidationChameleonError,
 )
 from vitya.payment_order.fields import (
     CBC,
@@ -162,6 +162,7 @@ def test_check_operation_kind(
     [
         (1, PaymentType.FL, nullcontext(), 1),
         (6, PaymentType.FL, pytest.raises(PurposeCodeValidationFlError), None),
+        (6, PaymentType.CHAMELEON, pytest.raises(PurposeCodeValidationChameleonError), None),
         (None, PaymentType.IP, nullcontext(), None),
         (1, PaymentType.IP, pytest.raises(PurposeCodeValidationNullError), None),
     ]
@@ -309,6 +310,10 @@ def test_check_payer_inn(
         (None, PaymentType.FL, nullcontext(), None),
         (FL_INN, PaymentType.FL, nullcontext(), FL_INN),
         (LE_INN, PaymentType.FL, pytest.raises(PayeeINNValidationFLLenError), None),
+
+        (None, PaymentType.CHAMELEON, nullcontext(), None),
+        (FL_INN, PaymentType.CHAMELEON, nullcontext(), FL_INN),
+        (LE_INN, PaymentType.CHAMELEON, nullcontext(), LE_INN),
 
         (None, PaymentType.CUSTOMS, pytest.raises(PayeeINNValidationNonEmptyError), None),
         (IP_INN, PaymentType.CUSTOMS, pytest.raises(PayeeINNValidationLELenError), None),
