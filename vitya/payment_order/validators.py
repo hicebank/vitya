@@ -19,8 +19,8 @@ from vitya.payment_order.errors import (
     NumberValidationLenError,
     OperationKindValidationTypeError,
     OperationKindValidationValueError,
-    PayeeValidationNameError,
-    PayeeValidationSizeError,
+    ReceiverValidationNameError,
+    ReceiverValidationSizeError,
     PayerStatusValidationTypeError,
     PayerStatusValidationValueError,
     PayerValidationSizeError,
@@ -83,13 +83,13 @@ def validate_payer(value: str) -> str:
     return value
 
 
-def validate_payee(value: str) -> str:
+def validate_receiver(value: str) -> str:
     try:
         validate_customer(value)
     except CustomerValidationSizeError as e:
-        raise PayeeValidationSizeError from e
+        raise ReceiverValidationSizeError from e
     if bool(re.match('(.*)(4)[0-9]{19}', value)):
-        raise PayeeValidationNameError
+        raise ReceiverValidationNameError
     return value
 
 

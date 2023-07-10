@@ -73,16 +73,16 @@ class PayerValidationSizeError(PayerValidationError, CustomerValidationSizeError
     pass
 
 
-class PayeeValidationError(CustomerValidationError):
-    target = 'payee'
+class ReceiverValidationError(CustomerValidationError):
+    target = 'receiver'
     target_ru = 'получатель'
 
 
-class PayeeValidationSizeError(PayeeValidationError, CustomerValidationSizeError):
+class ReceiverValidationSizeError(ReceiverValidationError, CustomerValidationSizeError):
     pass
 
 
-class PayeeValidationNameError(PayeeValidationError):
+class ReceiverValidationNameError(ReceiverValidationError):
     description = 'contains account number'
     description_ru = 'содержит номер счета'
 
@@ -211,7 +211,7 @@ class UINValidationFNSNotValueZeroError(UINValidationFNSValueError):
 
 
 class UINValidationBONotEmpty(UINValidationFNSValueError):
-    description = 'for budget other and payee number starting with 03212 uin must be filled'
+    description = 'for budget other and receiver number starting with 03212 uin must be filled'
     description_ru = (
         'для платежей в бюджет иные с номером счёта получателя, который начинается с "03212", УИН должен быть заполен'
     )
@@ -284,59 +284,59 @@ class PayerINNValidationFiveOnlyZerosError(PayerINNValidationError):
     description_ru = 'ИНН с длиной 5 символов не может содержать только нули'
 
 
-class PayeeINNValidationError(INNValidationError):
-    target = 'payee inn'
+class ReceiverINNValidationError(INNValidationError):
+    target = 'receiver inn'
     target_ru = 'ИНН получателя'
 
 
-class PayeeINNValidationNonEmptyError(PayeeINNValidationError):
+class ReceiverINNValidationNonEmptyError(ReceiverINNValidationError):
     description = 'cannot be empty'
     description_ru = 'не может быть пустым'
 
 
-class PayeeINNValidationFLenError(INNValidationLenError, PayeeINNValidationError):
-    description = 'for fl payee inn must be 12'
+class ReceiverINNValidationFLenError(INNValidationLenError, ReceiverINNValidationError):
+    description = 'for fl receiver inn must be 12'
     description_ru = 'для платежей ИП ИНН получателя должно быть длиной 12 символов'
 
 
-class PayeeINNValidationFLLenError(INNValidationLenError, PayeeINNValidationError):
-    description = 'for fl payee inn must be empty or 12 chars'
+class ReceiverINNValidationFLLenError(INNValidationLenError, ReceiverINNValidationError):
+    description = 'for fl receiver inn must be empty or 12 chars'
     description_ru = 'для платежей ИП ИНН получателя должно быть пустым или содержать 12 символов'
 
 
-class PayeeINNValidationChameleonLenError(INNValidationLenError, PayeeINNValidationError):
-    description = 'for chameleon payee inn must be empty or 12 or 10 chars'
+class ReceiverINNValidationChameleonLenError(INNValidationLenError, ReceiverINNValidationError):
+    description = 'for chameleon receiver inn must be empty or 12 or 10 chars'
     description_ru = 'для платежей Хамелиону ИНН получателя должно быть пустым или содержать 12 или 10 символов'
 
 
-class PayeeINNValidationIPLenError(PayeeINNValidationError):
-    description = 'for ip payee inn must be 12'
+class ReceiverINNValidationIPLenError(ReceiverINNValidationError):
+    description = 'for ip receiver inn must be 12'
     description_ru = 'для платежей ИП ИНН получателя должно быть 12 символов'
 
 
-class PayeeINNValidationLELenError(PayeeINNValidationError):
+class ReceiverINNValidationLELenError(ReceiverINNValidationError):
     description = 'for fns, customs, bo and le inn must be 10'
     description_ru = 'для платежей в бюджет и платежей ЮЛ, ИНН должно быть 10 символов'
 
 
-class PayeeAccountValidationError(VityaDescribedError, PydanticValueError):
-    target = 'payee account'
+class ReceiverAccountValidationError(VityaDescribedError, PydanticValueError):
+    target = 'receiver account'
     target_ru = 'счет получателя'
     description = 'base error'
     description_ru = 'базовая ошибка'
 
 
-class PayeeAccountValidationNonEmptyError(PayeeAccountValidationError):
+class ReceiverAccountValidationNonEmptyError(ReceiverAccountValidationError):
     description = 'cannot be empty'
     description_ru = 'не может быть пустым'
 
 
-class PayeeAccountValidationLenError(PayeeAccountValidationError):
+class ReceiverAccountValidationLenError(ReceiverAccountValidationError):
     description = 'must be 20 digits'
     description_ru = 'должен состоять из 20 цифр'
 
 
-class PayeeAccountValidationFNSValueError(PayeeAccountValidationError):
+class ReceiverAccountValidationFNSValueError(ReceiverAccountValidationError):
     description = 'for FNS payment account must be "03100643000000018500"'
     description_ru = 'для платежей в ФНС счет должен быть "03100643000000018500"'
 
@@ -368,7 +368,7 @@ class AccountValidationBICValueError(AccountNumberValidationError):
     description_ru = 'не ключуется с БИКом'
 
 
-class PayeeAccountValidationBICValueError(AccountValidationBICValueError, PayeeAccountValidationError):
+class ReceiverAccountValidationBICValueError(AccountValidationBICValueError, ReceiverAccountValidationError):
     pass
 
 
@@ -431,24 +431,24 @@ class PayerKPPValidationINN12OnlyEmptyError(PayerKPPValidationOnlyEmptyError):
     description_ru = 'для платежей в бюджет с длиной ИНН равной 12 значение КПП должно быть пустым'
 
 
-class PayeeKPPValidationError(KPPValidationError):
-    target = 'payee kpp'
+class ReceiverKPPValidationError(KPPValidationError):
+    target = 'receiver kpp'
     target_ru = 'КПП получателя'
     description = 'base error'
     description_ru = 'базовая ошибка'
 
 
-class PayeeKPPValidationOnlyEmptyError(PayeeKPPValidationError, KPPValidationOnlyEmptyError):
+class ReceiverKPPValidationOnlyEmptyError(ReceiverKPPValidationError, KPPValidationOnlyEmptyError):
     description = 'for ip or fl only empty allowed'
     description_ru = 'для платежей ИП и ФЛ значение должно быть пустым'
 
 
-class PayeeKPPValidationEmptyNotAllowed(PayeeKPPValidationError, KPPValidationEmptyNotAllowed):
+class ReceiverKPPValidationEmptyNotAllowed(ReceiverKPPValidationError, KPPValidationEmptyNotAllowed):
     description = 'for fns, customs, budget other or le empty value is not allowed'
     description_ru = 'для платежей в бюджет или платежей ЮЛ пустое значение недопустимо'
 
 
-class PayeeKPPValidationStartsWithZeros(PayeeKPPValidationError):
+class ReceiverKPPValidationStartsWithZeros(ReceiverKPPValidationError):
     description = 'for fns, customs, budget other or le kpp cannot starts with "00"'
     description_ru = 'для платежей в бюджет или платежей ЮЛ значение не может начинаться с "00"'
 
@@ -616,7 +616,7 @@ class DocumentNumberValidationBOEmptyNotAllowed(DocumentNumberValidationEmptyNot
 
 class DocumentNumberValidationBOOnlyEmptyError(DocumentNumberValidationOnlyEmptyError):
     description = (
-        'for bo with payee account starts with "03212",'
+        'for bo with receiver account starts with "03212",'
         ' payer status = "31", uin is not empty - empty value is not allowed'
     )
     description_ru = (

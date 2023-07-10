@@ -10,7 +10,7 @@ from vitya.payment_order.validators import (
     validate_document_number,
     validate_number,
     validate_operation_kind,
-    validate_payee,
+    validate_receiver,
     validate_payer,
     validate_payer_status,
     validate_payment_order,
@@ -62,7 +62,7 @@ class Payee(Customer):
 
     @classmethod
     def _validate(cls, value: str) -> str:
-        return validate_payee(value)
+        return validate_receiver(value)
 
 
 class PaymentOrder(FieldMixin, int):

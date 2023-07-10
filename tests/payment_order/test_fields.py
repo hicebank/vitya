@@ -15,8 +15,6 @@ from vitya.payment_order.errors import (
     NumberValidationLenError,
     OperationKindValidationTypeError,
     OperationKindValidationValueError,
-    PayeeValidationNameError,
-    PayeeValidationSizeError,
     PayerValidationSizeError,
     PaymentOrderValidationError,
     PurposeCodeValidationTypeError,
@@ -26,7 +24,7 @@ from vitya.payment_order.errors import (
     UINValidationDigitsOnlyError,
     UINValidationLenError,
     UINValidationOnlyZeroError,
-    UINValidationTypeError,
+    UINValidationTypeError, ReceiverValidationSizeError, ReceiverValidationNameError,
 )
 from vitya.payment_order.fields import (
     UIN,
@@ -119,12 +117,12 @@ class TestPayeeModel(BaseModel):
     'value, exception, expected',
     [
         ('Ashot Ashot', None, 'Ashot Ashot'),
-        ('', PayeeValidationSizeError, None),
-        ('0' * 161, PayeeValidationSizeError, None),
-        ('with 40802810722200035222', PayeeValidationNameError, None),
+        ('', ReceiverValidationSizeError, None),
+        ('0' * 161, ReceiverValidationSizeError, None),
+        ('with 40802810722200035222', ReceiverValidationNameError, None),
     ]
 )
-def test_payee(
+def test_receiver(
     value: str,
     exception: Type[Exception],
     expected: str,

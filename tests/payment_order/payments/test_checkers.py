@@ -33,14 +33,14 @@ from vitya.payment_order.errors import (
     OKTMOValidationFNSEmptyNotAllowed,
     OKTMOValidationZerosNotAllowed,
     OperationKindValidationBudgetValueError,
-    PayeeAccountValidationBICValueError,
-    PayeeAccountValidationFNSValueError,
-    PayeeINNValidationFLLenError,
-    PayeeINNValidationIPLenError,
-    PayeeINNValidationLELenError,
-    PayeeINNValidationNonEmptyError,
-    PayeeKPPValidationEmptyNotAllowed,
-    PayeeKPPValidationOnlyEmptyError,
+    ReceiverAccountValidationBICValueError,
+    ReceiverAccountValidationFNSValueError,
+    ReceiverINNValidationFLLenError,
+    ReceiverINNValidationIPLenError,
+    ReceiverINNValidationLELenError,
+    ReceiverINNValidationNonEmptyError,
+    ReceiverKPPValidationEmptyNotAllowed,
+    ReceiverKPPValidationOnlyEmptyError,
     PayerINNValidationEmptyNotAllowedError,
     PayerKPPValidationINN10EmptyNotAllowed,
     PayerKPPValidationINN12OnlyEmptyError,
@@ -70,16 +70,15 @@ from vitya.payment_order.fields import (
     TaxPeriod,
 )
 from vitya.payment_order.payments.checkers import (
-    AccountBicChecker,
     BaseModelChecker,
     CBCChecker,
     DocumentDateChecker,
     DocumentNumberChecker,
     OKTMOChecker,
     OperationKindChecker,
-    PayeeAccountChecker,
-    PayeeINNChecker,
-    PayeeKPPChecker,
+    ReceiverAccountChecker,
+    ReceiverINNChecker,
+    ReceiverKPPChecker,
     PayerINNChecker,
     PayerKPPChecker,
     PayerStatusChecker,
@@ -88,46 +87,17 @@ from vitya.payment_order.payments.checkers import (
     TaxPeriodChecker,
     UINChecker,
 )
-from vitya.payment_order.payments.constants import FNS_PAYEE_ACCOUNT_NUMBER
+from vitya.payment_order.payments.constants import FNS_RECEIVER_ACCOUNT_NUMBER
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 
-class TestAccountBicModelChecker(BaseModelChecker):
-    account_number: AccountNumber
-    bic: BIC
-
-    __checkers__ = [
-        (AccountBicChecker, ['account_number', 'bic'])
-    ]
-
-
-@pytest.mark.parametrize(
-    'account_number, bic, exception',
-    [
-        (IP_ACCOUNT, VALID_BIC, None),
-        (IP_ACCOUNT, VALID_BIC[:-1] + '1', AccountValidationBICValueError)
-    ]
-)
-def test_account_bic_checker(
-    account_number: AccountNumber,
-    bic: BIC,
-    exception: Type[Exception]
-) -> None:
-    try:
-        TestAccountBicModelChecker(account_number=account_number, bic=bic)
-    except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
-    else:
-        assert exception is None
-
-
-class TestPayeeAccountModelChecker(BaseModelChecker):
+class TestReceiverAccountModelChecker(BaseModelChecker):
     account_number: AccountNumber
     bic: BIC
     payment_type: PaymentType
 
-    __checkers__ = [
-        (PayeeAccountChecker, ['account_number', 'bic', 'payment_type'])
+    __extra_checkers__ = [
+        (ReceiverAccountChecker, ['account_number', 'bic', 'payment_type'])
     ]
 
 
@@ -135,19 +105,19 @@ class TestPayeeAccountModelChecker(BaseModelChecker):
     'account_number, bic, payment_type, exception',
     [
         (IP_ACCOUNT, VALID_BIC, PaymentType.IP, None),
-        (IP_ACCOUNT, VALID_BIC, PaymentType.FNS, PayeeAccountValidationFNSValueError),
-        (FNS_PAYEE_ACCOUNT_NUMBER, VALID_BIC, PaymentType.FNS, None),
-        (IP_ACCOUNT, VALID_BIC[:-1] + '1', PaymentType.IP, PayeeAccountValidationBICValueError),
+        (IP_ACCOUNT, VALID_BIC, PaymentType.FNS, ReceiverAccountValidationFNSValueError),
+        (FNS_RECEIVER_ACCOUNT_NUMBER, VALID_BIC, PaymentType.FNS, None),
+        (IP_ACCOUNT, VALID_BIC[:-1] + '1', PaymentType.IP, ReceiverAccountValidationBICValueError),
     ]
 )
-def test_payee_account_checker(
+def test_receiver_account_checker(
     account_number: AccountNumber,
     bic: BIC,
     payment_type: PaymentType,
     exception: Type[Exception]
 ) -> None:
     try:
-        TestPayeeAccountModelChecker(account_number=account_number, bic=bic, payment_type=payment_type)
+        TestReceiverAccountModelChecker(account_number=account_number, bic=bic, payment_type=payment_type)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:
@@ -158,7 +128,7 @@ class TestOperationKindChecker(BaseModelChecker):
     operation_kind: OperationKind
     payment_type: PaymentType
 
-    __checkers__ = [
+    __extra_checkers__ = [
         (OperationKindChecker, ['operation_kind', 'payment_type'])
     ]
 
@@ -190,7 +160,7 @@ class TestPayerInnChecker(BaseModelChecker):
     for_third_face: bool
     payment_type: PaymentType
 
-    __checkers__ = [
+    __extra_checkers__ = [
         (PayerINNChecker, ['payer_inn', 'payer_status', 'for_third_face', 'payment_type']),
     ]
 
@@ -224,18 +194,18 @@ def test_payer_inn_checker(
 
 class TestUinChecker(BaseModelChecker):
     uin: Optional[UIN]
-    payee_account: AccountNumber
+    receiver_account: AccountNumber
     payer_inn: Optional[INN]
     payer_status: PayerStatus
     payment_type: PaymentType
 
-    __checkers__ = [
-        (UINChecker, ['uin', 'payee_account', 'payer_inn', 'payer_status', 'payment_type']),
+    __extra_checkers__ = [
+        (UINChecker, ['uin', 'receiver_account', 'payer_inn', 'payer_status', 'payment_type']),
     ]
 
 
 @pytest.mark.parametrize(
-    'uin, payee_account, payer_inn, payer_status, payment_type, exception',
+    'uin, receiver_account, payer_inn, payer_status, payment_type, exception',
     [
         (VALID_UIN, AccountNumber(IP_ACCOUNT), VALID_INN, '13', PaymentType.IP, None),
         (None, AccountNumber(IP_ACCOUNT), VALID_INN, '31', PaymentType.FNS, UINValidationValueZeroError)
@@ -243,7 +213,7 @@ class TestUinChecker(BaseModelChecker):
 )
 def test_uin_checker(
     uin: UIN,
-    payee_account: AccountNumber,
+    receiver_account: AccountNumber,
     payer_inn: INN,
     payer_status: PayerStatus,
     payment_type: PaymentType,
@@ -252,7 +222,7 @@ def test_uin_checker(
     try:
         TestUinChecker(
             uin=uin,
-            payee_account=payee_account,
+            receiver_account=receiver_account,
             payer_inn=payer_inn,
             payer_status=payer_status,
             payment_type=payment_type
@@ -268,7 +238,7 @@ class TestPurposeChecker(BaseModelChecker):
     payment_type: PaymentType
     payer_account: AccountNumber
 
-    __checkers__ = [
+    __extra_checkers__ = [
         (PurposeChecker, ['purpose', 'payment_type', 'payer_account']),
     ]
 
@@ -300,9 +270,8 @@ class TestSeveralChecker(BaseModelChecker):
     bic: BIC
     payment_type: PaymentType
 
-    __checkers__ = [
-        (AccountBicChecker, ['account_number', 'bic']),
-        (PayeeAccountChecker, ['account_number', 'bic', 'payment_type'])
+    __extra_checkers__ = [
+        (ReceiverAccountChecker, ['account_number', 'bic', 'payment_type'])
     ]
 
 
@@ -310,7 +279,7 @@ class TestSeveralChecker(BaseModelChecker):
     'account_number, bic, payment_type, exceptions',
     [
         (IP_ACCOUNT, VALID_BIC[:-1] + '1', PaymentType.FNS,
-         (AccountValidationBICValueError, PayeeAccountValidationFNSValueError))
+         (AccountValidationBICValueError, ReceiverAccountValidationFNSValueError))
     ]
 )
 def test_several_checker(
@@ -329,32 +298,32 @@ def test_several_checker(
             raise NotImplementedError
 
 
-class TestPayeeInnChecker(BaseModelChecker):
-    payee_inn: Optional[INN]
+class TestReceiverInnChecker(BaseModelChecker):
+    receiver_inn: Optional[INN]
     payment_type: PaymentType
 
-    __checkers__ = [
-        (PayeeINNChecker, ['payee_inn', 'payment_type']),
+    __extra_checkers__ = [
+        (ReceiverINNChecker, ['receiver_inn', 'payment_type']),
     ]
 
 
 @pytest.mark.parametrize(
-    'payee_inn, payment_type, exception',
+    'receiver_inn, payment_type, exception',
     [
-        (LE_INN, PaymentType.IP, PayeeINNValidationIPLenError),
-        (None, PaymentType.IP, PayeeINNValidationIPLenError),
-        (LE_INN, PaymentType.FL, PayeeINNValidationFLLenError),
-        (None, PaymentType.CUSTOMS, PayeeINNValidationNonEmptyError),
-        (IP_INN, PaymentType.CUSTOMS, PayeeINNValidationLELenError),
+        (LE_INN, PaymentType.IP, ReceiverINNValidationIPLenError),
+        (None, PaymentType.IP, ReceiverINNValidationIPLenError),
+        (LE_INN, PaymentType.FL, ReceiverINNValidationFLLenError),
+        (None, PaymentType.CUSTOMS, ReceiverINNValidationNonEmptyError),
+        (IP_INN, PaymentType.CUSTOMS, ReceiverINNValidationLELenError),
     ]
 )
-def test_payee_inn_checker(
-    payee_inn: INN,
+def test_receiver_inn_checker(
+    receiver_inn: INN,
     payment_type: PaymentType,
     exception: Type[Exception]
 ) -> None:
     try:
-        TestPayeeInnChecker(payee_inn=payee_inn, payment_type=payment_type)
+        TestReceiverInnChecker(receiver_inn=receiver_inn, payment_type=payment_type)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:
@@ -366,7 +335,7 @@ class TestPayerStatusChecker(BaseModelChecker):
     payment_type: PaymentType
     for_third_face: bool
 
-    __checkers__ = [
+    __extra_checkers__ = [
         (PayerStatusChecker, ['payer_status', 'payment_type', 'for_third_face']),
     ]
 
@@ -397,7 +366,7 @@ class TestPayerKppChecker(BaseModelChecker):
     payment_type: PaymentType
     payer_inn: INN
 
-    __checkers__ = [
+    __extra_checkers__ = [
         (PayerKPPChecker, ['payer_kpp', 'payment_type', 'payer_inn']),
     ]
 
@@ -425,32 +394,32 @@ def test_payer_kpp_checker(
         assert exception is None
 
 
-class TestPayeeKppChecker(BaseModelChecker):
-    payee_kpp: Optional[KPP]
+class TestReceiverKppChecker(BaseModelChecker):
+    receiver_kpp: Optional[KPP]
     payment_type: PaymentType
 
-    __checkers__ = [
-        (PayeeKPPChecker, ['payee_kpp', 'payment_type']),
+    __extra_checkers__ = [
+        (ReceiverKPPChecker, ['receiver_kpp', 'payment_type']),
     ]
 
 
 @pytest.mark.parametrize(
-    'payee_kpp, payment_type, exception',
+    'receiver_kpp, payment_type, exception',
     [
         (None, PaymentType.FL, None),
-        (VALID_KPP, PaymentType.FL, PayeeKPPValidationOnlyEmptyError),
+        (VALID_KPP, PaymentType.FL, ReceiverKPPValidationOnlyEmptyError),
 
-        (None, PaymentType.CUSTOMS, PayeeKPPValidationEmptyNotAllowed),
+        (None, PaymentType.CUSTOMS, ReceiverKPPValidationEmptyNotAllowed),
         (VALID_KPP, PaymentType.CUSTOMS, None),
     ]
 )
-def test_payee_kpp_checker(
-    payee_kpp: KPP,
+def test_receiver_kpp_checker(
+    receiver_kpp: KPP,
     payment_type: PaymentType,
     exception: Type[Exception]
 ) -> None:
     try:
-        TestPayeeKppChecker(payee_kpp=payee_kpp, payment_type=payment_type)
+        TestReceiverKppChecker(receiver_kpp=receiver_kpp, payment_type=payment_type)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:
@@ -461,7 +430,7 @@ class TestCBCChecker(BaseModelChecker):
     cbc: Optional[CBC]
     payment_type: PaymentType
 
-    __checkers__ = [
+    __extra_checkers__ = [
         (CBCChecker, ['cbc', 'payment_type']),
     ]
 
@@ -493,7 +462,7 @@ class TestOktmoChecker(BaseModelChecker):
     payment_type: PaymentType
     payer_status: PayerStatus
 
-    __checkers__ = [
+    __extra_checkers__ = [
         (OKTMOChecker, ['oktmo', 'payment_type', 'payer_status']),
     ]
 
@@ -524,7 +493,7 @@ class TestReasonChecker(BaseModelChecker):
     reason: Optional[Reason]
     payment_type: PaymentType
 
-    __checkers__ = [
+    __extra_checkers__ = [
         (ReasonChecker, ['reason', 'payment_type']),
     ]
 
@@ -553,7 +522,7 @@ class TestTaxPeriodChecker(BaseModelChecker):
     payment_type: PaymentType
     payer_status: PayerStatus
 
-    __checkers__ = [
+    __extra_checkers__ = [
         (TaxPeriodChecker, ['tax_period', 'payment_type', 'payer_status']),
     ]
 
@@ -590,15 +559,15 @@ class DocumentNumberCheckerChecker(BaseModelChecker):
     payment_type: PaymentType
     reason: Optional[Reason]
     payer_status: PayerStatus
-    payee_account: AccountNumber
+    receiver_account: AccountNumber
     uin: Optional[UIN]
     payer_inn: Optional[INN]
 
-    __checkers__ = [
+    __extra_checkers__ = [
         (
             DocumentNumberChecker, [
                 'document_number', 'payment_type', 'reason',
-                'payer_status', 'payee_account', 'uin', 'payer_inn',
+                'payer_status', 'receiver_account', 'uin', 'payer_inn',
             ]
         ),
     ]
@@ -606,7 +575,7 @@ class DocumentNumberCheckerChecker(BaseModelChecker):
 
 @parametrize_with_dict(
     [
-        'document_number', 'payment_type', 'payer_status', 'payee_account',
+        'document_number', 'payment_type', 'payer_status', 'receiver_account',
         'payer_inn', 'uin', 'reason', 'exception',
     ],
     [
@@ -614,7 +583,7 @@ class DocumentNumberCheckerChecker(BaseModelChecker):
             'document_number': '02;1222',
             'payment_type': PaymentType.FNS,
             'payer_status': '13',
-            'payee_account': IP_ACCOUNT,
+            'receiver_account': IP_ACCOUNT,
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': None,
@@ -624,7 +593,7 @@ class DocumentNumberCheckerChecker(BaseModelChecker):
             'document_number': '02;1222',
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '31',
-            'payee_account': '03212' + '1' * 15,
+            'receiver_account': '03212' + '1' * 15,
             'payer_inn': VALID_INN,
             'uin': VALID_UIN,
             'reason': '',
@@ -634,7 +603,7 @@ class DocumentNumberCheckerChecker(BaseModelChecker):
             'document_number': None,
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '24',
-            'payee_account': IP_ACCOUNT,
+            'receiver_account': IP_ACCOUNT,
             'payer_inn': None,
             'uin': None,
             'reason': '',
@@ -644,7 +613,7 @@ class DocumentNumberCheckerChecker(BaseModelChecker):
             'document_number': '1' * 16,
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '24',
-            'payee_account': IP_ACCOUNT,
+            'receiver_account': IP_ACCOUNT,
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': '',
@@ -654,7 +623,7 @@ class DocumentNumberCheckerChecker(BaseModelChecker):
             'document_number': '18;',
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '24',
-            'payee_account': IP_ACCOUNT,
+            'receiver_account': IP_ACCOUNT,
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': '',
@@ -664,7 +633,7 @@ class DocumentNumberCheckerChecker(BaseModelChecker):
             'document_number': None,
             'payment_type': PaymentType.CUSTOMS,
             'payer_status': '24',
-            'payee_account': IP_ACCOUNT,
+            'receiver_account': IP_ACCOUNT,
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': '00',
@@ -674,7 +643,7 @@ class DocumentNumberCheckerChecker(BaseModelChecker):
             'document_number': '1' * 8,
             'payment_type': PaymentType.CUSTOMS,
             'payer_status': '24',
-            'payee_account': IP_ACCOUNT,
+            'receiver_account': IP_ACCOUNT,
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': 'ПК',
@@ -684,7 +653,7 @@ class DocumentNumberCheckerChecker(BaseModelChecker):
             'document_number': None,
             'payment_type': PaymentType.CUSTOMS,
             'payer_status': '24',
-            'payee_account': IP_ACCOUNT,
+            'receiver_account': IP_ACCOUNT,
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': 'ИЛ',
@@ -697,7 +666,7 @@ def test_document_number_checker(
     document_number: DocumentNumber,
     payment_type: PaymentType,
     payer_status: PayerStatus,
-    payee_account: AccountNumber,
+    receiver_account: AccountNumber,
     payer_inn: INN,
     uin: UIN,
     reason: Reason,
@@ -708,7 +677,7 @@ def test_document_number_checker(
             document_number=document_number,
             payment_type=payment_type,
             payer_status=payer_status,
-            payee_account=payee_account,
+            receiver_account=receiver_account,
             payer_inn=payer_inn,
             uin=uin,
             reason=reason,
@@ -723,7 +692,7 @@ class TestDocumentDateChecker(BaseModelChecker):
     document_date: Optional[DocumentDate]
     payment_type: PaymentType
 
-    __checkers__ = [
+    __extra_checkers__ = [
         (DocumentDateChecker, ['document_date', 'payment_type']),
     ]
 

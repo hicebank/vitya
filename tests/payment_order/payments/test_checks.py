@@ -36,15 +36,15 @@ from vitya.payment_order.errors import (
     OKTMOValidationFNSEmptyNotAllowed,
     OKTMOValidationZerosNotAllowed,
     OperationKindValidationBudgetValueError,
-    PayeeAccountValidationBICValueError,
-    PayeeAccountValidationFNSValueError,
-    PayeeINNValidationFLLenError,
-    PayeeINNValidationIPLenError,
-    PayeeINNValidationLELenError,
-    PayeeINNValidationNonEmptyError,
-    PayeeKPPValidationEmptyNotAllowed,
-    PayeeKPPValidationOnlyEmptyError,
-    PayeeKPPValidationStartsWithZeros,
+    ReceiverAccountValidationBICValueError,
+    ReceiverAccountValidationFNSValueError,
+    ReceiverINNValidationFLLenError,
+    ReceiverINNValidationIPLenError,
+    ReceiverINNValidationLELenError,
+    ReceiverINNValidationNonEmptyError,
+    ReceiverKPPValidationEmptyNotAllowed,
+    ReceiverKPPValidationOnlyEmptyError,
+    ReceiverKPPValidationStartsWithZeros,
     PayerINNValidationCustomsLen10Error,
     PayerINNValidationCustomsLen12Error,
     PayerINNValidationEmptyNotAllowedError,
@@ -86,9 +86,9 @@ from vitya.payment_order.payments.checks import (
     check_document_number,
     check_oktmo,
     check_operation_kind,
-    check_payee_account,
-    check_payee_inn,
-    check_payee_kpp,
+    check_receiver_account,
+    check_receiver_inn,
+    check_receiver_kpp,
     check_payer_inn,
     check_payer_kpp,
     check_payer_status,
@@ -99,28 +99,28 @@ from vitya.payment_order.payments.checks import (
     check_tax_period,
     check_uin,
 )
-from vitya.payment_order.payments.constants import FNS_PAYEE_ACCOUNT_NUMBER
+from vitya.payment_order.payments.constants import FNS_RECEIVER_ACCOUNT_NUMBER
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 
 @pytest.mark.parametrize(
-    'value, payment_type, payee_bic, exception_handler, expected_value',
+    'value, payment_type, receiver_bic, exception_handler, expected_value',
     [
         (IP_ACCOUNT, PaymentType.IP, VALID_BIC, nullcontext(), IP_ACCOUNT),
-        (FNS_PAYEE_ACCOUNT_NUMBER, PaymentType.FNS, '', nullcontext(), FNS_PAYEE_ACCOUNT_NUMBER),
-        (FNS_PAYEE_ACCOUNT_NUMBER[:-1], PaymentType.FNS, '', pytest.raises(PayeeAccountValidationFNSValueError), None),
-        (IP_ACCOUNT, PaymentType.IP, VALID_BIC[:-1] + '1', pytest.raises(PayeeAccountValidationBICValueError), None),
+        (FNS_RECEIVER_ACCOUNT_NUMBER, PaymentType.FNS, '', nullcontext(), FNS_RECEIVER_ACCOUNT_NUMBER),
+        (FNS_RECEIVER_ACCOUNT_NUMBER[:-1], PaymentType.FNS, '', pytest.raises(ReceiverAccountValidationFNSValueError), None),
+        (IP_ACCOUNT, PaymentType.IP, VALID_BIC[:-1] + '1', pytest.raises(ReceiverAccountValidationBICValueError), None),
     ]
 )
-def test_check_payee_account(
+def test_check_receiver_account(
     value: AccountNumber,
     payment_type: PaymentType,
-    payee_bic: BIC,
+    receiver_bic: BIC,
     exception_handler: ContextManager,
     expected_value: str
 ) -> None:
     with exception_handler:
-        assert check_payee_account(value=value, payment_type=payment_type, payee_bic=payee_bic) == expected_value
+        assert check_receiver_account(value=value, payment_type=payment_type, receiver_bic=receiver_bic) == expected_value
 
 
 @pytest.mark.parametrize(
@@ -178,7 +178,7 @@ def test_check_purpose_code(
 
 
 @pytest.mark.parametrize(
-    'value, payment_type, payee_account, payer_status, payer_inn, exception_handler, expected_value',
+    'value, payment_type, receiver_account, payer_status, payer_inn, exception_handler, expected_value',
     [
         ('', PaymentType.FL, AccountNumber(IP_ACCOUNT), '', '', nullcontext(), None),
         (None, PaymentType.FL, AccountNumber(IP_ACCOUNT), '', '', nullcontext(), None),
@@ -233,7 +233,7 @@ def test_check_purpose_code(
 )
 def test_check_uin(
     value: Optional[str],
-    payee_account: AccountNumber,
+    receiver_account: AccountNumber,
     payment_type: PaymentType,
     payer_status: PayerStatus,
     payer_inn: str,
@@ -243,7 +243,7 @@ def test_check_uin(
     with exception_handler:
         assert check_uin(
             value=value,
-            payee_account=payee_account,
+            receiver_account=receiver_account,
             payment_type=payment_type,
             payer_inn=payer_inn,
             payer_status=payer_status,
@@ -304,30 +304,30 @@ def test_check_payer_inn(
     'value, payment_type, exception_handler, expected_value',
     [
         (IP_INN, PaymentType.IP, nullcontext(), IP_INN),
-        (LE_INN, PaymentType.IP, pytest.raises(PayeeINNValidationIPLenError), None),
-        (None, PaymentType.IP, pytest.raises(PayeeINNValidationIPLenError), None),
+        (LE_INN, PaymentType.IP, pytest.raises(ReceiverINNValidationIPLenError), None),
+        (None, PaymentType.IP, pytest.raises(ReceiverINNValidationIPLenError), None),
 
         (None, PaymentType.FL, nullcontext(), None),
         (FL_INN, PaymentType.FL, nullcontext(), FL_INN),
-        (LE_INN, PaymentType.FL, pytest.raises(PayeeINNValidationFLLenError), None),
+        (LE_INN, PaymentType.FL, pytest.raises(ReceiverINNValidationFLLenError), None),
 
         (None, PaymentType.CHAMELEON, nullcontext(), None),
         (FL_INN, PaymentType.CHAMELEON, nullcontext(), FL_INN),
         (LE_INN, PaymentType.CHAMELEON, nullcontext(), LE_INN),
 
-        (None, PaymentType.CUSTOMS, pytest.raises(PayeeINNValidationNonEmptyError), None),
-        (IP_INN, PaymentType.CUSTOMS, pytest.raises(PayeeINNValidationLELenError), None),
+        (None, PaymentType.CUSTOMS, pytest.raises(ReceiverINNValidationNonEmptyError), None),
+        (IP_INN, PaymentType.CUSTOMS, pytest.raises(ReceiverINNValidationLELenError), None),
         (LE_INN, PaymentType.CUSTOMS, nullcontext(), LE_INN),
     ]
 )
-def test_check_payee_inn(
+def test_check_receiver_inn(
     value: Optional[str],
     payment_type: PaymentType,
     exception_handler: ContextManager,
     expected_value: str
 ) -> None:
     with exception_handler:
-        assert expected_value == check_payee_inn(value=value, payment_type=payment_type)
+        assert expected_value == check_receiver_inn(value=value, payment_type=payment_type)
 
 
 @pytest.mark.parametrize(
@@ -384,21 +384,21 @@ def test_check_payer_kpp(
     'value, payment_type, exception_handler, expected_value',
     [
         (None, PaymentType.FL, nullcontext(), None),
-        (VALID_KPP, PaymentType.FL, pytest.raises(PayeeKPPValidationOnlyEmptyError), None),
+        (VALID_KPP, PaymentType.FL, pytest.raises(ReceiverKPPValidationOnlyEmptyError), None),
 
-        (None, PaymentType.FNS, pytest.raises(PayeeKPPValidationEmptyNotAllowed), None),
+        (None, PaymentType.FNS, pytest.raises(ReceiverKPPValidationEmptyNotAllowed), None),
         (VALID_KPP, PaymentType.FNS, nullcontext(), VALID_KPP),
-        ('001234567', PaymentType.FNS, pytest.raises(PayeeKPPValidationStartsWithZeros), None),
+        ('001234567', PaymentType.FNS, pytest.raises(ReceiverKPPValidationStartsWithZeros), None),
     ]
 )
-def test_check_payee_kpp(
+def test_check_receiver_kpp(
     value: Optional[KPP],
     payment_type: PaymentType,
     exception_handler: ContextManager,
     expected_value: Optional[KPP],
 ) -> None:
     with exception_handler:
-        assert expected_value == check_payee_kpp(value=value, payment_type=payment_type)
+        assert expected_value == check_receiver_kpp(value=value, payment_type=payment_type)
 
 
 @pytest.mark.parametrize(
@@ -505,7 +505,7 @@ def test_check_tax_period(
 
 @parametrize_with_dict(
     [
-        'value', 'payment_type', 'payer_status', 'payee_account',
+        'value', 'payment_type', 'payer_status', 'receiver_account',
         'payer_inn', 'uin', 'reason', 'exception_handler', 'expected_value'
     ],
     [
@@ -514,7 +514,7 @@ def test_check_tax_period(
             'value': None,
             'payment_type': PaymentType.FL,
             'payer_status': '',
-            'payee_account': '',
+            'receiver_account': '',
             'payer_inn': '',
             'uin': '',
             'reason': '',
@@ -526,7 +526,7 @@ def test_check_tax_period(
             'value': None,
             'payment_type': PaymentType.FNS,
             'payer_status': '',
-            'payee_account': '',
+            'receiver_account': '',
             'payer_inn': '',
             'uin': '',
             'reason': '',
@@ -538,7 +538,7 @@ def test_check_tax_period(
             'value': '02;1222',
             'payment_type': PaymentType.FNS,
             'payer_status': '',
-            'payee_account': '',
+            'receiver_account': '',
             'payer_inn': '',
             'uin': '',
             'reason': '',
@@ -550,7 +550,7 @@ def test_check_tax_period(
             'value': '02;1222',
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '31',
-            'payee_account': '03212',
+            'receiver_account': '03212',
             'payer_inn': '',
             'uin': VALID_UIN,
             'reason': '',
@@ -562,7 +562,7 @@ def test_check_tax_period(
             'value': None,
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '31',
-            'payee_account': '03212',
+            'receiver_account': '03212',
             'payer_inn': '',
             'uin': VALID_UIN,
             'reason': '',
@@ -574,7 +574,7 @@ def test_check_tax_period(
             'value': None,
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '24',
-            'payee_account': '03212',
+            'receiver_account': '03212',
             'payer_inn': None,
             'uin': None,
             'reason': '',
@@ -586,7 +586,7 @@ def test_check_tax_period(
             'value': None,
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '24',
-            'payee_account': '03212',
+            'receiver_account': '03212',
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': '',
@@ -598,7 +598,7 @@ def test_check_tax_period(
             'value': '1' * 16,
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '24',
-            'payee_account': '03212',
+            'receiver_account': '03212',
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': '',
@@ -610,7 +610,7 @@ def test_check_tax_period(
             'value': '18;',
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '24',
-            'payee_account': '03212',
+            'receiver_account': '03212',
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': '',
@@ -622,7 +622,7 @@ def test_check_tax_period(
             'value': None,
             'payment_type': PaymentType.CUSTOMS,
             'payer_status': '24',
-            'payee_account': '03212',
+            'receiver_account': '03212',
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': '00',
@@ -634,7 +634,7 @@ def test_check_tax_period(
             'value': '1' * 8,
             'payment_type': PaymentType.CUSTOMS,
             'payer_status': '24',
-            'payee_account': '03212',
+            'receiver_account': '03212',
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': 'ПК',
@@ -646,7 +646,7 @@ def test_check_tax_period(
             'value': None,
             'payment_type': PaymentType.CUSTOMS,
             'payer_status': '24',
-            'payee_account': '03212',
+            'receiver_account': '03212',
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': 'ИЛ',
@@ -658,7 +658,7 @@ def test_check_tax_period(
             'value': '01',
             'payment_type': PaymentType.CUSTOMS,
             'payer_status': '24',
-            'payee_account': '03212',
+            'receiver_account': '03212',
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': 'ИЛ',
@@ -671,7 +671,7 @@ def test_check_document_number(
     value: Optional[DocumentNumber],
     payment_type: PaymentType,
     payer_status: Optional[PayerStatus],
-    payee_account: AccountNumber,
+    receiver_account: AccountNumber,
     payer_inn: Optional[INN],
     uin: Optional[UIN],
     reason: Optional[str],
@@ -683,7 +683,7 @@ def test_check_document_number(
             value=value,
             payment_type=payment_type,
             payer_status=payer_status,
-            payee_account=payee_account,
+            receiver_account=receiver_account,
             payer_inn=payer_inn,
             uin=uin,
             reason=reason,

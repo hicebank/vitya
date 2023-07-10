@@ -20,8 +20,6 @@ from vitya.payment_order.errors import (
     NumberValidationLenError,
     OperationKindValidationTypeError,
     OperationKindValidationValueError,
-    PayeeValidationNameError,
-    PayeeValidationSizeError,
     PayerStatusValidationTypeError,
     PayerStatusValidationValueError,
     PayerValidationSizeError,
@@ -37,7 +35,7 @@ from vitya.payment_order.errors import (
     UINValidationDigitsOnlyError,
     UINValidationLenError,
     UINValidationOnlyZeroError,
-    UINValidationTypeError,
+    UINValidationTypeError, ReceiverValidationSizeError, ReceiverValidationNameError,
 )
 from vitya.payment_order.validators import (
     validate_account_number,
@@ -47,7 +45,7 @@ from vitya.payment_order.validators import (
     validate_document_number,
     validate_number,
     validate_operation_kind,
-    validate_payee,
+    validate_receiver,
     validate_payer,
     validate_payer_status,
     validate_payment_order,
@@ -99,18 +97,18 @@ def test_validate_payer(
     'value, exception_handler, expected_value',
     [
         ('Ashot Ashot', nullcontext(), 'Ashot Ashot'),
-        ('', pytest.raises(PayeeValidationSizeError), None),
-        ('0' * 161, pytest.raises(PayeeValidationSizeError), None),
-        ('with 40802810722200035222', pytest.raises(PayeeValidationNameError), None),
+        ('', pytest.raises(ReceiverValidationSizeError), None),
+        ('0' * 161, pytest.raises(ReceiverValidationSizeError), None),
+        ('with 40802810722200035222', pytest.raises(ReceiverValidationNameError), None),
     ]
 )
-def test_validate_payee(
+def test_validate_receiver(
     value: str,
     exception_handler: ContextManager,
     expected_value: Optional[str]
 ) -> None:
     with exception_handler:
-        assert validate_payee(value=value) == expected_value
+        assert validate_receiver(value=value) == expected_value
 
 
 @pytest.mark.parametrize(
