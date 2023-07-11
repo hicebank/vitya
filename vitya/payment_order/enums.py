@@ -16,7 +16,7 @@ class PaymentType(str, Enum):
     IP = 'ip'                           # платеж на ИП
     FL = 'fl'                           # платеж на ФЛ
     LE = 'le'                           # платеж на ЮР
-    CHAMELEON = 'chameleon'             # платеж на Хамелиона
+    CHAMELEON = 'chameleon'             # платеж на Хамелеона
 
     @classmethod
     def budget_types(cls) -> List['PaymentType']:
