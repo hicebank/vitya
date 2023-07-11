@@ -137,7 +137,7 @@ class PurposeCodeValidationTypeError(PurposeCodeValidationError, PydanticTypeErr
 
 class PurposeCodeValidationNullError(PurposeCodeValidationError):
     description = 'for non fl payment value must be null'
-    description_ru = 'должен отсутствовать для не ФЛ платежей и не хамелиона'
+    description_ru = 'должен отсутствовать для не ФЛ платежей и не хамелеона'
 
 
 class PurposeCodeValidationFlError(PurposeCodeValidationError):
@@ -147,7 +147,7 @@ class PurposeCodeValidationFlError(PurposeCodeValidationError):
 
 class PurposeCodeValidationChameleonError(PurposeCodeValidationError):
     description = 'for chameleon payment value must be in {1, 2, 3, 4, 5}'
-    description_ru = 'для платежей хамелиону должен быть одним из {1, 2, 3, 4, 5}'
+    description_ru = 'для платежей хамелеону должен быть одним из {1, 2, 3, 4, 5}'
 
 
 class UINValidationError(VityaDescribedError, PydanticValueError):
