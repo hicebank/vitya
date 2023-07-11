@@ -1,7 +1,19 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import Any, ClassVar, Dict, List, Sequence, Tuple, Type, AbstractSet, DefaultDict, Mapping, Optional, \
-    get_type_hints, get_origin, Union
+from typing import (
+    AbstractSet,
+    Any,
+    ClassVar,
+    DefaultDict,
+    Dict,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    get_type_hints,
+)
 
 from pydantic import BaseModel, root_validator
 from pydantic.fields import ModelField
@@ -10,13 +22,20 @@ from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.fields import (
     CBC,
     UIN,
-    AccountNumber,
     DocumentDate,
     DocumentNumber,
+    ForThirdPerson,
     OperationKind,
+    PayerAccountNumber,
+    PayerINN,
+    PayerKPP,
     PayerStatus,
     Purpose,
     Reason,
+    ReceiverAccountNumber,
+    ReceiverBIC,
+    ReceiverINN,
+    ReceiverKPP,
     TaxPeriod,
 )
 from vitya.payment_order.payments.checks import (
@@ -25,19 +44,20 @@ from vitya.payment_order.payments.checks import (
     check_document_number,
     check_oktmo,
     check_operation_kind,
-    check_receiver_account,
-    check_receiver_inn,
-    check_receiver_kpp,
     check_payer_inn,
     check_payer_kpp,
     check_payer_status,
     check_payment_type_and_for_third_person,
     check_purpose,
     check_reason,
+    check_receiver_account,
+    check_receiver_inn,
+    check_receiver_kpp,
     check_tax_period,
     check_uin,
 )
-from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
+from vitya.pydantic_fields import OKTMO
+from vitya.typing_helpers import is_union, normalize_type
 
 
 class CheckerError(ValueError):
@@ -56,7 +76,7 @@ class BaseChecker(ABC):
 
 
 class ReceiverAccountChecker(BaseChecker):
-    def __init__(self, account_number: AccountNumber, bic: BIC, payment_type: PaymentType) -> None:
+    def __init__(self, account_number: ReceiverAccountNumber, bic: ReceiverBIC, payment_type: PaymentType) -> None:
         self.account_number = account_number
         self.bic = bic
         self.payment_type = payment_type
@@ -77,9 +97,9 @@ class OperationKindChecker(BaseChecker):
 class PayerINNChecker(BaseChecker):
     def __init__(
         self,
-        payer_inn: INN,
-        payer_status: PayerStatus,
-        for_third_person: bool,
+        payer_inn: Optional[PayerINN],
+        payer_status: Optional[PayerStatus],
+        for_third_person: ForThirdPerson,
         payment_type: PaymentType
     ) -> None:
         self.payer_inn = payer_inn
@@ -99,10 +119,10 @@ class PayerINNChecker(BaseChecker):
 class UINChecker(BaseChecker):
     def __init__(
         self,
-        uin: UIN,
-        receiver_account: AccountNumber,
-        payer_inn: INN,
-        payer_status: PayerStatus,
+        uin: Optional[UIN],
+        receiver_account: ReceiverAccountNumber,
+        payer_inn: Optional[PayerINN],
+        payer_status: Optional[PayerStatus],
         payment_type: PaymentType,
     ) -> None:
         self.uin = uin
@@ -122,7 +142,12 @@ class UINChecker(BaseChecker):
 
 
 class PurposeChecker(BaseChecker):
-    def __init__(self, purpose: Purpose, payment_type: PaymentType, payer_account: AccountNumber) -> None:
+    def __init__(
+        self,
+        purpose: Optional[Purpose],
+        payment_type: PaymentType,
+        payer_account: PayerAccountNumber,
+    ) -> None:
         self.purpose = purpose
         self.payment_type = payment_type
         self.payer_account = payer_account
@@ -134,7 +159,7 @@ class PurposeChecker(BaseChecker):
 class ReceiverINNChecker(BaseChecker):
     def __init__(
         self,
-        receiver_inn: INN,
+        receiver_inn: Optional[ReceiverINN],
         payment_type: PaymentType
     ) -> None:
         self.receiver_inn = receiver_inn
@@ -147,9 +172,9 @@ class ReceiverINNChecker(BaseChecker):
 class PayerStatusChecker(BaseChecker):
     def __init__(
         self,
-        payer_status: PayerStatus,
+        payer_status: Optional[PayerStatus],
         payment_type: PaymentType,
-        for_third_person: bool,
+        for_third_person: ForThirdPerson,
     ) -> None:
         self.payer_status = payer_status
         self.payment_type = payment_type
@@ -167,7 +192,7 @@ class PaymentTypeAndForThirdPersonChecker(BaseChecker):
     def __init__(
         self,
         payment_type: PaymentType,
-        for_third_person: bool,
+        for_third_person: ForThirdPerson,
     ) -> None:
         self.payment_type = payment_type
         self.for_third_person = for_third_person
@@ -182,9 +207,9 @@ class PaymentTypeAndForThirdPersonChecker(BaseChecker):
 class PayerKPPChecker(BaseChecker):
     def __init__(
         self,
-        payer_kpp: KPP,
+        payer_kpp: Optional[PayerKPP],
         payment_type: PaymentType,
-        payer_inn: INN,
+        payer_inn: Optional[PayerINN],
     ) -> None:
         self.payer_kpp = payer_kpp
         self.payment_type = payment_type
@@ -197,7 +222,7 @@ class PayerKPPChecker(BaseChecker):
 class ReceiverKPPChecker(BaseChecker):
     def __init__(
         self,
-        receiver_kpp: KPP,
+        receiver_kpp: Optional[ReceiverKPP],
         payment_type: PaymentType,
     ) -> None:
         self.receiver_kpp = receiver_kpp
@@ -210,7 +235,7 @@ class ReceiverKPPChecker(BaseChecker):
 class CBCChecker(BaseChecker):
     def __init__(
         self,
-        cbc: CBC,
+        cbc: Optional[CBC],
         payment_type: PaymentType,
     ) -> None:
         self.cbc = cbc
@@ -223,9 +248,9 @@ class CBCChecker(BaseChecker):
 class OKTMOChecker(BaseChecker):
     def __init__(
         self,
-        oktmo: OKTMO,
+        oktmo: Optional[OKTMO],
         payment_type: PaymentType,
-        payer_status: PayerStatus,
+        payer_status: Optional[PayerStatus],
     ) -> None:
         self.oktmo = oktmo
         self.payment_type = payment_type
@@ -238,7 +263,7 @@ class OKTMOChecker(BaseChecker):
 class ReasonChecker(BaseChecker):
     def __init__(
         self,
-        reason: Reason,
+        reason: Optional[Reason],
         payment_type: PaymentType,
     ) -> None:
         self.reason = reason
@@ -251,9 +276,9 @@ class ReasonChecker(BaseChecker):
 class TaxPeriodChecker(BaseChecker):
     def __init__(
         self,
-        tax_period: TaxPeriod,
+        tax_period: Optional[TaxPeriod],
         payment_type: PaymentType,
-        payer_status: PayerStatus,
+        payer_status: Optional[PayerStatus],
     ) -> None:
         self.tax_period = tax_period
         self.payment_type = payment_type
@@ -266,13 +291,13 @@ class TaxPeriodChecker(BaseChecker):
 class DocumentNumberChecker(BaseChecker):
     def __init__(
         self,
-        document_number: DocumentNumber,
+        document_number: Optional[DocumentNumber],
         payment_type: PaymentType,
-        reason: Reason,
-        payer_status: PayerStatus,
-        receiver_account: AccountNumber,
-        uin: UIN,
-        payer_inn: INN,
+        reason: Optional[Reason],
+        payer_status: Optional[PayerStatus],
+        receiver_account: ReceiverAccountNumber,
+        uin: Optional[UIN],
+        payer_inn: Optional[PayerINN],
     ) -> None:
         self.document_number = document_number
         self.payment_type = payment_type
@@ -297,7 +322,7 @@ class DocumentNumberChecker(BaseChecker):
 class DocumentDateChecker(BaseChecker):
     def __init__(
         self,
-        document_date: DocumentDate,
+        document_date: Optional[DocumentDate],
         payment_type: PaymentType,
     ) -> None:
         self.document_date = document_date
@@ -311,9 +336,8 @@ WiredChecker = Tuple[Type[BaseChecker], Sequence[str]]
 
 
 class BaseModelChecker(BaseModel):
-    __extra_checkers__: ClassVar[Sequence[WiredChecker]] = []
+    __extra_wired_checkers__: ClassVar[Sequence[WiredChecker]] = []
     __auto_checkers__: ClassVar[Sequence[Type[BaseChecker]]] = [
-        # AccountBicChecker
         ReceiverAccountChecker,
         OperationKindChecker,
         PayerINNChecker,
@@ -331,23 +355,22 @@ class BaseModelChecker(BaseModel):
         DocumentNumberChecker,
         DocumentDateChecker,
     ]
-    __auto_checkers__ = []
-    __excluded_auto_checkers__: ClassVar[AbstractSet[Type[BaseChecker]]] = {}
-    __wire_auto_checkers__: ClassVar[bool] = True  # disable to use only __extra_checkers__
+    __excluded_auto_checkers__: ClassVar[AbstractSet[Type[BaseChecker]]] = set()
+    __wire_auto_checkers__: ClassVar[bool] = True  # disable to use only __extra_wired_checkers__
 
-    __wired_checkers__: ClassVar[Sequence[WiredChecker]]  # this value is computed at __init_subclass__
+    __final_wired_checkers__: ClassVar[Sequence[WiredChecker]]  # this value is computed at __init_subclass__
 
     def __init_subclass__(cls, **kwargs: Dict[str, Any]) -> None:  # pragma: no cover
         # built error
         errors = []
-        for checker, fields in cls.__extra_checkers__:
+        for checker, fields in cls.__extra_wired_checkers__:
             wild_fields = set(fields) - cls.__fields__.keys()
             if wild_fields:
                 errors.append(f'Checker {checker} require unknown model fields {wild_fields}')
         if errors:
             raise ValueError(errors)
 
-        cls.__wired_checkers__ = list(cls.__extra_checkers__) + list(cls._wire_auto_checkers())
+        cls.__final_wired_checkers__ = list(cls.__extra_wired_checkers__) + list(cls._wire_auto_checkers())
 
     @classmethod
     def _wire_auto_checkers(cls) -> Sequence[WiredChecker]:
@@ -360,7 +383,8 @@ class BaseModelChecker(BaseModel):
         ]
         type_to_fields: DefaultDict[Any, List[ModelField]] = defaultdict(list)
         for field in cls.__fields__.values():
-            type_to_fields[field.type_].append(field)
+            type_to_fields[normalize_type(field.type_)].append(field)
+        type_to_fields.default_factory = None
 
         result: List[WiredChecker] = []
         for checker_cls in auto_checkers:
@@ -378,17 +402,20 @@ class BaseModelChecker(BaseModel):
     ) -> Optional[WiredChecker]:
         parameters = get_type_hints(checker_cls.__init__)  # by default get_type_hints strips Annotated
         field_names: List[str] = []
-        for parameter in parameters[1:].values():  # skip self
-            try:
-                fields = type_to_fields[parameter.annotation]
-            except KeyError:
+        for param_name, param_type in parameters.items():
+            if param_name == 'return':
+                continue
+
+            fields = cls._get_matching_fields_by_type(type_to_fields, param_type)
+            if len(fields) == 0:
                 return None
-            if len(fields) == 1:
+            elif len(fields) == 1:
                 field_names.append(fields[0].name)
-            raise ValueError(
-                f'{checker_cls} requires field with type {parameter.annotation},'
-                f' but there are several candidates {[field.name for field in fields]}'
-            )
+            else:
+                raise ValueError(
+                    f'{checker_cls} requires field with type {param_type},'
+                    f' but there are several candidates {[field.name for field in fields]}'
+                )
 
         return checker_cls, field_names
 
@@ -398,23 +425,24 @@ class BaseModelChecker(BaseModel):
         type_to_fields: Mapping[Any, Sequence[ModelField]],
         tp: Any,
     ) -> Sequence[ModelField]:
-        if get_origin(tp) != Union:
-            return type_to_fields.get(tp, [])
+        if not is_union(tp):
+            return type_to_fields.get(normalize_type(tp), [])
 
         union_args = set(tp.__args__)
         result: List[ModelField] = []
         for field_type, fields in type_to_fields.items():
-            if get_origin(field_type) != Union:
-                if field_type in union_args:
+            norm_field_type = normalize_type(field_type)
+            if not is_union(norm_field_type):
+                if norm_field_type in union_args:
                     result.extend(fields)
-            elif set(field_type.__args__).issubset(union_args):
+            elif set(norm_field_type.__args__).issubset(union_args):
                 result.extend(fields)
         return result
 
     @root_validator(pre=False)
     def run_checkers(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         errors = []
-        for checker, fields_names in cls.__wired_checkers__:
+        for checker, fields_names in cls.__final_wired_checkers__:
             try:
                 args = [values[field_name] for field_name in fields_names]
             except KeyError:  # pragma: no cover
@@ -427,4 +455,3 @@ class BaseModelChecker(BaseModel):
         if errors:
             raise CheckerError(errors)
         return values
-

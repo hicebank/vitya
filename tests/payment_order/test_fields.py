@@ -20,11 +20,13 @@ from vitya.payment_order.errors import (
     PurposeCodeValidationTypeError,
     PurposeValidationCharactersError,
     PurposeValidationMaxLenError,
+    ReceiverValidationNameError,
+    ReceiverValidationSizeError,
     UINValidationControlSumError,
     UINValidationDigitsOnlyError,
     UINValidationLenError,
     UINValidationOnlyZeroError,
-    UINValidationTypeError, ReceiverValidationSizeError, ReceiverValidationNameError,
+    UINValidationTypeError,
 )
 from vitya.payment_order.fields import (
     UIN,
@@ -32,11 +34,11 @@ from vitya.payment_order.fields import (
     Amount,
     Number,
     OperationKind,
-    Payee,
     Payer,
     PaymentOrder,
     Purpose,
     PurposeCode,
+    Receiver,
 )
 
 
@@ -110,7 +112,7 @@ def test_payer(
 
 
 class TestPayeeModel(BaseModel):
-    field: Payee
+    field: Receiver
 
 
 @pytest.mark.parametrize(

@@ -21,15 +21,6 @@ from vitya.payment_order.errors import (
     OKTMOValidationFNSEmptyNotAllowed,
     OKTMOValidationZerosNotAllowed,
     OperationKindValidationBudgetValueError,
-    ReceiverAccountValidationBICValueError,
-    ReceiverAccountValidationFNSValueError,
-    ReceiverINNValidationFLLenError,
-    ReceiverINNValidationIPLenError,
-    ReceiverINNValidationLELenError,
-    ReceiverINNValidationNonEmptyError,
-    ReceiverKPPValidationEmptyNotAllowed,
-    ReceiverKPPValidationOnlyEmptyError,
-    ReceiverKPPValidationStartsWithZeros,
     PayerINNValidationCustomsLen10Error,
     PayerINNValidationCustomsLen12Error,
     PayerINNValidationEmptyNotAllowedError,
@@ -39,10 +30,21 @@ from vitya.payment_order.errors import (
     PayerStatusValidationCustoms05NotAllowedError,
     PayerStatusValidationNullNotAllowedError,
     PaymentTypeValueError,
+    PurposeCodeValidationChameleonError,
     PurposeCodeValidationFlError,
     PurposeCodeValidationNullError,
     PurposeValidationIPNDSError,
     ReasonValidationValueErrorCustoms,
+    ReceiverAccountValidationBICValueError,
+    ReceiverAccountValidationFNSValueError,
+    ReceiverINNValidationChameleonLenError,
+    ReceiverINNValidationFLLenError,
+    ReceiverINNValidationIPLenError,
+    ReceiverINNValidationLELenError,
+    ReceiverINNValidationNonEmptyError,
+    ReceiverKPPValidationEmptyNotAllowed,
+    ReceiverKPPValidationOnlyEmptyError,
+    ReceiverKPPValidationStartsWithZeros,
     TaxPeriodValidationBOValueLenError,
     TaxPeriodValidationCustomsEmptyNotAllowed,
     TaxPeriodValidationCustomsValueLenError,
@@ -54,8 +56,6 @@ from vitya.payment_order.errors import (
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
     UINValidationValueZeroError,
-    ReceiverINNValidationChameleonLenError,
-    PurposeCodeValidationChameleonError,
 )
 from vitya.payment_order.fields import (
     CBC,
@@ -63,11 +63,19 @@ from vitya.payment_order.fields import (
     AccountNumber,
     DocumentDate,
     DocumentNumber,
+    ForThirdPerson,
     OperationKind,
+    PayerAccountNumber,
+    PayerINN,
+    PayerKPP,
     PayerStatus,
     Purpose,
     PurposeCode,
     Reason,
+    ReceiverAccountNumber,
+    ReceiverBIC,
+    ReceiverINN,
+    ReceiverKPP,
     TaxPeriod,
 )
 from vitya.payment_order.payments.constants import (
@@ -76,7 +84,7 @@ from vitya.payment_order.payments.constants import (
     FNS_RECEIVER_ACCOUNT_NUMBER,
 )
 from vitya.payment_order.payments.tools import get_account_kind
-from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
+from vitya.pydantic_fields import BIC, OKTMO
 
 
 def check_account_by_bic(
@@ -91,9 +99,9 @@ def check_account_by_bic(
 
 
 def check_receiver_account(
-    value: AccountNumber,
+    value: ReceiverAccountNumber,
     payment_type: PaymentType,
-    receiver_bic: BIC,
+    receiver_bic: ReceiverBIC,
 ) -> str:
     if payment_type == PaymentType.FNS:
         if value != FNS_RECEIVER_ACCOUNT_NUMBER:
@@ -132,10 +140,10 @@ def check_purpose_code(
 
 def check_uin(
     value: Optional[UIN],
-    receiver_account: AccountNumber,
+    receiver_account: ReceiverAccountNumber,
     payment_type: PaymentType,
     payer_status: Optional[PayerStatus],
-    payer_inn: Optional[str],
+    payer_inn: Optional[PayerINN],
 ) -> Optional[UIN]:
     if not payment_type.is_budget:
         return None
@@ -160,7 +168,7 @@ def check_uin(
 
 def check_purpose(
     value: Optional[Purpose],
-    payer_account: AccountNumber,
+    payer_account: PayerAccountNumber,
     payment_type: PaymentType,
 ) -> Optional[Purpose]:
     if (
@@ -176,11 +184,11 @@ def check_purpose(
 
 
 def check_payer_inn(
-    value: Optional[INN],
+    value: Optional[PayerINN],
     payment_type: PaymentType,
     payer_status: Optional[PayerStatus],
-    for_third_person: bool,
-) -> Optional[INN]:
+    for_third_person: ForThirdPerson,
+) -> Optional[PayerINN]:
     if not payment_type.is_budget:
         return value
 
@@ -207,9 +215,9 @@ def check_payer_inn(
 
 
 def check_receiver_inn(
-    value: Optional[INN],
+    value: Optional[ReceiverINN],
     payment_type: PaymentType,
-) -> Optional[INN]:
+) -> Optional[ReceiverINN]:
     if payment_type == PaymentType.IP:
         if value is None or len(value) != 12:
             raise ReceiverINNValidationIPLenError
@@ -231,7 +239,7 @@ def check_receiver_inn(
 
 def check_payment_type_and_for_third_person(
     payment_type: PaymentType,
-    for_third_person: bool,
+    for_third_person: ForThirdPerson,
 ) -> None:
     if for_third_person and not payment_type.is_budget:
         raise BudgetPaymentForThirdPersonError
@@ -240,7 +248,7 @@ def check_payment_type_and_for_third_person(
 def check_payer_status(
     value: Optional[PayerStatus],
     payment_type: PaymentType,
-    for_third_person: bool,
+    for_third_person: ForThirdPerson,
 ) -> Optional[PayerStatus]:
     if not payment_type.is_budget:
         return None
@@ -255,10 +263,10 @@ def check_payer_status(
 
 
 def check_payer_kpp(
-    value: Optional[KPP],
+    value: Optional[PayerKPP],
     payment_type: PaymentType,
-    payer_inn: Optional[str],
-) -> Optional[KPP]:
+    payer_inn: Optional[PayerINN],
+) -> Optional[PayerKPP]:
     if not payment_type.is_budget:
         return None
 
@@ -270,9 +278,9 @@ def check_payer_kpp(
 
 
 def check_receiver_kpp(
-    value: Optional[KPP],
+    value: Optional[ReceiverKPP],
     payment_type: PaymentType,
-) -> Optional[KPP]:
+) -> Optional[ReceiverKPP]:
     if payment_type in {PaymentType.FL, PaymentType.IP}:
         if value is not None:
             raise ReceiverKPPValidationOnlyEmptyError
@@ -380,9 +388,9 @@ def check_document_number(
     payment_type: PaymentType,
     reason: Optional[Reason],
     payer_status: Optional[PayerStatus],
-    receiver_account: AccountNumber,
+    receiver_account: ReceiverAccountNumber,
     uin: Optional[UIN],
-    payer_inn: Optional[INN],
+    payer_inn: Optional[PayerINN],
 ) -> Optional[DocumentNumber]:
     if not payment_type.is_budget:
         return None

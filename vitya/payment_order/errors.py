@@ -140,10 +140,6 @@ class PurposeCodeValidationNullError(PurposeCodeValidationError):
     description_ru = 'должен отсутствовать для не ФЛ платежей и не хамелиона'
 
 
-class PurposeCodeValidationError(PurposeCodeValidationError):
-    pass
-
-
 class PurposeCodeValidationFlError(PurposeCodeValidationError):
     description = 'for fl payment value must be in {1, 2, 3, 4, 5}'
     description_ru = 'для платежей ФЛ должен быть одним из {1, 2, 3, 4, 5}'

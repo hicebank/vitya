@@ -33,6 +33,13 @@ from vitya.payment_order.errors import (
     OKTMOValidationFNSEmptyNotAllowed,
     OKTMOValidationZerosNotAllowed,
     OperationKindValidationBudgetValueError,
+    PayerINNValidationEmptyNotAllowedError,
+    PayerKPPValidationINN10EmptyNotAllowed,
+    PayerKPPValidationINN12OnlyEmptyError,
+    PayerStatusValidationCustoms05NotAllowedError,
+    PayerStatusValidationNullNotAllowedError,
+    PurposeValidationIPNDSError,
+    ReasonValidationValueErrorCustoms,
     ReceiverAccountValidationBICValueError,
     ReceiverAccountValidationFNSValueError,
     ReceiverINNValidationFLLenError,
@@ -41,13 +48,6 @@ from vitya.payment_order.errors import (
     ReceiverINNValidationNonEmptyError,
     ReceiverKPPValidationEmptyNotAllowed,
     ReceiverKPPValidationOnlyEmptyError,
-    PayerINNValidationEmptyNotAllowedError,
-    PayerKPPValidationINN10EmptyNotAllowed,
-    PayerKPPValidationINN12OnlyEmptyError,
-    PayerStatusValidationCustoms05NotAllowedError,
-    PayerStatusValidationNullNotAllowedError,
-    PurposeValidationIPNDSError,
-    ReasonValidationValueErrorCustoms,
     TaxPeriodValidationBOValueLenError,
     TaxPeriodValidationCustomsEmptyNotAllowed,
     TaxPeriodValidationCustomsValueLenError,
@@ -76,14 +76,14 @@ from vitya.payment_order.payments.checkers import (
     DocumentNumberChecker,
     OKTMOChecker,
     OperationKindChecker,
-    ReceiverAccountChecker,
-    ReceiverINNChecker,
-    ReceiverKPPChecker,
     PayerINNChecker,
     PayerKPPChecker,
     PayerStatusChecker,
     PurposeChecker,
     ReasonChecker,
+    ReceiverAccountChecker,
+    ReceiverINNChecker,
+    ReceiverKPPChecker,
     TaxPeriodChecker,
     UINChecker,
 )
@@ -96,7 +96,7 @@ class TestReceiverAccountModelChecker(BaseModelChecker):
     bic: BIC
     payment_type: PaymentType
 
-    __extra_checkers__ = [
+    __extra_wired_checkers__ = [
         (ReceiverAccountChecker, ['account_number', 'bic', 'payment_type'])
     ]
 
@@ -128,7 +128,7 @@ class TestOperationKindChecker(BaseModelChecker):
     operation_kind: OperationKind
     payment_type: PaymentType
 
-    __extra_checkers__ = [
+    __extra_wired_checkers__ = [
         (OperationKindChecker, ['operation_kind', 'payment_type'])
     ]
 
@@ -160,7 +160,7 @@ class TestPayerInnChecker(BaseModelChecker):
     for_third_face: bool
     payment_type: PaymentType
 
-    __extra_checkers__ = [
+    __extra_wired_checkers__ = [
         (PayerINNChecker, ['payer_inn', 'payer_status', 'for_third_face', 'payment_type']),
     ]
 
@@ -199,7 +199,7 @@ class TestUinChecker(BaseModelChecker):
     payer_status: PayerStatus
     payment_type: PaymentType
 
-    __extra_checkers__ = [
+    __extra_wired_checkers__ = [
         (UINChecker, ['uin', 'receiver_account', 'payer_inn', 'payer_status', 'payment_type']),
     ]
 
@@ -238,7 +238,7 @@ class TestPurposeChecker(BaseModelChecker):
     payment_type: PaymentType
     payer_account: AccountNumber
 
-    __extra_checkers__ = [
+    __extra_wired_checkers__ = [
         (PurposeChecker, ['purpose', 'payment_type', 'payer_account']),
     ]
 
@@ -270,7 +270,7 @@ class TestSeveralChecker(BaseModelChecker):
     bic: BIC
     payment_type: PaymentType
 
-    __extra_checkers__ = [
+    __extra_wired_checkers__ = [
         (ReceiverAccountChecker, ['account_number', 'bic', 'payment_type'])
     ]
 
@@ -302,7 +302,7 @@ class TestReceiverInnChecker(BaseModelChecker):
     receiver_inn: Optional[INN]
     payment_type: PaymentType
 
-    __extra_checkers__ = [
+    __extra_wired_checkers__ = [
         (ReceiverINNChecker, ['receiver_inn', 'payment_type']),
     ]
 
@@ -335,7 +335,7 @@ class TestPayerStatusChecker(BaseModelChecker):
     payment_type: PaymentType
     for_third_face: bool
 
-    __extra_checkers__ = [
+    __extra_wired_checkers__ = [
         (PayerStatusChecker, ['payer_status', 'payment_type', 'for_third_face']),
     ]
 
@@ -366,7 +366,7 @@ class TestPayerKppChecker(BaseModelChecker):
     payment_type: PaymentType
     payer_inn: INN
 
-    __extra_checkers__ = [
+    __extra_wired_checkers__ = [
         (PayerKPPChecker, ['payer_kpp', 'payment_type', 'payer_inn']),
     ]
 
@@ -398,7 +398,7 @@ class TestReceiverKppChecker(BaseModelChecker):
     receiver_kpp: Optional[KPP]
     payment_type: PaymentType
 
-    __extra_checkers__ = [
+    __extra_wired_checkers__ = [
         (ReceiverKPPChecker, ['receiver_kpp', 'payment_type']),
     ]
 
@@ -430,7 +430,7 @@ class TestCBCChecker(BaseModelChecker):
     cbc: Optional[CBC]
     payment_type: PaymentType
 
-    __extra_checkers__ = [
+    __extra_wired_checkers__ = [
         (CBCChecker, ['cbc', 'payment_type']),
     ]
 
@@ -462,7 +462,7 @@ class TestOktmoChecker(BaseModelChecker):
     payment_type: PaymentType
     payer_status: PayerStatus
 
-    __extra_checkers__ = [
+    __extra_wired_checkers__ = [
         (OKTMOChecker, ['oktmo', 'payment_type', 'payer_status']),
     ]
 
@@ -493,7 +493,7 @@ class TestReasonChecker(BaseModelChecker):
     reason: Optional[Reason]
     payment_type: PaymentType
 
-    __extra_checkers__ = [
+    __extra_wired_checkers__ = [
         (ReasonChecker, ['reason', 'payment_type']),
     ]
 
@@ -522,7 +522,7 @@ class TestTaxPeriodChecker(BaseModelChecker):
     payment_type: PaymentType
     payer_status: PayerStatus
 
-    __extra_checkers__ = [
+    __extra_wired_checkers__ = [
         (TaxPeriodChecker, ['tax_period', 'payment_type', 'payer_status']),
     ]
 
@@ -563,7 +563,7 @@ class DocumentNumberCheckerChecker(BaseModelChecker):
     uin: Optional[UIN]
     payer_inn: Optional[INN]
 
-    __extra_checkers__ = [
+    __extra_wired_checkers__ = [
         (
             DocumentNumberChecker, [
                 'document_number', 'payment_type', 'reason',
@@ -692,7 +692,7 @@ class TestDocumentDateChecker(BaseModelChecker):
     document_date: Optional[DocumentDate]
     payment_type: PaymentType
 
-    __extra_checkers__ = [
+    __extra_wired_checkers__ = [
         (DocumentDateChecker, ['document_date', 'payment_type']),
     ]
 
