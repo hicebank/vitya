@@ -3,7 +3,7 @@ from vitya.payment_order.fields import AccountNumber
 
 IP_ACCOUNTS_PREFIXES_5 = {
     '40802', '45814', '45914', '47610', '47611', '47832',
-    *[str(prefix) for prefix in range(42018, 42113 + 1)]
+    *[str(prefix) for prefix in range(42108, 42114 + 1)]
 }
 IP_ACCOUNTS_PREFIXES_3 = {
     '454',
