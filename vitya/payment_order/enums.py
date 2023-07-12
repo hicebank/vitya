@@ -6,7 +6,7 @@ class AccountKind(str, Enum):
     IP = 'ip'                           # счет ИП
     FL = 'fl'                           # счет ФЛ
     LE = 'le'                           # счет ЮР
-    CHAMELEON = 'chameleon'             # счет Хамелиона
+    CHAMELEON = 'chameleon'             # счет Хамелеона
 
 
 class PaymentType(str, Enum):
@@ -38,5 +38,5 @@ _PAYMENT_TYPE_TO_RU = {
     PaymentType.IP: 'ИП',
     PaymentType.FL: 'ФЛ',
     PaymentType.LE: 'ЮЛ',
-    PaymentType.CHAMELEON: 'Хамелион',
+    PaymentType.CHAMELEON: 'Хамелеон',
 }

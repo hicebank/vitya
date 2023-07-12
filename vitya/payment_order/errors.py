@@ -141,13 +141,13 @@ class PurposeCodeValidationNullError(PurposeCodeValidationError):
 
 
 class PurposeCodeValidationFlError(PurposeCodeValidationError):
-    description = 'for fl payment value must be in {1, 2, 3, 4, 5}'
-    description_ru = 'для платежей ФЛ должен быть одним из {1, 2, 3, 4, 5}'
+    description = 'for fl payment value must be in {1, 2, 3, 4, 5} or must be empty'
+    description_ru = 'для платежей ФЛ должен быть одним из {1, 2, 3, 4, 5} или быть пустым'
 
 
 class PurposeCodeValidationChameleonError(PurposeCodeValidationError):
-    description = 'for chameleon payment value must be in {1, 2, 3, 4, 5}'
-    description_ru = 'для платежей хамелеону должен быть одним из {1, 2, 3, 4, 5}'
+    description = 'for chameleon payment value must be in {1, 2, 3, 4, 5} or must be empty'
+    description_ru = 'для платежей хамелеону должен быть одним из {1, 2, 3, 4, 5} или быть пустым'
 
 
 class UINValidationError(VityaDescribedError, PydanticValueError):
@@ -302,7 +302,7 @@ class ReceiverINNValidationFLLenError(INNValidationLenError, ReceiverINNValidati
 
 class ReceiverINNValidationChameleonLenError(INNValidationLenError, ReceiverINNValidationError):
     description = 'for chameleon receiver inn must be empty or 12 or 10 chars'
-    description_ru = 'для платежей Хамелиону ИНН получателя должно быть пустым или содержать 12 или 10 символов'
+    description_ru = 'для платежей Хамелеону ИНН получателя должно быть пустым или содержать 12 или 10 символов'
 
 
 class ReceiverINNValidationIPLenError(ReceiverINNValidationError):
