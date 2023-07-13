@@ -8,7 +8,7 @@ from vitya.errors import (
     KPPValidationError,
     OKTMOValidationError,
 )
-from vitya.errors_base import VityaDescribedError
+from vitya.errors_base import VityaDescribedError, IncorrectLen, NeedRequiredField, ExactFieldLenError, IncorrectData
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.payments.constants import (
     CHARS_FOR_PURPOSE,
@@ -37,17 +37,17 @@ class AmountValidationError(VityaDescribedError, PydanticValueError):
     description_ru = 'базовая ошибка'
 
 
-class AmountValidationLengthError(AmountValidationError):
+class AmountValidationLengthError(AmountValidationError, IncorrectLen):
     description = 'str representation cannot contains more 18 chars'
     description_ru = 'строковое представление не может содержать более 18 символов'
 
 
-class AmountValidationLessOrEqualZeroError(AmountValidationError):
+class AmountValidationLessOrEqualZeroError(AmountValidationError, IncorrectData):
     description = 'cannot be less than or equal to 0.0'
     description_ru = 'не может быть меньше или равно 0.0'
 
 
-class AmountNotANumber(AmountValidationError):
+class AmountNotANumber(AmountValidationError, IncorrectData):
     description = 'require to be a number'
     description_ru = 'должно быть числом'
 
@@ -69,7 +69,7 @@ class PayerValidationError(CustomerValidationError):
     target_ru = 'плательщик'
 
 
-class PayerValidationSizeError(PayerValidationError, CustomerValidationSizeError):
+class PayerValidationSizeError(PayerValidationError, CustomerValidationSizeError, IncorrectLen):
     pass
 
 
@@ -78,7 +78,7 @@ class ReceiverValidationError(CustomerValidationError):
     target_ru = 'получатель'
 
 
-class ReceiverValidationSizeError(ReceiverValidationError, CustomerValidationSizeError):
+class ReceiverValidationSizeError(ReceiverValidationError, CustomerValidationSizeError, IncorrectLen):
     pass
 
 
@@ -87,7 +87,7 @@ class ReceiverValidationNameError(ReceiverValidationError):
     description_ru = 'содержит номер счета'
 
 
-class NumberValidationLenError(VityaDescribedError, PydanticValueError):
+class NumberValidationLenError(PydanticValueError, IncorrectLen):
     target = 'number'
     target_ru = 'номер'
     description = 'cannot be longer than 6 chars'
@@ -99,6 +99,10 @@ class PaymentOrderValidationError(VityaDescribedError, PydanticValueError):
     target_ru = 'очередность платежа'
     description = 'value must be in {1, 2, 3, 4, 5}'
     description_ru = 'значение должно быть одним из {1, 2, 3, 4, 5}'
+
+
+class PaymentOrderLenError(PaymentOrderValidationError, ExactFieldLenError):
+    required_len = 1
 
 
 class OperationKindValidationError(VityaDescribedError, PydanticValueError):
@@ -118,9 +122,10 @@ class OperationKindValidationBudgetValueError(OperationKindValidationError):
     description_ru = 'для бюджетных операций значение должно быть одним из {"01", "02", "06"}'
 
 
-class OperationKindValidationValueError(OperationKindValidationBudgetValueError):
+class OperationKindValidationValueError(OperationKindValidationBudgetValueError, ExactFieldLenError):
     description = 'value must be str with len 2'
     description_ru = 'значение должно быть длиной 2 символов'
+    required_len = 2
 
 
 class PurposeCodeValidationError(VityaDescribedError, PydanticValueError):
@@ -162,22 +167,22 @@ class UINValidationTypeError(UINValidationError, PydanticTypeError):
     description_ru = 'должен быть строкой'
 
 
-class UINValidationLenError(UINValidationError):
+class UINValidationLenError(UINValidationError, IncorrectLen):
     description = 'len must be 4, 20 or 25 len'
     description_ru = 'длина должна быть 4, 20 или 25 символов'
 
 
-class UINValidationDigitsOnlyError(UINValidationError):
+class UINValidationDigitsOnlyError(UINValidationError, IncorrectData):
     description = 'must contains only digits'
     description_ru = 'должен содержать только числа'
 
 
-class UINValidationControlSumError(UINValidationError):
+class UINValidationControlSumError(UINValidationError, IncorrectData):
     description = 'control sum error'
     description_ru = 'некорректная контрольная сумма'
 
 
-class UINValidationValueZeroError(UINValidationError):
+class UINValidationValueZeroError(UINValidationError, NeedRequiredField):
     description = 'value cannot be zero'
     description_ru = 'значение не может быть нулем'
 
@@ -192,7 +197,7 @@ class UINValidationFNSValueError(UINValidationError):
     description_ru = 'базовая ФНС ошибка'
 
 
-class UINValidationFNSValueZeroError(UINValidationFNSValueError):
+class UINValidationFNSValueZeroError(UINValidationFNSValueError, NeedRequiredField):
     description = (
         'for FNS with payer status = "13" and empty inn uin must be non zero'
     )
@@ -201,12 +206,12 @@ class UINValidationFNSValueZeroError(UINValidationFNSValueError):
     )
 
 
-class UINValidationFNSNotValueZeroError(UINValidationFNSValueError):
+class UINValidationFNSNotValueZeroError(UINValidationFNSValueError, IncorrectData):
     description = 'for FNS with payer status = "02" uin must be zero'
     description_ru = 'для платежей в ФНС со статусом плательщика "02" и пустым ИНН, УИН должен быть нулевым'
 
 
-class UINValidationBONotEmpty(UINValidationFNSValueError):
+class UINValidationBONotEmpty(UINValidationFNSValueError, NeedRequiredField):
     description = 'for budget other and receiver number starting with 03212 uin must be filled'
     description_ru = (
         'для платежей в бюджет иные с номером счёта получателя, который начинается с "03212", УИН должен быть заполен'
@@ -218,7 +223,7 @@ class UINValidationFNSLenError(UINValidationLenError):
     description_ru = 'длина УИН для платежей в ФНС должна быть 20 или 15 символов'
 
 
-class UINValidationOnlyZeroError(UINValidationError):
+class UINValidationOnlyZeroError(UINValidationError, IncorrectData):
     description = 'cannot contains only 0 chars'
     description_ru = 'не может состоять только из нулей'
 
@@ -235,7 +240,7 @@ class PurposeValidationTypeError(PurposeValidationError, PydanticTypeError):
     description_ru = 'должно быть строкой'
 
 
-class PurposeValidationMaxLenError(PurposeValidationError):
+class PurposeValidationMaxLenError(PurposeValidationError, IncorrectLen):
     description = 'len can be from 1 to 210 chars'
     description_ru = 'длина должна быть от 1 до 210 символов'
 
@@ -245,7 +250,7 @@ class PurposeValidationCharactersError(PurposeValidationError):
     description_ru = f'может состоять только из символов {CHARS_FOR_PURPOSE}'
 
 
-class PurposeValidationIPNDSError(PurposeValidationError):
+class PurposeValidationIPNDSError(PurposeValidationError, IncorrectData):
     description = 'for IP payment purpose must contains "НДС"'
     description_ru = 'для платежей ИП назначение должно содержать "НДС"'
 
@@ -255,29 +260,29 @@ class PayerINNValidationError(INNValidationError):
     target_ru = 'ИНН плательщика'
 
 
-class PayerINNValidationCustomsLen10Error(INNValidationLenError, PayerINNValidationError):
+class PayerINNValidationCustomsLen10Error(INNValidationLenError, PayerINNValidationError, ExactFieldLenError):
     description = 'for customs payment and payer status "06", inn must be 10'
-    description_ru = 'для платежей в таможню и со статусом плательщика "06" ИНН должно быть "10"'
+    description_ru = 'для платежей в таможню и со статусом плательщика "06" ИНН должно быть быть длиной 10 символов'
+    required_len = 10
 
 
-class PayerINNValidationCustomsLen12Error(INNValidationLenError, PayerINNValidationError):
+class PayerINNValidationCustomsLen12Error(INNValidationLenError, PayerINNValidationError, ExactFieldLenError):
     description = 'for customs payment and payer status 16 or 17, inn must be 12'
-    description_ru = 'для платежей таможню со статусом плательщика "16" или "17", значение ИНН должно быть "12"'
+    description_ru = (
+        'для платежей таможню со статусом плательщика "16" или "17",'
+        ' значение ИНН должно быть длиной 12 символов'
+    )
+    required_len = 12
 
 
-class PayerINNValidationEmptyNotAllowedError(PayerINNValidationError):
+class PayerINNValidationEmptyNotAllowedError(PayerINNValidationError, NeedRequiredField):
     description = 'inn cannot be empty'
     description_ru = 'не может быть пустым'
 
 
-class PayerINNValidationStartWithZerosError(PayerINNValidationError):
+class PayerINNValidationStartWithZerosError(PayerINNValidationError, IncorrectData):
     description = 'cannot start with "00"'
     description_ru = 'не может начинаться с "00"'
-
-
-class PayerINNValidationFiveOnlyZerosError(PayerINNValidationError):
-    description = 'inn with len 5 cannot be contains only zeros'
-    description_ru = 'ИНН с длиной 5 символов не может содержать только нули'
 
 
 class ReceiverINNValidationError(INNValidationError):
@@ -349,9 +354,10 @@ class AccountNumberValidationTypeError(AccountNumberValidationError, PydanticTyp
     description_ru = 'должен быть строкой'
 
 
-class AccountNumberValidationSizeError(AccountNumberValidationError):
+class AccountNumberValidationSizeError(AccountNumberValidationError, ExactFieldLenError):
     description = 'must consist of 20 chars'
     description_ru = 'должен состоять из 20 символов'
+    required_len = 20
 
 
 class AccountNumberValidationDigitsOnlyError(AccountNumberValidationError):
@@ -364,7 +370,11 @@ class AccountValidationBICValueError(AccountNumberValidationError):
     description_ru = 'не ключуется с БИКом'
 
 
-class ReceiverAccountValidationBICValueError(AccountValidationBICValueError, ReceiverAccountValidationError):
+class ReceiverAccountValidationBICValueError(
+    AccountValidationBICValueError,
+    ReceiverAccountValidationError,
+    IncorrectData,
+):
     pass
 
 
@@ -390,7 +400,7 @@ class PayerStatusValidationNullNotAllowedError(PayerStatusValidationError):
     description_ru = 'для платежей в бюджет значение не должно быть пустым'
 
 
-class PayerStatusValidationCustoms05NotAllowedError(PayerStatusValidationError):
+class PayerStatusValidationCustoms05NotAllowedError(PayerStatusValidationError, IncorrectData):
     description = 'for customs payment and for_third_face = true value "06" not allowed'
     description_ru = 'для платежей в таможню и для платежей за третьих лиц значение статуса не может быть "06"'
 
@@ -417,12 +427,12 @@ class PayerKPPValidationOnlyEmptyError(PayerKPPValidationError, KPPValidationOnl
     description_ru = 'для платежей ИП, ФЛ, И ЮЛ значение должно быть пустым'
 
 
-class PayerKPPValidationINN10EmptyNotAllowed(PayerKPPValidationError, KPPValidationEmptyNotAllowed):
+class PayerKPPValidationINN10EmptyNotAllowed(PayerKPPValidationError, KPPValidationEmptyNotAllowed, NeedRequiredField):
     description = 'for budget payment with inn length 10 kpp empty value is not allowed'
     description_ru = 'для платежей в бюджет с длиной ИНН равной 10 значение КПП должно быть заполнено'
 
 
-class PayerKPPValidationINN12OnlyEmptyError(PayerKPPValidationOnlyEmptyError):
+class PayerKPPValidationINN12OnlyEmptyError(PayerKPPValidationOnlyEmptyError, IncorrectData):
     description = 'for budget with inn length 12 kpp only empty allowed'
     description_ru = 'для платежей в бюджет с длиной ИНН равной 12 значение КПП должно быть пустым'
 
@@ -461,22 +471,23 @@ class CBCValidationTypeError(CBCValidationError, PydanticTypeError):
     description_ru = 'должен быть строкой'
 
 
-class CBCValidationEmptyNotAllowed(CBCValidationError):
+class CBCValidationEmptyNotAllowed(CBCValidationError, NeedRequiredField):
     description = 'for fns or customs empty value is not allowed'
     description_ru = 'для платежей в ФНС или таможню значение не должно быть пустым'
 
 
-class CBCValidationValueLenError(CBCValidationError):
+class CBCValidationValueLenError(CBCValidationError, ExactFieldLenError):
     description = 'must be 20 digits'
     description_ru = 'должен состоять из 20 цифр'
+    required_len = 20
 
 
-class CBCValidationValueDigitsOnlyError(CBCValidationError):
+class CBCValidationValueDigitsOnlyError(CBCValidationError, IncorrectData):
     description = 'only digits are allowed'
     description_ru = 'должен состоять только из цифр'
 
 
-class CBCValidationValueCannotZerosOnly(CBCValidationError):
+class CBCValidationValueCannotZerosOnly(CBCValidationError, IncorrectData):
     description = 'cannot contain only zeros'
     description_ru = 'не может состоять только из нулей'
 
@@ -488,7 +499,7 @@ class OKTMOValidationEmptyNotAllowed(OKTMOValidationError):
     description_ru = 'значение не должно быть пустым'
 
 
-class OKTMOValidationFNSEmptyNotAllowed(OKTMOValidationEmptyNotAllowed):
+class OKTMOValidationFNSEmptyNotAllowed(OKTMOValidationEmptyNotAllowed, NeedRequiredField):
     description = 'invalid oktmo: for fns with payer status = "02" empty value is not allowed'
     description_ru = 'для платежей в фнс со статусом плательщика "02" значение не может быть пустым'
 
@@ -510,12 +521,12 @@ class ReasonValidationTypeError(ReasonValidationError, PydanticTypeError):
     description_ru = 'должно быть строкой'
 
 
-class ReasonValidationValueLenError(ReasonValidationError):
+class ReasonValidationValueLenError(ReasonValidationError, IncorrectLen):
     description = 'must be 2 chars'
     description_ru = 'должно состоять из 2 символов'
 
 
-class ReasonValidationValueErrorCustoms(ReasonValidationError):
+class ReasonValidationValueErrorCustoms(ReasonValidationError, IncorrectData):
     description = f'for customs payment value must be in {CUSTOMS_REASONS}'
     description_ru = f'для платежей в таможню значение должно быть одним из {CUSTOMS_REASONS}'
 
@@ -542,18 +553,19 @@ class TaxPeriodValidationValueLenError(TaxPeriodValidationError):
     description_ru = 'некорректная длина'
 
 
-class TaxPeriodValidationBOValueLenError(TaxPeriodValidationValueLenError):
+class TaxPeriodValidationBOValueLenError(TaxPeriodValidationValueLenError, IncorrectLen):
     description = 'for bo must be 10'
     description_ru = 'для иных платежей в бюджет длина должны быть равна 10'
 
 
-class TaxPeriodValidationCustomsEmptyNotAllowed(TaxPeriodValidationEmptyNotAllowed):
+class TaxPeriodValidationCustomsEmptyNotAllowed(TaxPeriodValidationEmptyNotAllowed, NeedRequiredField):
     pass
 
 
-class TaxPeriodValidationCustomsValueLenError(TaxPeriodValidationValueLenError):
+class TaxPeriodValidationCustomsValueLenError(TaxPeriodValidationValueLenError, ExactFieldLenError):
     description = 'for customs len must be 8'
     description_ru = 'для платежей в таможню длина должна быть 8 символов'
+    required_len = 8
 
 
 class TaxPeriodValidationFNS02EmptyNotAllowed(TaxPeriodValidationError):
@@ -561,19 +573,20 @@ class TaxPeriodValidationFNS02EmptyNotAllowed(TaxPeriodValidationError):
     description_ru = 'для платежей в ФНС со статусом плательщика "02" пустое значение недопустимо'
 
 
-class TaxPeriodValidationFNS01OnlyEmpty(TaxPeriodValidationError):
+class TaxPeriodValidationFNS01OnlyEmpty(TaxPeriodValidationError, IncorrectData):
     description = 'for fns with payer status = "01" or "13" only empty allowed'
     description_ru = 'для платежей в ФНС со статусом плательщика "01" или "13" значение должно быть пустым'
 
 
-class TaxPeriodValidationFNSEmptyNotAllowed(TaxPeriodValidationEmptyNotAllowed):
+class TaxPeriodValidationFNSEmptyNotAllowed(TaxPeriodValidationEmptyNotAllowed, NeedRequiredField):
     description = 'for fns empty is not allowed'
     description_ru = 'для платежей в ФНС пустое значение недопустимо'
 
 
-class TaxPeriodValidationFNSValueLenError(TaxPeriodValidationValueLenError):
+class TaxPeriodValidationFNSValueLenError(TaxPeriodValidationValueLenError, ExactFieldLenError):
     description = 'for fns len must be 10 chars'
     description_ru = 'для платежей в ФНС длина значения должна быть 10 символов'
+    required_len = 10
 
 
 class DocumentNumberValidationError(VityaDescribedError, PydanticValueError):
@@ -610,7 +623,16 @@ class DocumentNumberValidationBOEmptyNotAllowed(DocumentNumberValidationEmptyNot
     )
 
 
-class DocumentNumberValidationBOOnlyEmptyError(DocumentNumberValidationOnlyEmptyError):
+class DocumentNumberValidationBOPayerStatus33OnlyEmptyError(DocumentNumberValidationOnlyEmptyError, IncorrectData):
+    description = (
+        'for bo with payer status = "33" , must be empty'
+    )
+    description_ru = (
+        'для иных платежей в бюджет со статусом плательщика = «33» поле документ должно быть обязательно пустым'
+    )
+
+
+class DocumentNumberValidationBOOnlyEmptyError(DocumentNumberValidationOnlyEmptyError, IncorrectData):
     description = (
         'for bo with receiver account starts with "03212",'
         ' payer status = "31", uin is not empty - empty value is not allowed'
@@ -629,7 +651,7 @@ class DocumentNumberValidationBOValueError(DocumentNumberValidationError):
     )
 
 
-class DocumentNumberValidationBOValueLenError(DocumentNumberValidationError):
+class DocumentNumberValidationBOValueLenError(DocumentNumberValidationError, IncorrectLen):
     description = 'for bo value len max 15'
     description_ru = 'для иных платежей в бюджет максимальная длина должна быть равна 15'
 
@@ -639,7 +661,7 @@ class DocumentNumberValidationCustoms00ValueError(DocumentNumberValidationError)
     description_ru = 'для платежей в таможню основание платежа должно быть равно "00", а номер должен начинаться с "00"'
 
 
-class DocumentNumberValidationCustomsValueLen7Error(DocumentNumberValidationError):
+class DocumentNumberValidationCustomsValueLen7Error(DocumentNumberValidationError, IncorrectLen):
     description = 'for customs with reason in {"ПК", "УВ", "ТГ", "ТБ", "ТД", "ПВ"} value len max 7'
     description_ru = (
         'для платежей в таможню с основанием платежа в {"ПК", "УВ", "ТГ", "ТБ", "ТД", "ПВ"}'
@@ -647,7 +669,7 @@ class DocumentNumberValidationCustomsValueLen7Error(DocumentNumberValidationErro
     )
 
 
-class DocumentNumberValidationCustomsValueLen15Error(DocumentNumberValidationError):
+class DocumentNumberValidationCustomsValueLen15Error(DocumentNumberValidationError, IncorrectLen):
     description = 'for customs with reason in {"ИЛ", "ИН", "ПБ", "КЭ"} value len from 1 to 15 chars'
     description_ru = (
         'для платежей в таможню с основанием платежа в {"ИЛ", "ИН", "ПБ", "КЭ"}'
@@ -672,12 +694,13 @@ class DocumentDateValidationFNSOnlyEmptyError(DocumentDateValidationError):
     description_ru = 'для платежей в ФНС значение должно быть пустым'
 
 
-class DocumentDateValidationCustomsLenError(DocumentDateValidationError):
+class DocumentDateValidationCustomsLenError(DocumentDateValidationError, ExactFieldLenError):
     description = 'for customs value must be equal 10 chars'
     description_ru = 'для платежей в таможню длина значения должна быть 10 символов'
+    required_len = 10
 
 
-class DocumentDateValidationBOLenError(DocumentDateValidationError):
+class DocumentDateValidationBOLenError(DocumentDateValidationError, IncorrectLen):
     description = 'for bo value max 10 chars'
     description_ru = 'для иных платежей в бюджет значение не должно быть длиннее 10 символов'
 

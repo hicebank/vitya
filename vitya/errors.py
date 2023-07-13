@@ -1,6 +1,6 @@
 from pydantic.errors import PydanticTypeError, PydanticValueError
 
-from vitya.errors_base import VityaDescribedError
+from vitya.errors_base import VityaDescribedError, IncorrectLen, ExactFieldLenError, IncorrectData
 
 
 class OKTMOValidationError(VityaDescribedError, PydanticValueError):
@@ -15,12 +15,12 @@ class OKTMOValidationTypeError(OKTMOValidationError, PydanticTypeError):
     description_ru = 'должен быть строкой'
 
 
-class OKTMOValidationValueLenError(OKTMOValidationError):
+class OKTMOValidationValueLenError(OKTMOValidationError, IncorrectLen):
     description = 'must be match 8 or 11 digits'
     description_ru = 'должен состоять из 8 или 11 цифр'
 
 
-class OKTMOValidationValueError(OKTMOValidationError):
+class OKTMOValidationValueError(OKTMOValidationError, IncorrectData):
     description = 'must be match as ([0-9]{11}|[0-9]{8})'
     description_ru = 'должен матчиться с ([0-9]{11}|[0-9]{8})'
 
@@ -32,17 +32,17 @@ class INNValidationError(VityaDescribedError, PydanticValueError):
     description_ru = 'базовая ошибка'
 
 
-class INNValidationControlSumError(INNValidationError):
+class INNValidationControlSumError(INNValidationError, IncorrectData):
     description = 'invalid control sum'
     description_ru = 'неверная контрольная сумма'
 
 
-class INNValidationDigitsOnlyError(INNValidationError):
+class INNValidationDigitsOnlyError(INNValidationError, IncorrectData):
     description = 'must contains only digits'
     description_ru = 'может содержать только цифры'
 
 
-class INNValidationLenError(INNValidationError):
+class INNValidationLenError(INNValidationError, IncorrectLen):
     description = 'len must be 5, 10 or 12'
     description_ru = 'длина должна быть 5, 10 или 12 символов'
 
@@ -52,7 +52,7 @@ class INNValidationTypeError(INNValidationError, PydanticTypeError):
     description_ru = 'должен быть строкой'
 
 
-class INNValidationStartsWithZerosError(INNValidationError):
+class INNValidationStartsWithZerosError(INNValidationError, IncorrectData):
     description = 'cannot starts with "00"'
     description_ru = 'не может начинаться с "00"'
 
@@ -69,9 +69,10 @@ class KPPValidationTypeError(KPPValidationError, PydanticTypeError):
     description_ru = 'должно быть строкой'
 
 
-class KPPValidationValueLenError(KPPValidationError):
+class KPPValidationValueLenError(KPPValidationError, ExactFieldLenError):
     description = 'kpp must be 9 chars'
     description_ru = 'должен содержать 9 символов'
+    required_len = 9
 
 
 class KPPValidationValueDigitsOnlyError(KPPValidationError):
@@ -79,7 +80,7 @@ class KPPValidationValueDigitsOnlyError(KPPValidationError):
     description_ru = 'должен состоять только из цифр'
 
 
-class KPPValidationValueError(KPPValidationError):
+class KPPValidationValueError(KPPValidationError, IncorrectData):
     description = 'must matches as [0-9]{4}[0-9A-Z]{2}[0-9]{3}'
     description_ru = 'должен матчиться с [0-9]{4}[0-9A-Z]{2}[0-9]{3}'
 
@@ -101,9 +102,10 @@ class BICValidationTypeError(BICValidationError, PydanticTypeError):
     description_ru = 'должен быть строкой'
 
 
-class BICValidationLenError(BICValidationError):
+class BICValidationLenError(BICValidationError, ExactFieldLenError):
     description = 'must be 9 chars'
     description_ru = 'должен содержать 9 символов'
+    required_len = 9
 
 
 class BICValidationValueDigitsOnlyError(BICValidationError):

@@ -36,7 +36,7 @@ from vitya.payment_order.errors import (
     UINValidationDigitsOnlyError,
     UINValidationLenError,
     UINValidationOnlyZeroError,
-    UINValidationTypeError,
+    UINValidationTypeError, PaymentOrderLenError,
 )
 from vitya.payment_order.payments.constants import (
     CHARS_FOR_PURPOSE,
@@ -97,6 +97,8 @@ def validate_payment_order(value: Optional[str]) -> int:
     if value is None or value == '':
         return 5
 
+    if len(value) != 1:
+        raise PaymentOrderLenError
     try:
         value_int = int(value)
     except ValueError:

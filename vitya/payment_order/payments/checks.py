@@ -55,7 +55,7 @@ from vitya.payment_order.errors import (
     UINValidationBONotEmpty,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
-    UINValidationValueZeroError,
+    UINValidationValueZeroError, DocumentNumberValidationBOPayerStatus33OnlyEmptyError,
 )
 from vitya.payment_order.fields import (
     CBC,
@@ -400,6 +400,10 @@ def check_document_number(
             raise DocumentNumberValidationFNSOnlyEmptyError
         return None
     elif payment_type == PaymentType.BUDGET_OTHER:
+        if payer_status == '33':
+            if value is not None:
+                raise DocumentNumberValidationBOPayerStatus33OnlyEmptyError
+            return None
         if receiver_account.startswith('03212') and payer_status == '31' and uin is not None:
             if value is not None:
                 raise DocumentNumberValidationBOOnlyEmptyError

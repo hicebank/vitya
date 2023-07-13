@@ -17,3 +17,19 @@ class VityaDescribedError(Exception):
         if item.endswith('_ru'):
             return getattr(self, item[:-3])
         raise AttributeError
+
+
+class NeedRequiredField(VityaDescribedError):
+    pass
+
+
+class IncorrectLen(VityaDescribedError):
+    pass
+
+
+class ExactFieldLenError(VityaDescribedError):
+    required_len: int
+
+
+class IncorrectData(VityaDescribedError):
+    pass
