@@ -1,8 +1,14 @@
 from typing import Optional
 
 from vitya.error_description import AlertGenerator
-from vitya.payment_order.fields import PayerAccountNumber, ReceiverAccountNumber, Amount, \
-    Receiver, ReceiverBIC, ReceiverKPP
+from vitya.payment_order.fields import (
+    Amount,
+    PayerAccountNumber,
+    Receiver,
+    ReceiverAccountNumber,
+    ReceiverBIC,
+    ReceiverKPP,
+)
 from vitya.payment_order.payments.checkers import BaseModelChecker
 
 

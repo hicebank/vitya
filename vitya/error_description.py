@@ -3,8 +3,14 @@ from typing import List, Sequence, TypedDict
 
 import pydantic
 from pydantic.error_wrappers import ErrorWrapper, ValidationError
-from pydantic.errors import NoneIsNotAllowedError, MissingError
-from vitya.errors_base import NeedRequiredField, IncorrectLen, ExactFieldLenError, IncorrectData
+from pydantic.errors import MissingError, NoneIsNotAllowedError
+
+from vitya.errors_base import (
+    ExactFieldLenError,
+    IncorrectData,
+    IncorrectLen,
+    NeedRequiredField,
+)
 from vitya.payment_order.errors import DocumentNumberValidationBOEmptyNotAllowed
 from vitya.payment_order.payments.checkers import CheckerError
 

@@ -1,6 +1,11 @@
 from pydantic.errors import PydanticTypeError, PydanticValueError
 
-from vitya.errors_base import VityaDescribedError, IncorrectLen, ExactFieldLenError, IncorrectData
+from vitya.errors_base import (
+    ExactFieldLenError,
+    IncorrectData,
+    IncorrectLen,
+    VityaDescribedError,
+)
 
 
 class OKTMOValidationError(VityaDescribedError, PydanticValueError):

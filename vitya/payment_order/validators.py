@@ -22,6 +22,7 @@ from vitya.payment_order.errors import (
     PayerStatusValidationTypeError,
     PayerStatusValidationValueError,
     PayerValidationSizeError,
+    PaymentOrderLenError,
     PaymentOrderValidationError,
     PurposeCodeValidationTypeError,
     PurposeValidationCharactersError,
@@ -36,7 +37,7 @@ from vitya.payment_order.errors import (
     UINValidationDigitsOnlyError,
     UINValidationLenError,
     UINValidationOnlyZeroError,
-    UINValidationTypeError, PaymentOrderLenError,
+    UINValidationTypeError,
 )
 from vitya.payment_order.payments.constants import (
     CHARS_FOR_PURPOSE,

@@ -11,6 +11,7 @@ from vitya.payment_order.errors import (
     DocumentDateValidationFNSOnlyEmptyError,
     DocumentNumberValidationBOEmptyNotAllowed,
     DocumentNumberValidationBOOnlyEmptyError,
+    DocumentNumberValidationBOPayerStatus33OnlyEmptyError,
     DocumentNumberValidationBOValueError,
     DocumentNumberValidationBOValueLenError,
     DocumentNumberValidationCustoms00ValueError,
@@ -55,7 +56,7 @@ from vitya.payment_order.errors import (
     UINValidationBONotEmpty,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
-    UINValidationValueZeroError, DocumentNumberValidationBOPayerStatus33OnlyEmptyError,
+    UINValidationValueZeroError,
 )
 from vitya.payment_order.fields import (
     CBC,
