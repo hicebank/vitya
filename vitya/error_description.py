@@ -1,5 +1,5 @@
 from itertools import chain
-from typing import List, Sequence, TypedDict
+from typing import List, Sequence, TypedDict, Optional
 
 import pydantic
 from pydantic.error_wrappers import ErrorWrapper, ValidationError
@@ -43,6 +43,22 @@ class AlertGenerator:
     def __init__(self, key_to_field_name: AlertKeyToFieldName):
         self._field_name_to_key = {value: key for key, value in key_to_field_name.items()}
 
+    def _mixin_to_alert(self, exc: Exception) -> Optional[str]:
+        if isinstance(exc, NeedRequiredField):
+            return f'Поле «{exc.target_ru}» должно быть заполнено'
+        if isinstance(exc, IncorrectLen):
+            return f'Поле «{exc.target_ru}» содержит неправильное количество символов'
+        if isinstance(exc, ExactFieldLenError):
+            return f'Поле «{exc.target_ru}» должно содержать ровно {exc.required_len} символов'
+        if isinstance(exc, IncorrectData):
+            return f'Поле «{exc.target_ru}» содержит некорректные данные'
+        if isinstance(exc, DocumentNumberValidationBOEmptyNotAllowed):
+            return (
+                'При выборе «24» в поле «101, Статус плательщика» обязательны данные'
+                ' хотя бы одного из полей: «60, ИНН плательщика», «22, УИН», «108, Документ»'
+            )
+        return None
+
     def get_error_client_alerts(self, exc: Exception) -> List[str]:
         if not isinstance(exc, ValidationError):
             return []
@@ -51,23 +67,17 @@ class AlertGenerator:
         for error_wrapper in flatten_error_wrappers(exc.raw_errors):
             if isinstance(error_wrapper.exc, CheckerError):
                 for exc in error_wrapper.exc.errors:
-                    if isinstance(exc, NeedRequiredField):
-                        result.append(f'Поле «{exc.target_ru}» должно быть заполнено')
-                    elif isinstance(exc, IncorrectLen):
-                        result.append(f'Поле «{exc.target_ru}» содержит неправильное количество символов')
-                    elif isinstance(exc, ExactFieldLenError):
-                        result.append(f'Поле «{exc.target_ru}» должно содержать ровно {exc.required_len} символов')
-                    elif isinstance(exc, IncorrectData):
-                        result.append(f'Поле «{exc.target_ru}» содержит некорректные данные')
-                    elif isinstance(exc, DocumentNumberValidationBOEmptyNotAllowed):
-                        result.append(
-                            'При выборе «24» в поле «101, Статус плательщика» обязательны данные'
-                            ' хотя бы одного из полей: «60, ИНН плательщика», «22, УИН», «108, Документ»'
-                        )
+                    alert = self._mixin_to_alert(exc)
+                    if alert is not None:
+                        result.append(alert)
             elif isinstance(error_wrapper.exc, (NoneIsNotAllowedError, MissingError)):
                 if len(error_wrapper.loc_tuple()) == 1:
                     field_name = error_wrapper.loc_tuple()[0]
                     if field_name in self._field_name_to_key:
                         name_ru = self._key_to_ru[self._field_name_to_key[field_name]]
                         result.append(f'Поле «{name_ru}» должно быть заполнено')
+            else:
+                alert = self._mixin_to_alert(exc)
+                if alert is not None:
+                    result.append(alert)
         return result
