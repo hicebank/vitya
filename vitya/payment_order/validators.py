@@ -30,6 +30,9 @@ from vitya.payment_order.errors import (
     PurposeValidationTypeError,
     ReasonValidationTypeError,
     ReasonValidationValueLenError,
+    ReceiverAccountNumberValidationDigitsOnlyError,
+    ReceiverAccountNumberValidationSizeError,
+    ReceiverAccountNumberValidationTypeError,
     ReceiverValidationNameError,
     ReceiverValidationSizeError,
     TaxPeriodValidationTypeError,
@@ -117,6 +120,17 @@ def validate_account_number(value: str) -> str:
     if not only_digits(value):
         raise AccountNumberValidationDigitsOnlyError
     return value
+
+
+def validate_receiver_account_number(value: str) -> str:
+    try:
+        return validate_account_number(value)
+    except AccountNumberValidationTypeError:
+        raise ReceiverAccountNumberValidationTypeError
+    except AccountNumberValidationSizeError:
+        raise ReceiverAccountNumberValidationSizeError
+    except AccountNumberValidationDigitsOnlyError:
+        raise ReceiverAccountNumberValidationDigitsOnlyError
 
 
 def validate_operation_kind(value: str) -> str:

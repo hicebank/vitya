@@ -1,5 +1,5 @@
 from itertools import chain
-from typing import List, Sequence, TypedDict, Optional
+from typing import List, Optional, Sequence, TypedDict
 
 import pydantic
 from pydantic.error_wrappers import ErrorWrapper, ValidationError
@@ -38,6 +38,8 @@ class AlertGenerator:
         'receiver_bic': 'БИК банка получателя',
         'receiver': 'Получатель',
         'receiver_account_number': 'Номер счёта получателя',
+        'payer_account_number': 'Номер счёта плательщика',
+        'payer_bic': 'БИК банка плательщика',
     }
 
     def __init__(self, key_to_field_name: AlertKeyToFieldName):
@@ -61,23 +63,26 @@ class AlertGenerator:
 
     def get_error_client_alerts(self, exc: Exception) -> List[str]:
         if not isinstance(exc, ValidationError):
+            alert = self._mixin_to_alert(exc)
+            if alert is not None:
+                return [alert]
             return []
 
         result = []
         for error_wrapper in flatten_error_wrappers(exc.raw_errors):
             if isinstance(error_wrapper.exc, CheckerError):
-                for exc in error_wrapper.exc.errors:
-                    alert = self._mixin_to_alert(exc)
+                for sub_error in error_wrapper.exc.errors:
+                    alert = self._mixin_to_alert(sub_error)
                     if alert is not None:
                         result.append(alert)
             elif isinstance(error_wrapper.exc, (NoneIsNotAllowedError, MissingError)):
                 if len(error_wrapper.loc_tuple()) == 1:
                     field_name = error_wrapper.loc_tuple()[0]
                     if field_name in self._field_name_to_key:
-                        name_ru = self._key_to_ru[self._field_name_to_key[field_name]]
-                        result.append(f'Поле «{name_ru}» должно быть заполнено')
+                        target_ru = self._key_to_ru[self._field_name_to_key[field_name]]
+                        result.append(f'Поле «{target_ru}» должно быть заполнено')
             else:
-                alert = self._mixin_to_alert(exc)
+                alert = self._mixin_to_alert(error_wrapper.exc)
                 if alert is not None:
                     result.append(alert)
         return result

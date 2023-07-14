@@ -17,6 +17,7 @@ from vitya.payment_order.validators import (
     validate_purpose_code,
     validate_reason,
     validate_receiver,
+    validate_receiver_account_number,
     validate_tax_period,
     validate_uin,
 )
@@ -83,6 +84,10 @@ class AccountNumber(FieldMixin, str):
 
 class ReceiverAccountNumber(AccountNumber):
     """Счет получателя (17)"""
+
+    @classmethod
+    def _validate(cls, value: str) -> str:
+        return validate_receiver_account_number(value)
 
 
 class PayerAccountNumber(AccountNumber):

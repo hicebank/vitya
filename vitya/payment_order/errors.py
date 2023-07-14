@@ -26,7 +26,7 @@ from vitya.payment_order.payments.constants import (
 
 class PaymentTypeValueError(VityaDescribedError, PydanticValueError):
     target = 'payment type'
-    target_ru = 'тип платежа'
+    target_ru = 'Тип платежа'
     description = 'неизвестный тип платежа '
     description_ru = 'неизвестный тип платежа '
 
@@ -38,7 +38,7 @@ class PaymentTypeValueError(VityaDescribedError, PydanticValueError):
 
 class AmountValidationError(VityaDescribedError, PydanticValueError):
     target = 'amount'
-    target_ru = 'сумма'
+    target_ru = 'Сумма'
     description = 'base error'
     description_ru = 'базовая ошибка'
 
@@ -60,7 +60,7 @@ class AmountNotANumber(AmountValidationError, IncorrectData):
 
 class CustomerValidationError(VityaDescribedError, PydanticValueError):
     target = 'customer'
-    target_ru = 'плательщик или получатель'
+    target_ru = 'Плательщик или Получатель'
     description = 'base error'
     description_ru = 'базовая ошибка'
 
@@ -72,7 +72,7 @@ class CustomerValidationSizeError(CustomerValidationError):
 
 class PayerValidationError(CustomerValidationError):
     target = 'payer'
-    target_ru = 'плательщик'
+    target_ru = 'Плательщик'
 
 
 class PayerValidationSizeError(PayerValidationError, CustomerValidationSizeError, IncorrectLen):
@@ -81,7 +81,7 @@ class PayerValidationSizeError(PayerValidationError, CustomerValidationSizeError
 
 class ReceiverValidationError(CustomerValidationError):
     target = 'receiver'
-    target_ru = 'получатель'
+    target_ru = 'Получатель'
 
 
 class ReceiverValidationSizeError(ReceiverValidationError, CustomerValidationSizeError, IncorrectLen):
@@ -95,14 +95,14 @@ class ReceiverValidationNameError(ReceiverValidationError):
 
 class NumberValidationLenError(PydanticValueError, IncorrectLen):
     target = 'number'
-    target_ru = 'номер'
+    target_ru = 'Номер'
     description = 'cannot be longer than 6 chars'
     description_ru = 'не может быть длиннее 6 символов'
 
 
 class PaymentOrderValidationError(VityaDescribedError, PydanticValueError):
     target = 'payment order'
-    target_ru = 'очередность платежа'
+    target_ru = 'Очередность платежа'
     description = 'value must be in {1, 2, 3, 4, 5}'
     description_ru = 'значение должно быть одним из {1, 2, 3, 4, 5}'
 
@@ -113,7 +113,7 @@ class PaymentOrderLenError(PaymentOrderValidationError, ExactFieldLenError):
 
 class OperationKindValidationError(VityaDescribedError, PydanticValueError):
     target = 'operation kind'
-    target_ru = 'вид операции'
+    target_ru = 'Вид операции'
     description = 'base error'
     description_ru = 'базовая ошибка'
 
@@ -136,7 +136,7 @@ class OperationKindValidationValueError(OperationKindValidationBudgetValueError,
 
 class PurposeCodeValidationError(VityaDescribedError, PydanticValueError):
     target = 'purpose code'
-    target_ru = 'код назначения'
+    target_ru = 'Код назначения'
     description = 'base error'
     description_ru = 'базовая ошибка'
 
@@ -236,7 +236,7 @@ class UINValidationOnlyZeroError(UINValidationError, IncorrectData):
 
 class PurposeValidationError(VityaDescribedError, PydanticValueError):
     target = 'purpose'
-    target_ru = 'назначение'
+    target_ru = 'Назначение'
     description = 'base error'
     description_ru = 'базовая ошибка'
 
@@ -328,7 +328,7 @@ class ReceiverINNValidationLELenError(ReceiverINNValidationError):
 
 class ReceiverAccountValidationError(VityaDescribedError, PydanticValueError):
     target = 'receiver account'
-    target_ru = 'счет получателя'
+    target_ru = 'Счет получателя'
     description = 'base error'
     description_ru = 'базовая ошибка'
 
@@ -350,7 +350,7 @@ class ReceiverAccountValidationFNSValueError(ReceiverAccountValidationError):
 
 class AccountNumberValidationError(VityaDescribedError, PydanticValueError):
     target = 'account number'
-    target_ru = 'номер счета'
+    target_ru = 'Номер счета'
     description = 'base error'
     description_ru = 'базовая ошибка'
 
@@ -376,17 +376,37 @@ class AccountValidationBICValueError(AccountNumberValidationError):
     description_ru = 'не ключуется с БИКом'
 
 
-class ReceiverAccountValidationBICValueError(
-    AccountValidationBICValueError,
+class ReceiverAccountNumberValidationTypeError(
     ReceiverAccountValidationError,
-    IncorrectData,
+    AccountNumberValidationTypeError,
+):
+    pass
+
+
+class ReceiverAccountNumberValidationSizeError(
+    ReceiverAccountValidationError,
+    AccountNumberValidationSizeError,
+):
+    pass
+
+
+class ReceiverAccountNumberValidationDigitsOnlyError(
+    ReceiverAccountValidationError,
+    AccountNumberValidationDigitsOnlyError,
+):
+    pass
+
+
+class ReceiverAccountValidationBICValueError(
+    ReceiverAccountValidationError,
+    AccountValidationBICValueError,
 ):
     pass
 
 
 class PayerStatusValidationError(VityaDescribedError, PydanticValueError):
     target = 'payer status'
-    target_ru = 'статус плательщика'
+    target_ru = 'Статус плательщика'
     description = 'base error'
     description_ru = 'базовая ошибка'
 
@@ -517,7 +537,7 @@ class OKTMOValidationZerosNotAllowed(OKTMOValidationError):
 
 class ReasonValidationError(VityaDescribedError, PydanticValueError):
     target = 'reason'
-    target_ru = 'основание платежа'
+    target_ru = 'Основание платежа'
     description = 'base error'
     description_ru = 'базовая ошибка'
 
@@ -597,7 +617,7 @@ class TaxPeriodValidationFNSValueLenError(TaxPeriodValidationValueLenError, Exac
 
 class DocumentNumberValidationError(VityaDescribedError, PydanticValueError):
     target = 'document number'
-    target_ru = 'номер документа'
+    target_ru = 'Номер документа'
     description = 'base error'
     description_ru = 'базовая ошибка'
 
@@ -685,7 +705,7 @@ class DocumentNumberValidationCustomsValueLen15Error(DocumentNumberValidationErr
 
 class DocumentDateValidationError(VityaDescribedError, PydanticValueError):
     target = 'document date'
-    target_ru = 'дата документа'
+    target_ru = 'Дата документа'
     description = 'base error'
     description_ru = 'базовая ошибка'
 
