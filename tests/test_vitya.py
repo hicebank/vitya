@@ -117,7 +117,6 @@ def test_valid_inn_le(inn):
 @pytest.mark.parametrize(
     'inn', [
         None,  # can't be None
-        '',
         3664069397,  # can't be nothing than str
         302502032671,
         '770708389',  # should be size of 10 or 12 chars

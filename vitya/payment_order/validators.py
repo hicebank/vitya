@@ -1,6 +1,6 @@
 import re
 from decimal import Decimal, InvalidOperation
-from typing import Optional
+from typing import Optional, Union
 
 from vitya.payment_order.errors import (
     AccountNumberValidationDigitsOnlyError,
@@ -97,11 +97,11 @@ def validate_receiver(value: str) -> str:
     return value
 
 
-def validate_payment_order(value: Optional[str]) -> int:
+def validate_payment_order(value: Optional[Union[int, str]]) -> int:
     if value is None or value == '':
         return 5
 
-    if len(value) != 1:
+    if isinstance(value, str) and len(value) != 1:
         raise PaymentOrderLenError
     try:
         value_int = int(value)
