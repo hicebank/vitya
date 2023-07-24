@@ -25,7 +25,6 @@ from vitya.payment_order.errors import (
     PayerValidationSizeError,
     PaymentOrderValidationError,
     PurposeCodeValidationTypeError,
-    PurposeValidationCharactersError,
     PurposeValidationMaxLenError,
     PurposeValidationTypeError,
     ReasonValidationTypeError,
@@ -214,7 +213,7 @@ def test_validate_purpose_code(
         (None, pytest.raises(PurposeValidationTypeError), None),
         ('', nullcontext(), '0'),
         ('1' * 211, pytest.raises(PurposeValidationMaxLenError), None),
-        ('的', pytest.raises(PurposeValidationCharactersError), None),
+        ('的', nullcontext(), ''),
         ('some', nullcontext(), 'some'),
     ]
 )

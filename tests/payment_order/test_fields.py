@@ -18,7 +18,6 @@ from vitya.payment_order.errors import (
     PayerValidationSizeError,
     PaymentOrderValidationError,
     PurposeCodeValidationTypeError,
-    PurposeValidationCharactersError,
     PurposeValidationMaxLenError,
     ReceiverValidationNameError,
     ReceiverValidationSizeError,
@@ -265,7 +264,7 @@ class TestPurposeModel(BaseModel):
     [
         ('', None, '0'),
         ('1' * 211, PurposeValidationMaxLenError, None),
-        ('的', PurposeValidationCharactersError, None),
+        ('的', None, ''),
         ('some', None, 'some'),
     ]
 )

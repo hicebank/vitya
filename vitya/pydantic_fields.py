@@ -69,19 +69,19 @@ class FieldMixin(ABC):
 
 class INN(FieldMixin, str):
     @classmethod
-    def _validate(cls, value: str) -> str:
+    def _validate(cls, value: str) -> Optional[str]:
         return validate_inn(value)
 
 
 class INNIP(FieldMixin, str):
     @classmethod
-    def _validate(cls, value: str) -> str:
+    def _validate(cls, value: str) -> Optional[str]:
         return validate_inn_ip(value)
 
 
 class INNLE(FieldMixin, str):
     @classmethod
-    def _validate(cls, value: str) -> str:
+    def _validate(cls, value: str) -> Optional[str]:
         return validate_inn_le(value)
 
 

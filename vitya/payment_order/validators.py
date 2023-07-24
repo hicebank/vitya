@@ -25,7 +25,6 @@ from vitya.payment_order.errors import (
     PaymentOrderLenError,
     PaymentOrderValidationError,
     PurposeCodeValidationTypeError,
-    PurposeValidationCharactersError,
     PurposeValidationMaxLenError,
     PurposeValidationTypeError,
     ReasonValidationTypeError,
@@ -204,6 +203,9 @@ def validate_purpose_code(value: int) -> int:
     return value
 
 
+_PURPOSE_TRANS_TABLE = str.maketrans({char: ' ' for char in REPLACE_CHARS_FOR_SPACE})
+
+
 def validate_purpose(value: str) -> str:
     if not isinstance(value, str):
         raise PurposeValidationTypeError
@@ -211,13 +213,9 @@ def validate_purpose(value: str) -> str:
     if value == '':
         return '0'
 
+    value = ''.join(c for c in value.translate(_PURPOSE_TRANS_TABLE) if c in CHARS_FOR_PURPOSE)
     if len(value) > 210:
         raise PurposeValidationMaxLenError
-
-    replaced_space_value = ''.join(map(lambda x: x if x not in REPLACE_CHARS_FOR_SPACE else ' ', value))
-    for c in replaced_space_value:
-        if c not in CHARS_FOR_PURPOSE:
-            raise PurposeValidationCharactersError
     return value
 
 

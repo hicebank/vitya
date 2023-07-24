@@ -74,11 +74,11 @@ def validate_inn(inn: str, is_ip: Optional[bool] = None) -> Optional[str]:
     raise INNValidationLenError
 
 
-def validate_inn_ip(inn: str) -> str:
+def validate_inn_ip(inn: str) -> Optional[str]:
     return validate_inn(inn, is_ip=True)
 
 
-def validate_inn_le(inn: str) -> str:
+def validate_inn_le(inn: str) -> Optional[str]:
     return validate_inn(inn, is_ip=False)
 
 

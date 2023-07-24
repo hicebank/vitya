@@ -17,7 +17,6 @@ from vitya.errors_base import (
 )
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.payments.constants import (
-    CHARS_FOR_PURPOSE,
     CUSTOMS_REASONS,
     DOCUMENT_NUMBERS,
     PAYER_STATUSES,
@@ -249,11 +248,6 @@ class PurposeValidationTypeError(PurposeValidationError, PydanticTypeError):
 class PurposeValidationMaxLenError(PurposeValidationError, IncorrectLen):
     description = 'len can be from 1 to 210 chars'
     description_ru = 'длина должна быть от 1 до 210 символов'
-
-
-class PurposeValidationCharactersError(PurposeValidationError):
-    description = f'can only consist of {CHARS_FOR_PURPOSE}'
-    description_ru = f'может состоять только из символов {CHARS_FOR_PURPOSE}'
 
 
 class PurposeValidationIPNDSError(PurposeValidationError, IncorrectData):
