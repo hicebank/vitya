@@ -286,7 +286,8 @@ def check_receiver_kpp(
         if value is not None:
             raise ReceiverKPPValidationOnlyEmptyError
         return None
-
+    if payment_type in {PaymentType.LE, PaymentType.CHAMELEON}:
+        return value
     if value is None:
         raise ReceiverKPPValidationEmptyNotAllowed
     if value.startswith('00'):
