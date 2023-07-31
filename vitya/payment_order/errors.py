@@ -470,13 +470,13 @@ class ReceiverKPPValidationOnlyEmptyError(ReceiverKPPValidationError, KPPValidat
 
 
 class ReceiverKPPValidationEmptyNotAllowed(ReceiverKPPValidationError, KPPValidationEmptyNotAllowed):
-    description = 'for fns, customs, budget other or le empty value is not allowed'
-    description_ru = 'для платежей в бюджет или платежей ЮЛ пустое значение недопустимо'
+    description = 'for fns, customs, budget other empty value is not allowed'
+    description_ru = 'для платежей в бюджет пустое значение недопустимо'
 
 
 class ReceiverKPPValidationStartsWithZeros(ReceiverKPPValidationError):
-    description = 'for fns, customs, budget other or le kpp cannot starts with "00"'
-    description_ru = 'для платежей в бюджет или платежей ЮЛ значение не может начинаться с "00"'
+    description = 'for fns, customs, budget other kpp cannot starts with "00"'
+    description_ru = 'для платежей в бюджет значение не может начинаться с "00"'
 
 
 class CBCValidationError(VityaDescribedError, PydanticValueError):
