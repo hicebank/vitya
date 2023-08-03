@@ -32,7 +32,7 @@ def _count_inn_checksum(inn: str, coefficients: List[int]) -> int:
     return n % 11 % 10
 
 
-def validate_inn(inn: str, is_ip: Optional[bool] = None) -> str:
+def validate_inn(inn: str, is_ip: Optional[bool] = None) -> Optional[str]:
     """
     Source:
     https://www.consultant.ru/document/cons_doc_LAW_134082/947eeb5630c9f58cbc6103f0910440cef8eaccac/
@@ -40,6 +40,9 @@ def validate_inn(inn: str, is_ip: Optional[bool] = None) -> str:
     """
     if not isinstance(inn, str):
         raise INNValidationTypeError
+
+    if inn in {'', '0'}:
+        return None
 
     if not re.fullmatch(r'[0-9]+', inn):
         raise INNValidationDigitsOnlyError
@@ -71,11 +74,11 @@ def validate_inn(inn: str, is_ip: Optional[bool] = None) -> str:
     raise INNValidationLenError
 
 
-def validate_inn_ip(inn: str) -> str:
+def validate_inn_ip(inn: str) -> Optional[str]:
     return validate_inn(inn, is_ip=True)
 
 
-def validate_inn_le(inn: str) -> str:
+def validate_inn_le(inn: str) -> Optional[str]:
     return validate_inn(inn, is_ip=False)
 
 

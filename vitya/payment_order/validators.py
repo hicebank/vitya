@@ -1,6 +1,6 @@
 import re
 from decimal import Decimal, InvalidOperation
-from typing import Optional
+from typing import Optional, Union
 
 from vitya.payment_order.errors import (
     AccountNumberValidationDigitsOnlyError,
@@ -19,18 +19,21 @@ from vitya.payment_order.errors import (
     NumberValidationLenError,
     OperationKindValidationTypeError,
     OperationKindValidationValueError,
-    PayeeValidationNameError,
-    PayeeValidationSizeError,
     PayerStatusValidationTypeError,
     PayerStatusValidationValueError,
     PayerValidationSizeError,
+    PaymentOrderLenError,
     PaymentOrderValidationError,
     PurposeCodeValidationTypeError,
-    PurposeValidationCharactersError,
     PurposeValidationMaxLenError,
     PurposeValidationTypeError,
     ReasonValidationTypeError,
     ReasonValidationValueLenError,
+    ReceiverAccountNumberValidationDigitsOnlyError,
+    ReceiverAccountNumberValidationSizeError,
+    ReceiverAccountNumberValidationTypeError,
+    ReceiverValidationNameError,
+    ReceiverValidationSizeError,
     TaxPeriodValidationTypeError,
     UINValidationControlSumError,
     UINValidationDigitsOnlyError,
@@ -83,20 +86,22 @@ def validate_payer(value: str) -> str:
     return value
 
 
-def validate_payee(value: str) -> str:
+def validate_receiver(value: str) -> str:
     try:
         validate_customer(value)
     except CustomerValidationSizeError as e:
-        raise PayeeValidationSizeError from e
+        raise ReceiverValidationSizeError from e
     if bool(re.match('(.*)(4)[0-9]{19}', value)):
-        raise PayeeValidationNameError
+        raise ReceiverValidationNameError
     return value
 
 
-def validate_payment_order(value: Optional[str]) -> int:
+def validate_payment_order(value: Optional[Union[int, str]]) -> int:
     if value is None or value == '':
         return 5
 
+    if isinstance(value, str) and len(value) != 1:
+        raise PaymentOrderLenError
     try:
         value_int = int(value)
     except ValueError:
@@ -114,6 +119,17 @@ def validate_account_number(value: str) -> str:
     if not only_digits(value):
         raise AccountNumberValidationDigitsOnlyError
     return value
+
+
+def validate_receiver_account_number(value: str) -> str:
+    try:
+        return validate_account_number(value)
+    except AccountNumberValidationTypeError:
+        raise ReceiverAccountNumberValidationTypeError
+    except AccountNumberValidationSizeError:
+        raise ReceiverAccountNumberValidationSizeError
+    except AccountNumberValidationDigitsOnlyError:
+        raise ReceiverAccountNumberValidationDigitsOnlyError
 
 
 def validate_operation_kind(value: str) -> str:
@@ -187,6 +203,9 @@ def validate_purpose_code(value: int) -> int:
     return value
 
 
+_PURPOSE_TRANS_TABLE = str.maketrans({char: ' ' for char in REPLACE_CHARS_FOR_SPACE})
+
+
 def validate_purpose(value: str) -> str:
     if not isinstance(value, str):
         raise PurposeValidationTypeError
@@ -194,13 +213,9 @@ def validate_purpose(value: str) -> str:
     if value == '':
         return '0'
 
+    value = ''.join(c for c in value.translate(_PURPOSE_TRANS_TABLE) if c in CHARS_FOR_PURPOSE)
     if len(value) > 210:
         raise PurposeValidationMaxLenError
-
-    replaced_space_value = ''.join(map(lambda x: x if x not in REPLACE_CHARS_FOR_SPACE else ' ', value))
-    for c in replaced_space_value:
-        if c not in CHARS_FOR_PURPOSE:
-            raise PurposeValidationCharactersError
     return value
 
 

@@ -15,13 +15,12 @@ from vitya.payment_order.errors import (
     NumberValidationLenError,
     OperationKindValidationTypeError,
     OperationKindValidationValueError,
-    PayeeValidationNameError,
-    PayeeValidationSizeError,
     PayerValidationSizeError,
     PaymentOrderValidationError,
     PurposeCodeValidationTypeError,
-    PurposeValidationCharactersError,
     PurposeValidationMaxLenError,
+    ReceiverValidationNameError,
+    ReceiverValidationSizeError,
     UINValidationControlSumError,
     UINValidationDigitsOnlyError,
     UINValidationLenError,
@@ -34,11 +33,11 @@ from vitya.payment_order.fields import (
     Amount,
     Number,
     OperationKind,
-    Payee,
     Payer,
     PaymentOrder,
     Purpose,
     PurposeCode,
+    Receiver,
 )
 
 
@@ -112,19 +111,19 @@ def test_payer(
 
 
 class TestPayeeModel(BaseModel):
-    field: Payee
+    field: Receiver
 
 
 @pytest.mark.parametrize(
     'value, exception, expected',
     [
         ('Ashot Ashot', None, 'Ashot Ashot'),
-        ('', PayeeValidationSizeError, None),
-        ('0' * 161, PayeeValidationSizeError, None),
-        ('with 40802810722200035222', PayeeValidationNameError, None),
+        ('', ReceiverValidationSizeError, None),
+        ('0' * 161, ReceiverValidationSizeError, None),
+        ('with 40802810722200035222', ReceiverValidationNameError, None),
     ]
 )
-def test_payee(
+def test_receiver(
     value: str,
     exception: Type[Exception],
     expected: str,
@@ -265,7 +264,7 @@ class TestPurposeModel(BaseModel):
     [
         ('', None, '0'),
         ('1' * 211, PurposeValidationMaxLenError, None),
-        ('的', PurposeValidationCharactersError, None),
+        ('的', None, ''),
         ('some', None, 'some'),
     ]
 )

@@ -10,17 +10,18 @@ from vitya.payment_order.validators import (
     validate_document_number,
     validate_number,
     validate_operation_kind,
-    validate_payee,
     validate_payer,
     validate_payer_status,
     validate_payment_order,
     validate_purpose,
     validate_purpose_code,
     validate_reason,
+    validate_receiver,
+    validate_receiver_account_number,
     validate_tax_period,
     validate_uin,
 )
-from vitya.pydantic_fields import FieldMixin
+from vitya.pydantic_fields import BIC, INN, KPP, BoolWrapper, FieldMixin
 
 CallableGenerator = Generator[Callable[..., Any], None, None]
 
@@ -57,12 +58,12 @@ class Payer(Customer):
         return validate_payer(value)
 
 
-class Payee(Customer):
+class Receiver(Customer):
     """Наименование получателя (16)"""
 
     @classmethod
     def _validate(cls, value: str) -> str:
-        return validate_payee(value)
+        return validate_receiver(value)
 
 
 class PaymentOrder(FieldMixin, int):
@@ -79,6 +80,18 @@ class AccountNumber(FieldMixin, str):
     @classmethod
     def _validate(cls, value: str) -> str:
         return validate_account_number(value)
+
+
+class ReceiverAccountNumber(AccountNumber):
+    """Счет получателя (17)"""
+
+    @classmethod
+    def _validate(cls, value: str) -> str:
+        return validate_receiver_account_number(value)
+
+
+class PayerAccountNumber(AccountNumber):
+    """Номер счёта плательщика (9)"""
 
 
 class OperationKind(FieldMixin, str):
@@ -111,6 +124,26 @@ class Purpose(FieldMixin, str):
     @classmethod
     def _validate(cls, value: str) -> str:
         return validate_purpose(value)
+
+
+class PayerINN(INN):
+    """ИНН плательщика (60)"""
+
+
+class ReceiverINN(INN):
+    """ИНН получателя (61)"""
+
+
+class ReceiverBIC(BIC):
+    """БИК банка получателя (14)"""
+
+
+class ReceiverKPP(KPP):
+    """КПП плательщика (103)"""
+
+
+class PayerKPP(KPP):
+    """КПП получателя (102)"""
 
 
 class PayerStatus(FieldMixin, str):
@@ -159,3 +192,7 @@ class DocumentDate(FieldMixin, str):
     @classmethod
     def _validate(cls, value: str) -> Optional[str]:
         return validate_document_date(value)
+
+
+class ForThirdPerson(BoolWrapper):
+    pass

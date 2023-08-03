@@ -20,18 +20,17 @@ from vitya.payment_order.errors import (
     NumberValidationLenError,
     OperationKindValidationTypeError,
     OperationKindValidationValueError,
-    PayeeValidationNameError,
-    PayeeValidationSizeError,
     PayerStatusValidationTypeError,
     PayerStatusValidationValueError,
     PayerValidationSizeError,
     PaymentOrderValidationError,
     PurposeCodeValidationTypeError,
-    PurposeValidationCharactersError,
     PurposeValidationMaxLenError,
     PurposeValidationTypeError,
     ReasonValidationTypeError,
     ReasonValidationValueLenError,
+    ReceiverValidationNameError,
+    ReceiverValidationSizeError,
     TaxPeriodValidationTypeError,
     UINValidationControlSumError,
     UINValidationDigitsOnlyError,
@@ -47,13 +46,13 @@ from vitya.payment_order.validators import (
     validate_document_number,
     validate_number,
     validate_operation_kind,
-    validate_payee,
     validate_payer,
     validate_payer_status,
     validate_payment_order,
     validate_purpose,
     validate_purpose_code,
     validate_reason,
+    validate_receiver,
     validate_tax_period,
     validate_uin,
     validate_uin_control_sum,
@@ -99,18 +98,18 @@ def test_validate_payer(
     'value, exception_handler, expected_value',
     [
         ('Ashot Ashot', nullcontext(), 'Ashot Ashot'),
-        ('', pytest.raises(PayeeValidationSizeError), None),
-        ('0' * 161, pytest.raises(PayeeValidationSizeError), None),
-        ('with 40802810722200035222', pytest.raises(PayeeValidationNameError), None),
+        ('', pytest.raises(ReceiverValidationSizeError), None),
+        ('0' * 161, pytest.raises(ReceiverValidationSizeError), None),
+        ('with 40802810722200035222', pytest.raises(ReceiverValidationNameError), None),
     ]
 )
-def test_validate_payee(
+def test_validate_receiver(
     value: str,
     exception_handler: ContextManager,
     expected_value: Optional[str]
 ) -> None:
     with exception_handler:
-        assert validate_payee(value=value) == expected_value
+        assert validate_receiver(value=value) == expected_value
 
 
 @pytest.mark.parametrize(
@@ -214,7 +213,7 @@ def test_validate_purpose_code(
         (None, pytest.raises(PurposeValidationTypeError), None),
         ('', nullcontext(), '0'),
         ('1' * 211, pytest.raises(PurposeValidationMaxLenError), None),
-        ('的', pytest.raises(PurposeValidationCharactersError), None),
+        ('的', nullcontext(), ''),
         ('some', nullcontext(), 'some'),
     ]
 )

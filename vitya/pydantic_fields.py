@@ -69,19 +69,19 @@ class FieldMixin(ABC):
 
 class INN(FieldMixin, str):
     @classmethod
-    def _validate(cls, value: str) -> str:
+    def _validate(cls, value: str) -> Optional[str]:
         return validate_inn(value)
 
 
 class INNIP(FieldMixin, str):
     @classmethod
-    def _validate(cls, value: str) -> str:
+    def _validate(cls, value: str) -> Optional[str]:
         return validate_inn_ip(value)
 
 
 class INNLE(FieldMixin, str):
     @classmethod
-    def _validate(cls, value: str) -> str:
+    def _validate(cls, value: str) -> Optional[str]:
         return validate_inn_le(value)
 
 
@@ -119,3 +119,36 @@ class OKTMO(FieldMixin, str):
     @classmethod
     def _validate(cls, value: str) -> Optional[str]:
         return validate_oktmo(value)
+
+
+# Pydantic strip NewType from ModelField.type_
+
+class BoolWrapper:
+    __slots__ = ('_value', )
+
+    def __init__(self, value: bool):
+        self._value = value
+
+    def __bool__(self) -> bool:
+        return self._value
+
+    def __hash__(self) -> int:
+        return hash(self._value)
+
+    def __eq__(self, other: Any) -> Any:
+        if isinstance(other, type(self)):
+            return self._value == other._value
+        if isinstance(other, bool):
+            return self._value == other
+        return NotImplemented
+
+    @classmethod
+    def __get_validators__(cls) -> CallableGenerator:
+        def validator(value: Any) -> Any:
+            if isinstance(value, bool):
+                return cls(value)
+            if isinstance(value, cls):
+                return value
+            raise TypeError
+
+        yield validator
