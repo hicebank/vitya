@@ -552,7 +552,7 @@ class ReasonValidationValueErrorCustoms(ReasonValidationError, IncorrectData):
 
 
 class ReasonValidationValueErrorFNS(ReasonValidationError, IncorrectData):
-    description = f'for customs payment value must be in {CUSTOMS_REASONS}'
+    description = f'for fns payment value must be either empty or 0'
     description_ru = f'для платежей в ФНС значение должно быть 0 или пустым'
 
 
