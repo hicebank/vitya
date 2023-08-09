@@ -337,7 +337,7 @@ class ReceiverAccountValidationLenError(ReceiverAccountValidationError):
     description_ru = 'должен состоять из 20 цифр'
 
 
-class ReceiverAccountValidationFNSValueError(ReceiverAccountValidationError):
+class ReceiverAccountValidationFNSValueError(ReceiverAccountValidationError, IncorrectData):
     description = 'for FNS payment account must be "03100643000000018500"'
     description_ru = 'для платежей в ФНС счет должен быть "03100643000000018500"'
 
