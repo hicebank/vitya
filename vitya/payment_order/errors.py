@@ -474,7 +474,7 @@ class ReceiverKPPValidationEmptyNotAllowed(ReceiverKPPValidationError, KPPValida
     description_ru = 'для платежей в бюджет пустое значение недопустимо'
 
 
-class ReceiverKPPValidationStartsWithZeros(ReceiverKPPValidationError):
+class ReceiverKPPValidationStartsWithZeros(ReceiverKPPValidationError, IncorrectData):
     description = 'for fns, customs, budget other kpp cannot starts with "00"'
     description_ru = 'для платежей в бюджет значение не может начинаться с "00"'
 
