@@ -36,6 +36,7 @@ from vitya.payment_order.errors import (
     PurposeCodeValidationNullError,
     PurposeValidationIPNDSError,
     ReasonValidationValueErrorCustoms,
+    ReasonValidationValueErrorFNS,
     ReceiverAccountValidationBICValueError,
     ReceiverAccountValidationFNSValueError,
     ReceiverINNValidationChameleonLenError,
@@ -347,6 +348,8 @@ def check_reason(
         return None
     if payment_type == PaymentType.CUSTOMS and value not in CUSTOMS_REASONS:
         raise ReasonValidationValueErrorCustoms
+    if payment_type == PaymentType.FNS and value and value != '0':
+        raise ReasonValidationValueErrorFNS
     return value
 
 

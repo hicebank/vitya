@@ -551,6 +551,11 @@ class ReasonValidationValueErrorCustoms(ReasonValidationError, IncorrectData):
     description_ru = f'для платежей в таможню значение должно быть одним из {CUSTOMS_REASONS}'
 
 
+class ReasonValidationValueErrorFNS(ReasonValidationError, IncorrectData):
+    description = f'for customs payment value must be in {CUSTOMS_REASONS}'
+    description_ru = f'для платежей в ФНС значение должно быть 0 или пустым'
+
+
 class TaxPeriodValidationError(VityaDescribedError, PydanticValueError):
     target = 'tax period'
     target_ru = 'Периодичность платежа / Код таможенного органа'
