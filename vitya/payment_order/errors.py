@@ -714,7 +714,7 @@ class DocumentDateValidationTypeError(DocumentDateValidationError, PydanticTypeE
     description_ru = 'должна быть строкой'
 
 
-class DocumentDateValidationFNSOnlyEmptyError(DocumentDateValidationError):
+class DocumentDateValidationFNSOnlyEmptyError(DocumentDateValidationError, IncorrectData):
     description = 'for fns only empty allowed'
     description_ru = 'для платежей в ФНС значение должно быть пустым'
 

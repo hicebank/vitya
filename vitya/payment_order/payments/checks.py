@@ -446,7 +446,7 @@ def check_document_date(
         return None
 
     if payment_type == PaymentType.FNS:
-        if value is not None:
+        if value is not None and value != '0':
             raise DocumentDateValidationFNSOnlyEmptyError
         return None
     else:
