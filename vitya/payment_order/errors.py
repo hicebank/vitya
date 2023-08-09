@@ -593,7 +593,7 @@ class TaxPeriodValidationCustomsValueLenError(TaxPeriodValidationValueLenError, 
     required_len = 8
 
 
-class TaxPeriodValidationFNS02EmptyNotAllowed(TaxPeriodValidationError):
+class TaxPeriodValidationFNS02EmptyNotAllowed(TaxPeriodValidationError, NeedRequiredField):
     description = 'for fns with payer status = "02" empty is not allowed'
     description_ru = 'для платежей в ФНС со статусом плательщика "02" пустое значение недопустимо'
 
