@@ -552,8 +552,8 @@ class ReasonValidationValueErrorCustoms(ReasonValidationError, IncorrectData):
 
 
 class ReasonValidationValueErrorFNS(ReasonValidationError, IncorrectData):
-    description = f'for fns payment value must be either empty or 0'
-    description_ru = f'для платежей в ФНС значение должно быть 0 или пустым'
+    description = 'for fns payment value must be either 0 or empty'
+    description_ru = 'для платежей в ФНС значение должно быть 0 или пустым'
 
 
 class TaxPeriodValidationError(VityaDescribedError, PydanticValueError):
