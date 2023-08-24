@@ -420,7 +420,7 @@ def check_document_number(
         return None
     elif payment_type == PaymentType.BUDGET_OTHER:
         if payer_status == '33':
-            if value is not None:
+            if value is not None and value != '0':
                 raise DocumentNumberValidationBOPayerStatus33OnlyEmptyError
             return None
         if receiver_account.startswith('03212') and payer_status == '31' and uin is not None:
