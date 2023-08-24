@@ -168,7 +168,7 @@ def check_uin(
     if payment_type == PaymentType.FNS:
         if payer_status == '13' and payer_inn is None and value is None:
             raise UINValidationFNSValueZeroError
-        if payer_status == '02':
+        if payer_status == ('02' if date.today().year < 2024 else '33'):
             if value is not None:
                 raise UINValidationFNSNotValueZeroError
             return value
@@ -340,7 +340,11 @@ def check_oktmo(
     if payment_type in {PaymentType.CUSTOMS, PaymentType.BUDGET_OTHER} and value is None:
         return None
 
-    if payment_type == PaymentType.FNS and payer_status == '02' and value is None:
+    if (
+        payment_type == PaymentType.FNS and
+        payer_status == ('02' if date.today().year < 2024 else '33') and
+        value is None
+    ):
         raise OKTMOValidationFNSEmptyNotAllowed
 
     if value is None:
@@ -388,7 +392,10 @@ def check_tax_period(
             raise TaxPeriodValidationCustomsValueLenError
         return value
     else:
-        if payer_status == '02' and value is None:
+        if (
+            payer_status == ('02' if date.today().year < 2024 else '33') and
+            value is None
+        ):
             raise TaxPeriodValidationFNS02EmptyNotAllowed
         if payer_status in {'01', '13'}:
             if value is not None:
@@ -397,7 +404,10 @@ def check_tax_period(
 
         if value is None:
             raise TaxPeriodValidationFNSEmptyNotAllowed
-        elif payer_status == '02' and len(value) != 10:
+        elif (
+            payer_status == ('02' if date.today().year < 2024 else '33') and
+            len(value) != 10
+        ):
             raise TaxPeriodValidationFNSValueLenError
         return value
 
@@ -419,8 +429,8 @@ def check_document_number(
             raise DocumentNumberValidationFNSOnlyEmptyError
         return None
     elif payment_type == PaymentType.BUDGET_OTHER:
-        if payer_status == '33':
-            if value is not None and value != '0':
+        if payer_status == '33' and date.today().year >= 2024:
+            if value is not None:
                 raise DocumentNumberValidationBOPayerStatus33OnlyEmptyError
             return None
         if receiver_account.startswith('03212') and payer_status == '31' and uin is not None:
