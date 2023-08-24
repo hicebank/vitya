@@ -1,5 +1,6 @@
 import re
 from typing import Optional
+from datetime import date
 
 from vitya.payment_order.enums import AccountKind, PaymentType
 from vitya.payment_order.errors import (
@@ -21,6 +22,7 @@ from vitya.payment_order.errors import (
     OKTMOValidationEmptyNotAllowed,
     OKTMOValidationFNSEmptyNotAllowed,
     OKTMOValidationZerosNotAllowed,
+    OKTMOValidationFTS,
     OperationKindValidationBudgetValueError,
     PayerINNValidationCustomsLen10Error,
     PayerINNValidationCustomsLen12Error,
@@ -47,6 +49,8 @@ from vitya.payment_order.errors import (
     ReceiverKPPValidationEmptyNotAllowed,
     ReceiverKPPValidationOnlyEmptyError,
     ReceiverKPPValidationStartsWithZeros,
+    ReceiverKPPValidationFNS,
+    ReceiverKPPValidationFTS,
     TaxPeriodValidationBOValueLenError,
     TaxPeriodValidationCustomsEmptyNotAllowed,
     TaxPeriodValidationCustomsValueLenError,
@@ -84,6 +88,9 @@ from vitya.payment_order.payments.constants import (
     CUSTOMS_REASONS,
     DOCUMENT_NUMBERS,
     FNS_RECEIVER_ACCOUNT_NUMBER,
+    FNS_KPP,
+    FTS_KPP,
+    FTS_OKTMO,
 )
 from vitya.payment_order.payments.tools import get_account_kind
 from vitya.pydantic_fields import BIC, OKTMO
@@ -293,6 +300,10 @@ def check_receiver_kpp(
         raise ReceiverKPPValidationEmptyNotAllowed
     if value.startswith('00'):
         raise ReceiverKPPValidationStartsWithZeros
+    if payment_type == PaymentType.FNS and value != FNS_KPP:
+        raise ReceiverKPPValidationFNS
+    if payment_type == PaymentType.CUSTOMS and value != FTS_KPP:
+        raise ReceiverKPPValidationFTS
     return value
 
 
@@ -323,6 +334,9 @@ def check_oktmo(
     if payment_type == PaymentType.FNS and payer_status in {'01', '13'} and value is None:
         return None
 
+    if payment_type == PaymentType.CUSTOMS and value != FTS_OKTMO:
+        raise OKTMOValidationFTS
+
     if payment_type in {PaymentType.CUSTOMS, PaymentType.BUDGET_OTHER} and value is None:
         return None
 
@@ -344,11 +358,11 @@ def check_reason(
     if not payment_type.is_budget:
         return None
 
-    if payment_type.is_budget and value is None:
+    if payment_type.is_budget and (value is None or value == '0'):
         return None
     if payment_type == PaymentType.CUSTOMS and value not in CUSTOMS_REASONS:
         raise ReasonValidationValueErrorCustoms
-    if payment_type == PaymentType.FNS and value and value != '0':
+    if payment_type == PaymentType.FNS and value and value != '0' and date.today().year >= 2024:
         raise ReasonValidationValueErrorFNS
     return value
 
@@ -383,7 +397,7 @@ def check_tax_period(
 
         if value is None:
             raise TaxPeriodValidationFNSEmptyNotAllowed
-        elif len(value) != 10:
+        elif payer_status == '02' and len(value) != 10:
             raise TaxPeriodValidationFNSValueLenError
         return value
 

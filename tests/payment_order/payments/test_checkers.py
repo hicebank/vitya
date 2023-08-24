@@ -87,7 +87,7 @@ from vitya.payment_order.payments.checkers import (
     TaxPeriodChecker,
     UINChecker,
 )
-from vitya.payment_order.payments.constants import FNS_RECEIVER_ACCOUNT_NUMBER
+from vitya.payment_order.payments.constants import FNS_RECEIVER_ACCOUNT_NUMBER, FTS_KPP
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 
@@ -410,7 +410,7 @@ class TestReceiverKppChecker(BaseModelChecker):
         (VALID_KPP, PaymentType.FL, ReceiverKPPValidationOnlyEmptyError),
 
         (None, PaymentType.CUSTOMS, ReceiverKPPValidationEmptyNotAllowed),
-        (VALID_KPP, PaymentType.CUSTOMS, None),
+        (FTS_KPP, PaymentType.CUSTOMS, None),
     ]
 )
 def test_receiver_kpp_checker(
@@ -537,7 +537,7 @@ class TestTaxPeriodChecker(BaseModelChecker):
         ('1', PaymentType.FNS, '01', TaxPeriodValidationFNS01OnlyEmpty),
         ('1', PaymentType.FNS, '13', TaxPeriodValidationFNS01OnlyEmpty),
         (None, PaymentType.FNS, '30', TaxPeriodValidationFNSEmptyNotAllowed),
-        ('1' * 9, PaymentType.FNS, '30', TaxPeriodValidationFNSValueLenError),
+        ('1' * 9, PaymentType.FNS, '02', TaxPeriodValidationFNSValueLenError),
     ]
 )
 def test_tax_period_checker(

@@ -20,6 +20,9 @@ from vitya.payment_order.payments.constants import (
     CUSTOMS_REASONS,
     DOCUMENT_NUMBERS,
     PAYER_STATUSES,
+    FTS_KPP,
+    FNS_KPP,
+    FTS_OKTMO,
 )
 
 
@@ -479,6 +482,16 @@ class ReceiverKPPValidationStartsWithZeros(ReceiverKPPValidationError, Incorrect
     description_ru = 'для платежей в бюджет значение не может начинаться с "00"'
 
 
+class ReceiverKPPValidationFNS(ReceiverKPPValidationError, IncorrectData):
+    description = f'for fns kpp can only be {FNS_KPP}'
+    description_ru = f'для платежей в фнс значение может быть только {FNS_KPP}'
+
+
+class ReceiverKPPValidationFTS(ReceiverKPPValidationError, IncorrectData):
+    description = f'for customs kpp can only be {FTS_KPP}'
+    description_ru = f'для платежей в таможню значение может быть только {FTS_KPP}'
+
+
 class CBCValidationError(VityaDescribedError, PydanticValueError):
     target = 'CBC'
     target_ru = 'КБК'
@@ -527,6 +540,11 @@ class OKTMOValidationFNSEmptyNotAllowed(OKTMOValidationEmptyNotAllowed, NeedRequ
 class OKTMOValidationZerosNotAllowed(OKTMOValidationError):
     description = 'cannot be all zeros'
     description_ru = 'не может состоять полностью из нулей'
+
+
+class OKTMOValidationFTS(OKTMOValidationError, IncorrectData):
+    description = f'for customs payments oktmo can be only {FTS_OKTMO}'
+    description_ru = f'для платежей в таможню октмо может быть только {FTS_OKTMO}'
 
 
 class ReasonValidationError(VityaDescribedError, PydanticValueError):

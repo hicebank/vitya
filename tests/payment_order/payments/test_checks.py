@@ -35,6 +35,7 @@ from vitya.payment_order.errors import (
     OKTMOValidationEmptyNotAllowed,
     OKTMOValidationFNSEmptyNotAllowed,
     OKTMOValidationZerosNotAllowed,
+    OKTMOValidationFTS,
     OperationKindValidationBudgetValueError,
     PayerINNValidationCustomsLen10Error,
     PayerINNValidationCustomsLen12Error,
@@ -59,6 +60,8 @@ from vitya.payment_order.errors import (
     ReceiverKPPValidationEmptyNotAllowed,
     ReceiverKPPValidationOnlyEmptyError,
     ReceiverKPPValidationStartsWithZeros,
+    ReceiverKPPValidationFNS,
+    ReceiverKPPValidationFTS,
     TaxPeriodValidationBOValueLenError,
     TaxPeriodValidationCustomsEmptyNotAllowed,
     TaxPeriodValidationCustomsValueLenError,
@@ -101,7 +104,7 @@ from vitya.payment_order.payments.checks import (
     check_tax_period,
     check_uin,
 )
-from vitya.payment_order.payments.constants import FNS_RECEIVER_ACCOUNT_NUMBER
+from vitya.payment_order.payments.constants import FNS_RECEIVER_ACCOUNT_NUMBER, FNS_KPP, FTS_OKTMO
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 
@@ -389,8 +392,10 @@ def test_check_payer_kpp(
         (VALID_KPP, PaymentType.FL, pytest.raises(ReceiverKPPValidationOnlyEmptyError), None),
 
         (None, PaymentType.FNS, pytest.raises(ReceiverKPPValidationEmptyNotAllowed), None),
-        (VALID_KPP, PaymentType.FNS, nullcontext(), VALID_KPP),
+        (FNS_KPP, PaymentType.FNS, nullcontext(), FNS_KPP),
         ('001234567', PaymentType.FNS, pytest.raises(ReceiverKPPValidationStartsWithZeros), None),
+        (VALID_KPP, PaymentType.CUSTOMS, pytest.raises(ReceiverKPPValidationFTS), None),
+        (VALID_KPP, PaymentType.FNS, pytest.raises(ReceiverKPPValidationFNS), None),
     ]
 )
 def test_check_receiver_kpp(
@@ -430,11 +435,12 @@ def test_check_cbc(
         (None, PaymentType.FL, '01', nullcontext(), None),
         (None, PaymentType.FNS, '01', nullcontext(), None),
         (None, PaymentType.FNS, '13', nullcontext(), None),
-        (None, PaymentType.CUSTOMS, '13', nullcontext(), None),
+        (FTS_OKTMO, PaymentType.CUSTOMS, '13', nullcontext(), FTS_OKTMO),
         (None, PaymentType.BUDGET_OTHER, '13', nullcontext(), None),
         (None, PaymentType.FNS, '02', pytest.raises(OKTMOValidationFNSEmptyNotAllowed), None),
         (None, PaymentType.FNS, '06', pytest.raises(OKTMOValidationEmptyNotAllowed), None),
         ('0' * 8, PaymentType.FNS, '06', pytest.raises(OKTMOValidationZerosNotAllowed), None),
+        (VALID_OKTMO, PaymentType.CUSTOMS, '13', pytest.raises(OKTMOValidationFTS), None),
         (VALID_OKTMO, PaymentType.FNS, '06', nullcontext(), VALID_OKTMO),
     ]
 )
@@ -455,7 +461,7 @@ def test_check_oktmo(
         (None, PaymentType.FL, nullcontext(), None),
         (None, PaymentType.CUSTOMS, nullcontext(), None),
         (None, PaymentType.BUDGET_OTHER, nullcontext(), None),
-        ('ПК', PaymentType.FNS, pytest.raises(ReasonValidationValueErrorFNS), None),
+        ('ПК', PaymentType.FNS, nullcontext(), 'ПК'),
         (None, PaymentType.FNS, nullcontext(), None),
         ('ПК', PaymentType.BUDGET_OTHER, nullcontext(), 'ПК'),
         ('AИ', PaymentType.CUSTOMS, pytest.raises(ReasonValidationValueErrorCustoms), None),
@@ -490,7 +496,7 @@ def test_check_reason(
         (None, PaymentType.FNS, '01', nullcontext(), None),
         (None, PaymentType.FNS, '13', nullcontext(), None),
         (None, PaymentType.FNS, '30', pytest.raises(TaxPeriodValidationFNSEmptyNotAllowed), None),
-        ('1' * 9, PaymentType.FNS, '30', pytest.raises(TaxPeriodValidationFNSValueLenError), None),
+        ('1' * 9, PaymentType.FNS, '02', pytest.raises(TaxPeriodValidationFNSValueLenError), None),
         ('1' * 10, PaymentType.FNS, '30', nullcontext(), '1' * 10),
     ]
 )
