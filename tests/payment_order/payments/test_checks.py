@@ -2,7 +2,7 @@ from contextlib import nullcontext
 from typing import ContextManager, Optional, Type
 from datetime import datetime
 
-import freezegun
+from freezegun import freeze_time
 import pytest
 
 from tests.helpers import parametrize_with_dict
@@ -543,6 +543,7 @@ def test_check_reason(
         assert expected_value == check_reason(value=value, payment_type=payment_type)
 
 
+@freeze_time(datetime(2024, 1, 1))
 @pytest.mark.parametrize(
     'value, payment_type, exception_handler, expected_value',
     [
@@ -555,9 +556,8 @@ def test_future_check_reason(
     exception_handler: ContextManager,
     expected_value: Optional[Reason],
 ) -> None:
-    with freezegun.freeze_time(datetime(year=2024, month=1, day=1)):
-        with exception_handler:
-            assert expected_value == check_reason(value=value, payment_type=payment_type)
+    with exception_handler:
+        assert expected_value == check_reason(value=value, payment_type=payment_type)
 
 
 @pytest.mark.parametrize(
