@@ -25,6 +25,7 @@ from vitya.payment_order.payments.constants import (
     FTS_KPP,
     FNS_KPP,
     FTS_OKTMO,
+    CHANGE_YEAR,
 )
 
 
@@ -416,8 +417,8 @@ class PayerStatusValidationTypeError(PayerStatusValidationError, PydanticTypeErr
 
 
 class PayerStatusValidationValueError(PayerStatusValidationError):
-    description = f'value can be only {PAYER_STATUSES if date.today().year < 2024 else PAYER_STATUSES_AFTER_2024}'
-    description_ru = f'должен быть одним из {PAYER_STATUSES if date.today().year < 2024 else PAYER_STATUSES_AFTER_2024}'
+    description = f'value can be only {PAYER_STATUSES if date.today().year < CHANGE_YEAR else PAYER_STATUSES_AFTER_2024}'
+    description_ru = f'должен быть одним из {PAYER_STATUSES if date.today().year < CHANGE_YEAR else PAYER_STATUSES_AFTER_2024}'
 
 
 class PayerStatusValidationNullNotAllowedError(PayerStatusValidationError):

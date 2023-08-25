@@ -3,7 +3,7 @@ from datetime import datetime
 
 import pytest
 from pydantic import ValidationError
-import freezegun
+from freezegun import freeze_time
 
 from tests.helpers import parametrize_with_dict
 from tests.payment_order.testdata import (
@@ -89,7 +89,7 @@ from vitya.payment_order.payments.checkers import (
     TaxPeriodChecker,
     UINChecker,
 )
-from vitya.payment_order.payments.constants import FNS_RECEIVER_ACCOUNT_NUMBER, FTS_KPP
+from vitya.payment_order.payments.constants import FNS_RECEIVER_ACCOUNT_NUMBER, FTS_KPP, CHANGE_YEAR
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 
@@ -469,6 +469,7 @@ class TestOktmoChecker(BaseModelChecker):
     ]
 
 
+@freeze_time(datetime(year=CHANGE_YEAR - 1, month=12, day=31))
 @pytest.mark.parametrize(
     'oktmo, payment_type, payer_status, exception',
     [
@@ -483,15 +484,15 @@ def test_oktmo_checker(
     payer_status: PayerStatus,
     exception: Type[Exception]
 ) -> None:
-    with freezegun.freeze_time(datetime(year=2023, month=12, day=31)):
-        try:
-            TestOktmoChecker(oktmo=oktmo, payment_type=payment_type, payer_status=payer_status)
-        except ValidationError as e:
-            assert isinstance(e.raw_errors[0].exc.errors[0], exception)
-        else:
-            assert exception is None
+    try:
+        TestOktmoChecker(oktmo=oktmo, payment_type=payment_type, payer_status=payer_status)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        assert exception is None
 
 
+@freeze_time(datetime(year=CHANGE_YEAR, month=1, day=1))
 @pytest.mark.parametrize(
     'oktmo, payment_type, payer_status, exception',
     [
@@ -504,13 +505,12 @@ def test_oktmo_checker_after_2024(
     payer_status: PayerStatus,
     exception: Type[Exception]
 ) -> None:
-    with freezegun.freeze_time(datetime(year=2024, month=1, day=1)):
-        try:
-            TestOktmoChecker(oktmo=oktmo, payment_type=payment_type, payer_status=payer_status)
-        except ValidationError as e:
-            assert isinstance(e.raw_errors[0].exc.errors[0], exception)
-        else:
-            assert exception is None
+    try:
+        TestOktmoChecker(oktmo=oktmo, payment_type=payment_type, payer_status=payer_status)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        assert exception is None
 
 
 class TestReasonChecker(BaseModelChecker):
@@ -551,6 +551,7 @@ class TestTaxPeriodChecker(BaseModelChecker):
     ]
 
 
+@freeze_time(datetime(year=CHANGE_YEAR - 1, month=12, day=31))
 @pytest.mark.parametrize(
     'tax_period, payment_type, payer_status, exception',
     [
@@ -570,15 +571,15 @@ def test_tax_period_checker(
     payer_status: PayerStatus,
     exception: Type[Exception]
 ) -> None:
-    with freezegun.freeze_time(datetime(year=2023, month=12, day=31)):
-        try:
-            TestTaxPeriodChecker(tax_period=tax_period, payment_type=payment_type, payer_status=payer_status)
-        except ValidationError as e:
-            assert isinstance(e.raw_errors[0].exc.errors[0], exception)
-        else:
-            assert exception is None
+    try:
+        TestTaxPeriodChecker(tax_period=tax_period, payment_type=payment_type, payer_status=payer_status)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        assert exception is None
 
 
+@freeze_time(datetime(year=CHANGE_YEAR, month=1, day=1))
 @pytest.mark.parametrize(
     'tax_period, payment_type, payer_status, exception',
     [
@@ -592,13 +593,12 @@ def test_tax_period_checker_after_2024(
     payer_status: PayerStatus,
     exception: Type[Exception]
 ) -> None:
-    with freezegun.freeze_time(datetime(year=2024, month=1, day=1)):
-        try:
-            TestTaxPeriodChecker(tax_period=tax_period, payment_type=payment_type, payer_status=payer_status)
-        except ValidationError as e:
-            assert isinstance(e.raw_errors[0].exc.errors[0], exception)
-        else:
-            assert exception is None
+    try:
+        TestTaxPeriodChecker(tax_period=tax_period, payment_type=payment_type, payer_status=payer_status)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        assert exception is None
 
 
 class DocumentNumberCheckerChecker(BaseModelChecker):

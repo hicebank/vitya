@@ -47,6 +47,7 @@ from vitya.payment_order.payments.constants import (
     PAYER_STATUSES,
     PAYER_STATUSES_AFTER_2024,
     REPLACE_CHARS_FOR_SPACE,
+    CHANGE_YEAR,
 )
 
 
@@ -224,7 +225,7 @@ def validate_purpose(value: str) -> str:
 def validate_payer_status(value: str) -> str:
     if not isinstance(value, str):
         raise PayerStatusValidationTypeError
-    elif value not in (PAYER_STATUSES if date.today().year < 2024 else PAYER_STATUSES_AFTER_2024):
+    elif value not in (PAYER_STATUSES if date.today().year < CHANGE_YEAR else PAYER_STATUSES_AFTER_2024):
         raise PayerStatusValidationValueError
     return value
 

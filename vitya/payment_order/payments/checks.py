@@ -91,6 +91,7 @@ from vitya.payment_order.payments.constants import (
     FNS_KPP,
     FTS_KPP,
     FTS_OKTMO,
+    CHANGE_YEAR,
 )
 from vitya.payment_order.payments.tools import get_account_kind
 from vitya.pydantic_fields import BIC, OKTMO
@@ -168,7 +169,7 @@ def check_uin(
     if payment_type == PaymentType.FNS:
         if payer_status == '13' and payer_inn is None and value is None:
             raise UINValidationFNSValueZeroError
-        if payer_status == ('02' if date.today().year < 2024 else '33'):
+        if payer_status == ('02' if date.today().year < CHANGE_YEAR else '33'):
             if value is not None:
                 raise UINValidationFNSNotValueZeroError
             return value
@@ -342,7 +343,7 @@ def check_oktmo(
 
     if (
         payment_type == PaymentType.FNS and
-        payer_status == ('02' if date.today().year < 2024 else '33') and
+        payer_status == ('02' if date.today().year < CHANGE_YEAR else '33') and
         value is None
     ):
         raise OKTMOValidationFNSEmptyNotAllowed
@@ -366,7 +367,7 @@ def check_reason(
         return None
     if payment_type == PaymentType.CUSTOMS and value not in CUSTOMS_REASONS:
         raise ReasonValidationValueErrorCustoms
-    if payment_type == PaymentType.FNS and value and value != '0' and date.today().year >= 2024:
+    if payment_type == PaymentType.FNS and value and value != '0' and date.today().year >= CHANGE_YEAR:
         raise ReasonValidationValueErrorFNS
     return value
 
@@ -393,7 +394,7 @@ def check_tax_period(
         return value
     else:
         if (
-            payer_status == ('02' if date.today().year < 2024 else '33') and
+            payer_status == ('02' if date.today().year < CHANGE_YEAR else '33') and
             value is None
         ):
             raise TaxPeriodValidationFNS02EmptyNotAllowed
@@ -405,7 +406,7 @@ def check_tax_period(
         if value is None:
             raise TaxPeriodValidationFNSEmptyNotAllowed
         elif (
-            payer_status == ('02' if date.today().year < 2024 else '33') and
+            payer_status == ('02' if date.today().year < CHANGE_YEAR else '33') and
             len(value) != 10
         ):
             raise TaxPeriodValidationFNSValueLenError
@@ -429,7 +430,7 @@ def check_document_number(
             raise DocumentNumberValidationFNSOnlyEmptyError
         return None
     elif payment_type == PaymentType.BUDGET_OTHER:
-        if payer_status == '33' and date.today().year >= 2024:
+        if payer_status == '33' and date.today().year >= CHANGE_YEAR:
             if value is not None:
                 raise DocumentNumberValidationBOPayerStatus33OnlyEmptyError
             return None

@@ -106,7 +106,7 @@ from vitya.payment_order.payments.checks import (
     check_tax_period,
     check_uin,
 )
-from vitya.payment_order.payments.constants import FNS_RECEIVER_ACCOUNT_NUMBER, FNS_KPP, FTS_OKTMO
+from vitya.payment_order.payments.constants import FNS_RECEIVER_ACCOUNT_NUMBER, FNS_KPP, FTS_OKTMO, CHANGE_YEAR
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 
@@ -184,6 +184,7 @@ def test_check_purpose_code(
         assert check_purpose_code(value=value, payment_type=payment_type) == expected_value
 
 
+@freeze_time(datetime(year=CHANGE_YEAR - 1, month=12, day=31))
 @pytest.mark.parametrize(
     'value, payment_type, receiver_account, payer_status, payer_inn, exception_handler, expected_value',
     [
@@ -247,17 +248,17 @@ def test_check_uin(
     exception_handler: Optional[Type[Exception]],
     expected_value: str
 ) -> None:
-    with freezegun.freeze_time(datetime(year=2023, month=12, day=31)):
-        with exception_handler:
-            assert check_uin(
-                value=value,
-                receiver_account=receiver_account,
-                payment_type=payment_type,
-                payer_inn=payer_inn,
-                payer_status=payer_status,
-            ) == expected_value
+    with exception_handler:
+        assert check_uin(
+            value=value,
+            receiver_account=receiver_account,
+            payment_type=payment_type,
+            payer_inn=payer_inn,
+            payer_status=payer_status,
+        ) == expected_value
 
 
+@freeze_time(datetime(year=CHANGE_YEAR, month=1, day=1))
 @pytest.mark.parametrize(
     'value, payment_type, receiver_account, payer_status, payer_inn, exception_handler, expected_value',
     [
@@ -290,15 +291,14 @@ def test_check_uin_after_2024(
     exception_handler: Optional[Type[Exception]],
     expected_value: str
 ) -> None:
-    with freezegun.freeze_time(datetime(year=2024, month=1, day=1)):
-        with exception_handler:
-            assert check_uin(
-                value=value,
-                receiver_account=receiver_account,
-                payment_type=payment_type,
-                payer_inn=payer_inn,
-                payer_status=payer_status,
-            ) == expected_value
+    with exception_handler:
+        assert check_uin(
+            value=value,
+            receiver_account=receiver_account,
+            payment_type=payment_type,
+            payer_inn=payer_inn,
+            payer_status=payer_status,
+        ) == expected_value
 
 
 @pytest.mark.parametrize(
@@ -475,6 +475,7 @@ def test_check_cbc(
         assert expected_value == check_cbc(value=value, payment_type=payment_type)
 
 
+@freeze_time(datetime(year=CHANGE_YEAR - 1, month=12, day=31))
 @pytest.mark.parametrize(
     'value, payment_type, payer_status, exception_handler, expected_value',
     [
@@ -497,11 +498,11 @@ def test_check_oktmo(
     exception_handler: ContextManager,
     expected_value: Optional[OKTMO],
 ) -> None:
-    with freezegun.freeze_time(datetime(year=2023, month=12, day=31)):
-        with exception_handler:
-            assert expected_value == check_oktmo(value=value, payment_type=payment_type, payer_status=payer_status)
+    with exception_handler:
+        assert expected_value == check_oktmo(value=value, payment_type=payment_type, payer_status=payer_status)
 
 
+@freeze_time(datetime(year=CHANGE_YEAR, month=1, day=1))
 @pytest.mark.parametrize(
     'value, payment_type, payer_status, exception_handler, expected_value',
     [
@@ -515,9 +516,8 @@ def test_check_oktmo_after_2024(
     exception_handler: ContextManager,
     expected_value: Optional[OKTMO],
 ) -> None:
-    with freezegun.freeze_time(datetime(year=2024, month=1, day=1)):
-        with exception_handler:
-            assert expected_value == check_oktmo(value=value, payment_type=payment_type, payer_status=payer_status)
+    with exception_handler:
+        assert expected_value == check_oktmo(value=value, payment_type=payment_type, payer_status=payer_status)
 
 
 @pytest.mark.parametrize(
@@ -543,7 +543,7 @@ def test_check_reason(
         assert expected_value == check_reason(value=value, payment_type=payment_type)
 
 
-@freeze_time(datetime(2024, 1, 1))
+@freeze_time(datetime(CHANGE_YEAR, 1, 1))
 @pytest.mark.parametrize(
     'value, payment_type, exception_handler, expected_value',
     [
@@ -560,6 +560,7 @@ def test_future_check_reason(
         assert expected_value == check_reason(value=value, payment_type=payment_type)
 
 
+@freeze_time(datetime(year=CHANGE_YEAR - 1, month=12, day=31))
 @pytest.mark.parametrize(
     'value, payment_type, payer_status, exception_handler, expected_value',
     [
@@ -589,11 +590,11 @@ def test_check_tax_period(
     exception_handler: ContextManager,
     expected_value: Optional[TaxPeriod],
 ) -> None:
-    with freezegun.freeze_time(datetime(year=2023, month=12, day=31)):
-        with exception_handler:
-            assert expected_value == check_tax_period(value=value, payment_type=payment_type, payer_status=payer_status)
+    with exception_handler:
+        assert expected_value == check_tax_period(value=value, payment_type=payment_type, payer_status=payer_status)
 
 
+@freeze_time(datetime(year=CHANGE_YEAR, month=1, day=1))
 @pytest.mark.parametrize(
     'value, payment_type, payer_status, exception_handler, expected_value',
     [
@@ -609,9 +610,8 @@ def test_check_tax_period_after_2024(
     exception_handler: ContextManager,
     expected_value: Optional[TaxPeriod],
 ) -> None:
-    with freezegun.freeze_time(datetime(year=2024, month=1, day=1)):
-        with exception_handler:
-            assert expected_value == check_tax_period(value=value, payment_type=payment_type, payer_status=payer_status)
+    with exception_handler:
+        assert expected_value == check_tax_period(value=value, payment_type=payment_type, payer_status=payer_status)
 
 
 @parametrize_with_dict(
