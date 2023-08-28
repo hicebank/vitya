@@ -469,7 +469,6 @@ class TestOktmoChecker(BaseModelChecker):
     ]
 
 
-@freeze_time(datetime(year=CHANGE_YEAR - 1, month=12, day=31))
 @pytest.mark.parametrize(
     'oktmo, payment_type, payer_status, exception',
     [
@@ -479,27 +478,6 @@ class TestOktmoChecker(BaseModelChecker):
     ]
 )
 def test_oktmo_checker(
-    oktmo: CBC,
-    payment_type: PaymentType,
-    payer_status: PayerStatus,
-    exception: Type[Exception]
-) -> None:
-    try:
-        TestOktmoChecker(oktmo=oktmo, payment_type=payment_type, payer_status=payer_status)
-    except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
-    else:
-        assert exception is None
-
-
-@freeze_time(datetime(year=CHANGE_YEAR, month=1, day=1))
-@pytest.mark.parametrize(
-    'oktmo, payment_type, payer_status, exception',
-    [
-        (None, PaymentType.FNS, '33', OKTMOValidationFNSEmptyNotAllowed),
-    ]
-)
-def test_oktmo_checker_after_2024(
     oktmo: CBC,
     payment_type: PaymentType,
     payer_status: PayerStatus,
@@ -551,7 +529,6 @@ class TestTaxPeriodChecker(BaseModelChecker):
     ]
 
 
-@freeze_time(datetime(year=CHANGE_YEAR - 1, month=12, day=31))
 @pytest.mark.parametrize(
     'tax_period, payment_type, payer_status, exception',
     [
@@ -566,28 +543,6 @@ class TestTaxPeriodChecker(BaseModelChecker):
     ]
 )
 def test_tax_period_checker(
-    tax_period: TaxPeriod,
-    payment_type: PaymentType,
-    payer_status: PayerStatus,
-    exception: Type[Exception]
-) -> None:
-    try:
-        TestTaxPeriodChecker(tax_period=tax_period, payment_type=payment_type, payer_status=payer_status)
-    except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
-    else:
-        assert exception is None
-
-
-@freeze_time(datetime(year=CHANGE_YEAR, month=1, day=1))
-@pytest.mark.parametrize(
-    'tax_period, payment_type, payer_status, exception',
-    [
-        (None, PaymentType.FNS, '33', TaxPeriodValidationFNS02EmptyNotAllowed),
-        ('1' * 9, PaymentType.FNS, '33', TaxPeriodValidationFNSValueLenError),
-    ]
-)
-def test_tax_period_checker_after_2024(
     tax_period: TaxPeriod,
     payment_type: PaymentType,
     payer_status: PayerStatus,

@@ -184,7 +184,6 @@ def test_check_purpose_code(
         assert check_purpose_code(value=value, payment_type=payment_type) == expected_value
 
 
-@freeze_time(datetime(year=CHANGE_YEAR - 1, month=12, day=31))
 @pytest.mark.parametrize(
     'value, payment_type, receiver_account, payer_status, payer_inn, exception_handler, expected_value',
     [
@@ -240,49 +239,6 @@ def test_check_purpose_code(
     ]
 )
 def test_check_uin(
-    value: Optional[str],
-    receiver_account: AccountNumber,
-    payment_type: PaymentType,
-    payer_status: PayerStatus,
-    payer_inn: str,
-    exception_handler: Optional[Type[Exception]],
-    expected_value: str
-) -> None:
-    with exception_handler:
-        assert check_uin(
-            value=value,
-            receiver_account=receiver_account,
-            payment_type=payment_type,
-            payer_inn=payer_inn,
-            payer_status=payer_status,
-        ) == expected_value
-
-
-@freeze_time(datetime(year=CHANGE_YEAR, month=1, day=1))
-@pytest.mark.parametrize(
-    'value, payment_type, receiver_account, payer_status, payer_inn, exception_handler, expected_value',
-    [
-        (
-            VALID_UIN,
-            PaymentType.FNS,
-            AccountNumber(IP_ACCOUNT),
-            '33',
-            '',
-            pytest.raises(UINValidationFNSNotValueZeroError),
-            None,
-        ),
-        (
-            None,
-            PaymentType.FNS,
-            AccountNumber(IP_ACCOUNT),
-            '33',
-            '',
-            nullcontext(),
-            None,
-        ),
-    ]
-)
-def test_check_uin_after_2024(
     value: Optional[str],
     receiver_account: AccountNumber,
     payment_type: PaymentType,
@@ -475,7 +431,6 @@ def test_check_cbc(
         assert expected_value == check_cbc(value=value, payment_type=payment_type)
 
 
-@freeze_time(datetime(year=CHANGE_YEAR - 1, month=12, day=31))
 @pytest.mark.parametrize(
     'value, payment_type, payer_status, exception_handler, expected_value',
     [
@@ -492,24 +447,6 @@ def test_check_cbc(
     ]
 )
 def test_check_oktmo(
-    value: Optional[OKTMO],
-    payment_type: PaymentType,
-    payer_status: PayerStatus,
-    exception_handler: ContextManager,
-    expected_value: Optional[OKTMO],
-) -> None:
-    with exception_handler:
-        assert expected_value == check_oktmo(value=value, payment_type=payment_type, payer_status=payer_status)
-
-
-@freeze_time(datetime(year=CHANGE_YEAR, month=1, day=1))
-@pytest.mark.parametrize(
-    'value, payment_type, payer_status, exception_handler, expected_value',
-    [
-        (None, PaymentType.FNS, '33', pytest.raises(OKTMOValidationFNSEmptyNotAllowed), None),
-    ]
-)
-def test_check_oktmo_after_2024(
     value: Optional[OKTMO],
     payment_type: PaymentType,
     payer_status: PayerStatus,
@@ -560,7 +497,6 @@ def test_future_check_reason(
         assert expected_value == check_reason(value=value, payment_type=payment_type)
 
 
-@freeze_time(datetime(year=CHANGE_YEAR - 1, month=12, day=31))
 @pytest.mark.parametrize(
     'value, payment_type, payer_status, exception_handler, expected_value',
     [
@@ -584,26 +520,6 @@ def test_future_check_reason(
     ]
 )
 def test_check_tax_period(
-    value: Optional[TaxPeriod],
-    payment_type: PaymentType,
-    payer_status: PayerStatus,
-    exception_handler: ContextManager,
-    expected_value: Optional[TaxPeriod],
-) -> None:
-    with exception_handler:
-        assert expected_value == check_tax_period(value=value, payment_type=payment_type, payer_status=payer_status)
-
-
-@freeze_time(datetime(year=CHANGE_YEAR, month=1, day=1))
-@pytest.mark.parametrize(
-    'value, payment_type, payer_status, exception_handler, expected_value',
-    [
-        (None, PaymentType.FNS, '33', pytest.raises(TaxPeriodValidationFNS02EmptyNotAllowed), None),
-        ('1' * 10, PaymentType.FNS, '33', nullcontext(), '1' * 10),
-        ('1' * 9, PaymentType.FNS, '33', pytest.raises(TaxPeriodValidationFNSValueLenError), None),
-    ]
-)
-def test_check_tax_period_after_2024(
     value: Optional[TaxPeriod],
     payment_type: PaymentType,
     payer_status: PayerStatus,

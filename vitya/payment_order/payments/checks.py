@@ -169,7 +169,7 @@ def check_uin(
     if payment_type == PaymentType.FNS:
         if payer_status == '13' and payer_inn is None and value is None:
             raise UINValidationFNSValueZeroError
-        if payer_status == ('02' if date.today().year < CHANGE_YEAR else '33'):
+        if payer_status == '02':
             if value is not None:
                 raise UINValidationFNSNotValueZeroError
             return value
@@ -343,7 +343,7 @@ def check_oktmo(
 
     if (
         payment_type == PaymentType.FNS and
-        payer_status == ('02' if date.today().year < CHANGE_YEAR else '33') and
+        payer_status == '02' and
         value is None
     ):
         raise OKTMOValidationFNSEmptyNotAllowed
@@ -394,7 +394,7 @@ def check_tax_period(
         return value
     else:
         if (
-            payer_status == ('02' if date.today().year < CHANGE_YEAR else '33') and
+            payer_status == '02' and
             value is None
         ):
             raise TaxPeriodValidationFNS02EmptyNotAllowed
@@ -405,10 +405,7 @@ def check_tax_period(
 
         if value is None:
             raise TaxPeriodValidationFNSEmptyNotAllowed
-        elif (
-            payer_status == ('02' if date.today().year < CHANGE_YEAR else '33') and
-            len(value) != 10
-        ):
+        elif payer_status == '02' and len(value) != 10:
             raise TaxPeriodValidationFNSValueLenError
         return value
 
