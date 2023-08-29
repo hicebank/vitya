@@ -469,6 +469,7 @@ class TestOktmoChecker(BaseModelChecker):
     ]
 
 
+@freeze_time(datetime(2023, 12, 31))
 @pytest.mark.parametrize(
     'oktmo, payment_type, payer_status, exception',
     [
@@ -529,6 +530,7 @@ class TestTaxPeriodChecker(BaseModelChecker):
     ]
 
 
+@freeze_time(datetime(2023, 12, 31))
 @pytest.mark.parametrize(
     'tax_period, payment_type, payer_status, exception',
     [

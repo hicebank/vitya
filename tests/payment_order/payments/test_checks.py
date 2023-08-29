@@ -146,6 +146,7 @@ def test_check_account_by_bic(
         check_account_by_bic(account_number=account_number, bic=bic)
 
 
+@freeze_time(datetime(2023, 12, 31))
 @pytest.mark.parametrize(
     'value, payment_type, exception_handler, expected_value',
     [
@@ -184,6 +185,7 @@ def test_check_purpose_code(
         assert check_purpose_code(value=value, payment_type=payment_type) == expected_value
 
 
+@freeze_time(datetime(2023, 12, 31))
 @pytest.mark.parametrize(
     'value, payment_type, receiver_account, payer_status, payer_inn, exception_handler, expected_value',
     [
@@ -497,6 +499,7 @@ def test_future_check_reason(
         assert expected_value == check_reason(value=value, payment_type=payment_type)
 
 
+@freeze_time(datetime(2023, 12, 31))
 @pytest.mark.parametrize(
     'value, payment_type, payer_status, exception_handler, expected_value',
     [
