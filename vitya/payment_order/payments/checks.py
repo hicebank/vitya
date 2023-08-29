@@ -169,7 +169,7 @@ def check_uin(
     if payment_type == PaymentType.FNS:
         if payer_status == '13' and payer_inn is None and value is None:
             raise UINValidationFNSValueZeroError
-        if payer_status == '02' and  date.today().year < CHANGE_YEAR:
+        if payer_status == '02' and date.today().year < CHANGE_YEAR:
             if value is not None:
                 raise UINValidationFNSNotValueZeroError
             return value
