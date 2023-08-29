@@ -1,6 +1,7 @@
 import re
 from decimal import Decimal, InvalidOperation
 from typing import Optional, Union
+from datetime import date
 
 from vitya.payment_order.errors import (
     AccountNumberValidationDigitsOnlyError,
@@ -44,7 +45,9 @@ from vitya.payment_order.errors import (
 from vitya.payment_order.payments.constants import (
     CHARS_FOR_PURPOSE,
     PAYER_STATUSES,
+    PAYER_STATUSES_AFTER_2024,
     REPLACE_CHARS_FOR_SPACE,
+    CHANGE_YEAR,
 )
 
 
@@ -222,7 +225,7 @@ def validate_purpose(value: str) -> str:
 def validate_payer_status(value: str) -> str:
     if not isinstance(value, str):
         raise PayerStatusValidationTypeError
-    elif value not in PAYER_STATUSES:
+    elif value not in (PAYER_STATUSES if date.today().year < CHANGE_YEAR else PAYER_STATUSES_AFTER_2024):
         raise PayerStatusValidationValueError
     return value
 

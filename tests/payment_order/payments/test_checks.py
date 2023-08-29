@@ -1,6 +1,8 @@
 from contextlib import nullcontext
 from typing import ContextManager, Optional, Type
+from datetime import datetime
 
+from freezegun import freeze_time
 import pytest
 
 from tests.helpers import parametrize_with_dict
@@ -35,6 +37,7 @@ from vitya.payment_order.errors import (
     OKTMOValidationEmptyNotAllowed,
     OKTMOValidationFNSEmptyNotAllowed,
     OKTMOValidationZerosNotAllowed,
+    OKTMOValidationFTS,
     OperationKindValidationBudgetValueError,
     PayerINNValidationCustomsLen10Error,
     PayerINNValidationCustomsLen12Error,
@@ -59,6 +62,8 @@ from vitya.payment_order.errors import (
     ReceiverKPPValidationEmptyNotAllowed,
     ReceiverKPPValidationOnlyEmptyError,
     ReceiverKPPValidationStartsWithZeros,
+    ReceiverKPPValidationFNS,
+    ReceiverKPPValidationFTS,
     TaxPeriodValidationBOValueLenError,
     TaxPeriodValidationCustomsEmptyNotAllowed,
     TaxPeriodValidationCustomsValueLenError,
@@ -101,7 +106,7 @@ from vitya.payment_order.payments.checks import (
     check_tax_period,
     check_uin,
 )
-from vitya.payment_order.payments.constants import FNS_RECEIVER_ACCOUNT_NUMBER
+from vitya.payment_order.payments.constants import FNS_RECEIVER_ACCOUNT_NUMBER, FNS_KPP, FTS_OKTMO, CHANGE_YEAR
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 
@@ -144,12 +149,28 @@ def test_check_account_by_bic(
 @pytest.mark.parametrize(
     'value, payment_type, exception_handler, expected_value',
     [
-        ('02', PaymentType.IP, nullcontext(), '02'),
-        ('02', PaymentType.BUDGET_OTHER, nullcontext(), '02'),
         ('03', PaymentType.BUDGET_OTHER, pytest.raises(OperationKindValidationBudgetValueError), None),
     ]
 )
 def test_check_operation_kind(
+    value: OperationKind,
+    payment_type: PaymentType,
+    exception_handler: ContextManager,
+    expected_value: str
+) -> None:
+    with exception_handler:
+        assert check_operation_kind(value=value, payment_type=payment_type) == expected_value
+
+
+@freeze_time(datetime(CHANGE_YEAR - 1, 12, 31))
+@pytest.mark.parametrize(
+    'value, payment_type, exception_handler, expected_value',
+    [
+        ('02', PaymentType.IP, nullcontext(), '02'),
+        ('02', PaymentType.BUDGET_OTHER, nullcontext(), '02'),
+    ]
+)
+def test_check_operation_kind_before_2024(
     value: OperationKind,
     payment_type: PaymentType,
     exception_handler: ContextManager,
@@ -213,6 +234,31 @@ def test_check_purpose_code(
             nullcontext(),
             VALID_UIN,
         ),
+    ]
+)
+def test_check_uin(
+    value: Optional[str],
+    receiver_account: AccountNumber,
+    payment_type: PaymentType,
+    payer_status: PayerStatus,
+    payer_inn: str,
+    exception_handler: Optional[Type[Exception]],
+    expected_value: str
+) -> None:
+    with exception_handler:
+        assert check_uin(
+            value=value,
+            receiver_account=receiver_account,
+            payment_type=payment_type,
+            payer_inn=payer_inn,
+            payer_status=payer_status,
+        ) == expected_value
+
+
+@freeze_time(datetime(CHANGE_YEAR - 1, 12, 31))
+@pytest.mark.parametrize(
+    'value, payment_type, receiver_account, payer_status, payer_inn, exception_handler, expected_value',
+    [
         (
             VALID_UIN,
             PaymentType.FNS,
@@ -233,7 +279,7 @@ def test_check_purpose_code(
         ),
     ]
 )
-def test_check_uin(
+def test_check_uin_before_2024(
     value: Optional[str],
     receiver_account: AccountNumber,
     payment_type: PaymentType,
@@ -389,8 +435,10 @@ def test_check_payer_kpp(
         (VALID_KPP, PaymentType.FL, pytest.raises(ReceiverKPPValidationOnlyEmptyError), None),
 
         (None, PaymentType.FNS, pytest.raises(ReceiverKPPValidationEmptyNotAllowed), None),
-        (VALID_KPP, PaymentType.FNS, nullcontext(), VALID_KPP),
+        (FNS_KPP, PaymentType.FNS, nullcontext(), FNS_KPP),
         ('001234567', PaymentType.FNS, pytest.raises(ReceiverKPPValidationStartsWithZeros), None),
+        (VALID_KPP, PaymentType.CUSTOMS, pytest.raises(ReceiverKPPValidationFTS), None),
+        (VALID_KPP, PaymentType.FNS, pytest.raises(ReceiverKPPValidationFNS), None),
     ]
 )
 def test_check_receiver_kpp(
@@ -430,11 +478,12 @@ def test_check_cbc(
         (None, PaymentType.FL, '01', nullcontext(), None),
         (None, PaymentType.FNS, '01', nullcontext(), None),
         (None, PaymentType.FNS, '13', nullcontext(), None),
-        (None, PaymentType.CUSTOMS, '13', nullcontext(), None),
+        (FTS_OKTMO, PaymentType.CUSTOMS, '13', nullcontext(), FTS_OKTMO),
         (None, PaymentType.BUDGET_OTHER, '13', nullcontext(), None),
         (None, PaymentType.FNS, '02', pytest.raises(OKTMOValidationFNSEmptyNotAllowed), None),
         (None, PaymentType.FNS, '06', pytest.raises(OKTMOValidationEmptyNotAllowed), None),
         ('0' * 8, PaymentType.FNS, '06', pytest.raises(OKTMOValidationZerosNotAllowed), None),
+        (VALID_OKTMO, PaymentType.CUSTOMS, '13', pytest.raises(OKTMOValidationFTS), None),
         (VALID_OKTMO, PaymentType.FNS, '06', nullcontext(), VALID_OKTMO),
     ]
 )
@@ -455,12 +504,11 @@ def test_check_oktmo(
         (None, PaymentType.FL, nullcontext(), None),
         (None, PaymentType.CUSTOMS, nullcontext(), None),
         (None, PaymentType.BUDGET_OTHER, nullcontext(), None),
-        ('ПК', PaymentType.FNS, pytest.raises(ReasonValidationValueErrorFNS), None),
         (None, PaymentType.FNS, nullcontext(), None),
         ('ПК', PaymentType.BUDGET_OTHER, nullcontext(), 'ПК'),
         ('AИ', PaymentType.CUSTOMS, pytest.raises(ReasonValidationValueErrorCustoms), None),
+        ('ПК', PaymentType.FNS, pytest.raises(ReasonValidationValueErrorFNS), None),
     ]
-
 )
 def test_check_reason(
     value: Optional[Reason],
@@ -482,19 +530,35 @@ def test_check_reason(
         (None, PaymentType.CUSTOMS, '01', pytest.raises(TaxPeriodValidationCustomsEmptyNotAllowed), None),
         ('20220222', PaymentType.CUSTOMS, '01', nullcontext(), '20220222'),
         ('2022022', PaymentType.CUSTOMS, '01', pytest.raises(TaxPeriodValidationCustomsValueLenError), None),
-
-        (None, PaymentType.FNS, '02', pytest.raises(TaxPeriodValidationFNS02EmptyNotAllowed), None),
-        ('1' * 10, PaymentType.FNS, '02', nullcontext(), '1' * 10),
         ('1', PaymentType.FNS, '01', pytest.raises(TaxPeriodValidationFNS01OnlyEmpty), None),
         ('1', PaymentType.FNS, '13', pytest.raises(TaxPeriodValidationFNS01OnlyEmpty), None),
         (None, PaymentType.FNS, '01', nullcontext(), None),
         (None, PaymentType.FNS, '13', nullcontext(), None),
         (None, PaymentType.FNS, '30', pytest.raises(TaxPeriodValidationFNSEmptyNotAllowed), None),
-        ('1' * 9, PaymentType.FNS, '30', pytest.raises(TaxPeriodValidationFNSValueLenError), None),
         ('1' * 10, PaymentType.FNS, '30', nullcontext(), '1' * 10),
     ]
 )
 def test_check_tax_period(
+    value: Optional[TaxPeriod],
+    payment_type: PaymentType,
+    payer_status: PayerStatus,
+    exception_handler: ContextManager,
+    expected_value: Optional[TaxPeriod],
+) -> None:
+    with exception_handler:
+        assert expected_value == check_tax_period(value=value, payment_type=payment_type, payer_status=payer_status)
+
+
+@freeze_time(datetime(CHANGE_YEAR - 1, 12, 31))
+@pytest.mark.parametrize(
+    'value, payment_type, payer_status, exception_handler, expected_value',
+    [
+        (None, PaymentType.FNS, '02', pytest.raises(TaxPeriodValidationFNS02EmptyNotAllowed), None),
+        ('1' * 10, PaymentType.FNS, '02', nullcontext(), '1' * 10),
+        ('1' * 9, PaymentType.FNS, '02', pytest.raises(TaxPeriodValidationFNSValueLenError), None),
+    ]
+)
+def test_check_tax_period_before_2024(
     value: Optional[TaxPeriod],
     payment_type: PaymentType,
     payer_status: PayerStatus,
