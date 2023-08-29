@@ -1,4 +1,5 @@
 import re
+from datetime import date
 from typing import Optional
 
 from vitya.payment_order.enums import AccountKind, PaymentType
@@ -20,6 +21,7 @@ from vitya.payment_order.errors import (
     DocumentNumberValidationFNSOnlyEmptyError,
     OKTMOValidationEmptyNotAllowed,
     OKTMOValidationFNSEmptyNotAllowed,
+    OKTMOValidationFTS,
     OKTMOValidationZerosNotAllowed,
     OperationKindValidationBudgetValueError,
     PayerINNValidationCustomsLen10Error,
@@ -36,6 +38,7 @@ from vitya.payment_order.errors import (
     PurposeCodeValidationNullError,
     PurposeValidationIPNDSError,
     ReasonValidationValueErrorCustoms,
+    ReasonValidationValueErrorFNS,
     ReceiverAccountValidationBICValueError,
     ReceiverAccountValidationFNSValueError,
     ReceiverINNValidationChameleonLenError,
@@ -44,6 +47,8 @@ from vitya.payment_order.errors import (
     ReceiverINNValidationLELenError,
     ReceiverINNValidationNonEmptyError,
     ReceiverKPPValidationEmptyNotAllowed,
+    ReceiverKPPValidationFNS,
+    ReceiverKPPValidationFTS,
     ReceiverKPPValidationOnlyEmptyError,
     ReceiverKPPValidationStartsWithZeros,
     TaxPeriodValidationBOValueLenError,
@@ -80,9 +85,13 @@ from vitya.payment_order.fields import (
     TaxPeriod,
 )
 from vitya.payment_order.payments.constants import (
+    CHANGE_YEAR,
     CUSTOMS_REASONS,
     DOCUMENT_NUMBERS,
+    FNS_KPP,
     FNS_RECEIVER_ACCOUNT_NUMBER,
+    FTS_KPP,
+    FTS_OKTMO,
 )
 from vitya.payment_order.payments.tools import get_account_kind
 from vitya.pydantic_fields import BIC, OKTMO
@@ -160,7 +169,7 @@ def check_uin(
     if payment_type == PaymentType.FNS:
         if payer_status == '13' and payer_inn is None and value is None:
             raise UINValidationFNSValueZeroError
-        if payer_status == '02':
+        if payer_status == '02' and date.today().year < CHANGE_YEAR:
             if value is not None:
                 raise UINValidationFNSNotValueZeroError
             return value
@@ -292,6 +301,10 @@ def check_receiver_kpp(
         raise ReceiverKPPValidationEmptyNotAllowed
     if value.startswith('00'):
         raise ReceiverKPPValidationStartsWithZeros
+    if payment_type == PaymentType.FNS and value != FNS_KPP:
+        raise ReceiverKPPValidationFNS
+    if payment_type == PaymentType.CUSTOMS and value != FTS_KPP:
+        raise ReceiverKPPValidationFTS
     return value
 
 
@@ -322,10 +335,18 @@ def check_oktmo(
     if payment_type == PaymentType.FNS and payer_status in {'01', '13'} and value is None:
         return None
 
+    if payment_type == PaymentType.CUSTOMS and value != FTS_OKTMO:
+        raise OKTMOValidationFTS
+
     if payment_type in {PaymentType.CUSTOMS, PaymentType.BUDGET_OTHER} and value is None:
         return None
 
-    if payment_type == PaymentType.FNS and payer_status == '02' and value is None:
+    if (
+        payment_type == PaymentType.FNS and
+        payer_status == '02' and
+        value is None and
+        date.today().year < CHANGE_YEAR
+    ):
         raise OKTMOValidationFNSEmptyNotAllowed
 
     if value is None:
@@ -343,10 +364,12 @@ def check_reason(
     if not payment_type.is_budget:
         return None
 
-    if payment_type.is_budget and value is None:
+    if payment_type.is_budget and (value is None or value == '0'):
         return None
     if payment_type == PaymentType.CUSTOMS and value not in CUSTOMS_REASONS:
         raise ReasonValidationValueErrorCustoms
+    if payment_type == PaymentType.FNS and value and value != '0':
+        raise ReasonValidationValueErrorFNS
     return value
 
 
@@ -371,7 +394,11 @@ def check_tax_period(
             raise TaxPeriodValidationCustomsValueLenError
         return value
     else:
-        if payer_status == '02' and value is None:
+        if (
+            payer_status == '02' and
+            value is None and
+            date.today().year < CHANGE_YEAR
+        ):
             raise TaxPeriodValidationFNS02EmptyNotAllowed
         if payer_status in {'01', '13'}:
             if value is not None:
@@ -380,7 +407,7 @@ def check_tax_period(
 
         if value is None:
             raise TaxPeriodValidationFNSEmptyNotAllowed
-        elif len(value) != 10:
+        elif payer_status == '02' and len(value) != 10 and date.today().year < CHANGE_YEAR:
             raise TaxPeriodValidationFNSValueLenError
         return value
 
@@ -402,7 +429,7 @@ def check_document_number(
             raise DocumentNumberValidationFNSOnlyEmptyError
         return None
     elif payment_type == PaymentType.BUDGET_OTHER:
-        if payer_status == '33':
+        if payer_status == '33' and date.today().year >= CHANGE_YEAR:
             if value is not None:
                 raise DocumentNumberValidationBOPayerStatus33OnlyEmptyError
             return None
@@ -416,7 +443,7 @@ def check_document_number(
         if value is not None:
             if len(value) > 15:
                 raise DocumentNumberValidationBOValueLenError
-            if len(value) < 3 or value[2] != ";" or value[:2] not in DOCUMENT_NUMBERS:
+            if len(value) < 3 or value[2] != ';' or value[:2] not in DOCUMENT_NUMBERS:
                 raise DocumentNumberValidationBOValueError
         return value
     elif payment_type == PaymentType.CUSTOMS:
@@ -443,7 +470,7 @@ def check_document_date(
         return None
 
     if payment_type == PaymentType.FNS:
-        if value is not None:
+        if value is not None and value != '0':
             raise DocumentDateValidationFNSOnlyEmptyError
         return None
     else:

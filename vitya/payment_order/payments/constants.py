@@ -32,6 +32,20 @@ PAYER_STATUSES = {
     '31'
 }
 
+PAYER_STATUSES_AFTER_2024 = {
+    '01',
+    '06',
+    '08',
+    '13',
+    '16',
+    '17',
+    '24',
+    '28',
+    '30',
+    '31',
+    '33'
+}
+
 CUSTOMS_REASONS = {
     'ПК',
     'КЭ',
@@ -69,3 +83,8 @@ DOCUMENT_NUMBERS = {
     '29',
     '30'
 }
+
+FNS_KPP = '770801001'
+FTS_KPP = '773001001'
+FTS_OKTMO = '45328000'
+CHANGE_YEAR = 2024

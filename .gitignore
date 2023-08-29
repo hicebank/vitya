@@ -3,3 +3,4 @@ build/
 dist/
 env/
 vitya.egg-info/
+__pycache__/

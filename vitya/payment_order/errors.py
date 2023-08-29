@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Any
 
 from pydantic.errors import PydanticTypeError, PydanticValueError
@@ -17,9 +18,14 @@ from vitya.errors_base import (
 )
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.payments.constants import (
+    CHANGE_YEAR,
     CUSTOMS_REASONS,
     DOCUMENT_NUMBERS,
+    FNS_KPP,
+    FTS_KPP,
+    FTS_OKTMO,
     PAYER_STATUSES,
+    PAYER_STATUSES_AFTER_2024,
 )
 
 
@@ -337,7 +343,7 @@ class ReceiverAccountValidationLenError(ReceiverAccountValidationError):
     description_ru = 'должен состоять из 20 цифр'
 
 
-class ReceiverAccountValidationFNSValueError(ReceiverAccountValidationError):
+class ReceiverAccountValidationFNSValueError(ReceiverAccountValidationError, IncorrectData):
     description = 'for FNS payment account must be "03100643000000018500"'
     description_ru = 'для платежей в ФНС счет должен быть "03100643000000018500"'
 
@@ -411,8 +417,8 @@ class PayerStatusValidationTypeError(PayerStatusValidationError, PydanticTypeErr
 
 
 class PayerStatusValidationValueError(PayerStatusValidationError):
-    description = f'value can be only {PAYER_STATUSES}'
-    description_ru = f'должен быть одним из {PAYER_STATUSES}'
+    description = f'value can be only {PAYER_STATUSES if date.today().year < CHANGE_YEAR else PAYER_STATUSES_AFTER_2024}'
+    description_ru = f'должен быть одним из {PAYER_STATUSES if date.today().year < CHANGE_YEAR else PAYER_STATUSES_AFTER_2024}'
 
 
 class PayerStatusValidationNullNotAllowedError(PayerStatusValidationError):
@@ -474,9 +480,19 @@ class ReceiverKPPValidationEmptyNotAllowed(ReceiverKPPValidationError, KPPValida
     description_ru = 'для платежей в бюджет пустое значение недопустимо'
 
 
-class ReceiverKPPValidationStartsWithZeros(ReceiverKPPValidationError):
+class ReceiverKPPValidationStartsWithZeros(ReceiverKPPValidationError, IncorrectData):
     description = 'for fns, customs, budget other kpp cannot starts with "00"'
     description_ru = 'для платежей в бюджет значение не может начинаться с "00"'
+
+
+class ReceiverKPPValidationFNS(ReceiverKPPValidationError, IncorrectData):
+    description = f'for fns kpp can only be {FNS_KPP}'
+    description_ru = f'для платежей в фнс значение может быть только {FNS_KPP}'
+
+
+class ReceiverKPPValidationFTS(ReceiverKPPValidationError, IncorrectData):
+    description = f'for customs kpp can only be {FTS_KPP}'
+    description_ru = f'для платежей в таможню значение может быть только {FTS_KPP}'
 
 
 class CBCValidationError(VityaDescribedError, PydanticValueError):
@@ -529,6 +545,11 @@ class OKTMOValidationZerosNotAllowed(OKTMOValidationError):
     description_ru = 'не может состоять полностью из нулей'
 
 
+class OKTMOValidationFTS(OKTMOValidationError, IncorrectData):
+    description = f'for customs payments oktmo can be only {FTS_OKTMO}'
+    description_ru = f'для платежей в таможню октмо может быть только {FTS_OKTMO}'
+
+
 class ReasonValidationError(VityaDescribedError, PydanticValueError):
     target = 'reason'
     target_ru = 'Основание платежа'
@@ -549,6 +570,11 @@ class ReasonValidationValueLenError(ReasonValidationError, IncorrectLen):
 class ReasonValidationValueErrorCustoms(ReasonValidationError, IncorrectData):
     description = f'for customs payment value must be in {CUSTOMS_REASONS}'
     description_ru = f'для платежей в таможню значение должно быть одним из {CUSTOMS_REASONS}'
+
+
+class ReasonValidationValueErrorFNS(ReasonValidationError, IncorrectData):
+    description = 'for fns payment value must be either 0 or empty'
+    description_ru = 'для платежей в ФНС значение должно быть 0 или пустым'
 
 
 class TaxPeriodValidationError(VityaDescribedError, PydanticValueError):
@@ -588,7 +614,7 @@ class TaxPeriodValidationCustomsValueLenError(TaxPeriodValidationValueLenError, 
     required_len = 8
 
 
-class TaxPeriodValidationFNS02EmptyNotAllowed(TaxPeriodValidationError):
+class TaxPeriodValidationFNS02EmptyNotAllowed(TaxPeriodValidationError, NeedRequiredField):
     description = 'for fns with payer status = "02" empty is not allowed'
     description_ru = 'для платежей в ФНС со статусом плательщика "02" пустое значение недопустимо'
 
@@ -709,7 +735,7 @@ class DocumentDateValidationTypeError(DocumentDateValidationError, PydanticTypeE
     description_ru = 'должна быть строкой'
 
 
-class DocumentDateValidationFNSOnlyEmptyError(DocumentDateValidationError):
+class DocumentDateValidationFNSOnlyEmptyError(DocumentDateValidationError, IncorrectData):
     description = 'for fns only empty allowed'
     description_ru = 'для платежей в ФНС значение должно быть пустым'
 

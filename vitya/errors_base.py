@@ -10,8 +10,8 @@ class VityaDescribedError(Exception):
 
     def __str__(self) -> str:
         if self.target:
-            return f"invalid {self.target}: {self.description}"
-        return f"{self.description}"
+            return f'invalid {self.target}: {self.description}'
+        return f'{self.description}'
 
     def __getattr__(self, item: str) -> Any:
         if item.endswith('_ru'):

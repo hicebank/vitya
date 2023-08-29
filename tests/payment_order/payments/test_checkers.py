@@ -1,6 +1,8 @@
+from datetime import datetime
 from typing import Optional, Tuple, Type
 
 import pytest
+from freezegun import freeze_time
 from pydantic import ValidationError
 
 from tests.helpers import parametrize_with_dict
@@ -87,7 +89,11 @@ from vitya.payment_order.payments.checkers import (
     TaxPeriodChecker,
     UINChecker,
 )
-from vitya.payment_order.payments.constants import FNS_RECEIVER_ACCOUNT_NUMBER
+from vitya.payment_order.payments.constants import (
+    CHANGE_YEAR,
+    FNS_RECEIVER_ACCOUNT_NUMBER,
+    FTS_KPP,
+)
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 
@@ -410,7 +416,7 @@ class TestReceiverKppChecker(BaseModelChecker):
         (VALID_KPP, PaymentType.FL, ReceiverKPPValidationOnlyEmptyError),
 
         (None, PaymentType.CUSTOMS, ReceiverKPPValidationEmptyNotAllowed),
-        (VALID_KPP, PaymentType.CUSTOMS, None),
+        (FTS_KPP, PaymentType.CUSTOMS, None),
     ]
 )
 def test_receiver_kpp_checker(
@@ -470,12 +476,32 @@ class TestOktmoChecker(BaseModelChecker):
 @pytest.mark.parametrize(
     'oktmo, payment_type, payer_status, exception',
     [
-        (None, PaymentType.FNS, '02', OKTMOValidationFNSEmptyNotAllowed),
         (None, PaymentType.FNS, '06', OKTMOValidationEmptyNotAllowed),
         ('0' * 8, PaymentType.FNS, '06', OKTMOValidationZerosNotAllowed)
     ]
 )
 def test_oktmo_checker(
+    oktmo: CBC,
+    payment_type: PaymentType,
+    payer_status: PayerStatus,
+    exception: Type[Exception]
+) -> None:
+    try:
+        TestOktmoChecker(oktmo=oktmo, payment_type=payment_type, payer_status=payer_status)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        assert exception is None
+
+
+@freeze_time(datetime(CHANGE_YEAR - 1, 12, 31))
+@pytest.mark.parametrize(
+    'oktmo, payment_type, payer_status, exception',
+    [
+        (None, PaymentType.FNS, '02', OKTMOValidationFNSEmptyNotAllowed),
+    ]
+)
+def test_oktmo_checker_before_2024(
     oktmo: CBC,
     payment_type: PaymentType,
     payer_status: PayerStatus,
@@ -533,14 +559,34 @@ class TestTaxPeriodChecker(BaseModelChecker):
         ('2' * 11, PaymentType.BUDGET_OTHER, '01', TaxPeriodValidationBOValueLenError),
         (None, PaymentType.CUSTOMS, '01', TaxPeriodValidationCustomsEmptyNotAllowed),
         ('2022022', PaymentType.CUSTOMS, '01', TaxPeriodValidationCustomsValueLenError),
-        (None, PaymentType.FNS, '02', TaxPeriodValidationFNS02EmptyNotAllowed),
         ('1', PaymentType.FNS, '01', TaxPeriodValidationFNS01OnlyEmpty),
         ('1', PaymentType.FNS, '13', TaxPeriodValidationFNS01OnlyEmpty),
         (None, PaymentType.FNS, '30', TaxPeriodValidationFNSEmptyNotAllowed),
-        ('1' * 9, PaymentType.FNS, '30', TaxPeriodValidationFNSValueLenError),
     ]
 )
 def test_tax_period_checker(
+    tax_period: TaxPeriod,
+    payment_type: PaymentType,
+    payer_status: PayerStatus,
+    exception: Type[Exception]
+) -> None:
+    try:
+        TestTaxPeriodChecker(tax_period=tax_period, payment_type=payment_type, payer_status=payer_status)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        assert exception is None
+
+
+@freeze_time(datetime(CHANGE_YEAR - 1, 12, 31))
+@pytest.mark.parametrize(
+    'tax_period, payment_type, payer_status, exception',
+    [
+        (None, PaymentType.FNS, '02', TaxPeriodValidationFNS02EmptyNotAllowed),
+        ('1' * 9, PaymentType.FNS, '02', TaxPeriodValidationFNSValueLenError),
+    ]
+)
+def test_tax_period_checker_before_2024(
     tax_period: TaxPeriod,
     payment_type: PaymentType,
     payer_status: PayerStatus,

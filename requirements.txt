@@ -6,3 +6,4 @@ mypy==0.812
 flake8==3.8.4
 isort==5.7.0
 importlib-metadata<5.0
+freezegun==1.2.2
