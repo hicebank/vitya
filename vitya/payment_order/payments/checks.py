@@ -362,7 +362,7 @@ def check_reason(
         return None
     if payment_type == PaymentType.CUSTOMS and value not in CUSTOMS_REASONS:
         raise ReasonValidationValueErrorCustoms
-    if payment_type == PaymentType.FNS and value and value != '0' and date.today().year >= 2024:
+    if payment_type == PaymentType.FNS and value and value != '0':
         raise ReasonValidationValueErrorFNS
     return value
 
