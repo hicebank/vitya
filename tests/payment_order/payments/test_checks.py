@@ -504,31 +504,13 @@ def test_check_oktmo(
         (None, PaymentType.FL, nullcontext(), None),
         (None, PaymentType.CUSTOMS, nullcontext(), None),
         (None, PaymentType.BUDGET_OTHER, nullcontext(), None),
-        ('ПК', PaymentType.FNS, nullcontext(), 'ПК'),
         (None, PaymentType.FNS, nullcontext(), None),
         ('ПК', PaymentType.BUDGET_OTHER, nullcontext(), 'ПК'),
         ('AИ', PaymentType.CUSTOMS, pytest.raises(ReasonValidationValueErrorCustoms), None),
-    ]
-
-)
-def test_check_reason(
-    value: Optional[Reason],
-    payment_type: PaymentType,
-    exception_handler: ContextManager,
-    expected_value: Optional[Reason],
-) -> None:
-    with exception_handler:
-        assert expected_value == check_reason(value=value, payment_type=payment_type)
-
-
-@freeze_time(datetime(CHANGE_YEAR, 1, 1))
-@pytest.mark.parametrize(
-    'value, payment_type, exception_handler, expected_value',
-    [
         ('ПК', PaymentType.FNS, pytest.raises(ReasonValidationValueErrorFNS), None),
     ]
 )
-def test_future_check_reason(
+def test_check_reason(
     value: Optional[Reason],
     payment_type: PaymentType,
     exception_handler: ContextManager,
