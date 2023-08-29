@@ -146,16 +146,31 @@ def test_check_account_by_bic(
         check_account_by_bic(account_number=account_number, bic=bic)
 
 
-@freeze_time(datetime(2023, 12, 31))
+@pytest.mark.parametrize(
+    'value, payment_type, exception_handler, expected_value',
+    [
+        ('03', PaymentType.BUDGET_OTHER, pytest.raises(OperationKindValidationBudgetValueError), None),
+    ]
+)
+def test_check_operation_kind(
+    value: OperationKind,
+    payment_type: PaymentType,
+    exception_handler: ContextManager,
+    expected_value: str
+) -> None:
+    with exception_handler:
+        assert check_operation_kind(value=value, payment_type=payment_type) == expected_value
+
+
+@freeze_time(datetime(CHANGE_YEAR - 1, 12, 31))
 @pytest.mark.parametrize(
     'value, payment_type, exception_handler, expected_value',
     [
         ('02', PaymentType.IP, nullcontext(), '02'),
         ('02', PaymentType.BUDGET_OTHER, nullcontext(), '02'),
-        ('03', PaymentType.BUDGET_OTHER, pytest.raises(OperationKindValidationBudgetValueError), None),
     ]
 )
-def test_check_operation_kind(
+def test_check_operation_kind_before_2024(
     value: OperationKind,
     payment_type: PaymentType,
     exception_handler: ContextManager,
@@ -185,7 +200,6 @@ def test_check_purpose_code(
         assert check_purpose_code(value=value, payment_type=payment_type) == expected_value
 
 
-@freeze_time(datetime(2023, 12, 31))
 @pytest.mark.parametrize(
     'value, payment_type, receiver_account, payer_status, payer_inn, exception_handler, expected_value',
     [
@@ -220,6 +234,31 @@ def test_check_purpose_code(
             nullcontext(),
             VALID_UIN,
         ),
+    ]
+)
+def test_check_uin(
+    value: Optional[str],
+    receiver_account: AccountNumber,
+    payment_type: PaymentType,
+    payer_status: PayerStatus,
+    payer_inn: str,
+    exception_handler: Optional[Type[Exception]],
+    expected_value: str
+) -> None:
+    with exception_handler:
+        assert check_uin(
+            value=value,
+            receiver_account=receiver_account,
+            payment_type=payment_type,
+            payer_inn=payer_inn,
+            payer_status=payer_status,
+        ) == expected_value
+
+
+@freeze_time(datetime(CHANGE_YEAR - 1, 12, 31))
+@pytest.mark.parametrize(
+    'value, payment_type, receiver_account, payer_status, payer_inn, exception_handler, expected_value',
+    [
         (
             VALID_UIN,
             PaymentType.FNS,
@@ -240,7 +279,7 @@ def test_check_purpose_code(
         ),
     ]
 )
-def test_check_uin(
+def test_check_uin_before_2024(
     value: Optional[str],
     receiver_account: AccountNumber,
     payment_type: PaymentType,
@@ -499,7 +538,6 @@ def test_future_check_reason(
         assert expected_value == check_reason(value=value, payment_type=payment_type)
 
 
-@freeze_time(datetime(2023, 12, 31))
 @pytest.mark.parametrize(
     'value, payment_type, payer_status, exception_handler, expected_value',
     [
@@ -510,19 +548,35 @@ def test_future_check_reason(
         (None, PaymentType.CUSTOMS, '01', pytest.raises(TaxPeriodValidationCustomsEmptyNotAllowed), None),
         ('20220222', PaymentType.CUSTOMS, '01', nullcontext(), '20220222'),
         ('2022022', PaymentType.CUSTOMS, '01', pytest.raises(TaxPeriodValidationCustomsValueLenError), None),
-
-        (None, PaymentType.FNS, '02', pytest.raises(TaxPeriodValidationFNS02EmptyNotAllowed), None),
-        ('1' * 10, PaymentType.FNS, '02', nullcontext(), '1' * 10),
         ('1', PaymentType.FNS, '01', pytest.raises(TaxPeriodValidationFNS01OnlyEmpty), None),
         ('1', PaymentType.FNS, '13', pytest.raises(TaxPeriodValidationFNS01OnlyEmpty), None),
         (None, PaymentType.FNS, '01', nullcontext(), None),
         (None, PaymentType.FNS, '13', nullcontext(), None),
         (None, PaymentType.FNS, '30', pytest.raises(TaxPeriodValidationFNSEmptyNotAllowed), None),
-        ('1' * 9, PaymentType.FNS, '02', pytest.raises(TaxPeriodValidationFNSValueLenError), None),
         ('1' * 10, PaymentType.FNS, '30', nullcontext(), '1' * 10),
     ]
 )
 def test_check_tax_period(
+    value: Optional[TaxPeriod],
+    payment_type: PaymentType,
+    payer_status: PayerStatus,
+    exception_handler: ContextManager,
+    expected_value: Optional[TaxPeriod],
+) -> None:
+    with exception_handler:
+        assert expected_value == check_tax_period(value=value, payment_type=payment_type, payer_status=payer_status)
+
+
+@freeze_time(datetime(CHANGE_YEAR - 1, 12, 31))
+@pytest.mark.parametrize(
+    'value, payment_type, payer_status, exception_handler, expected_value',
+    [
+        (None, PaymentType.FNS, '02', pytest.raises(TaxPeriodValidationFNS02EmptyNotAllowed), None),
+        ('1' * 10, PaymentType.FNS, '02', nullcontext(), '1' * 10),
+        ('1' * 9, PaymentType.FNS, '02', pytest.raises(TaxPeriodValidationFNSValueLenError), None),
+    ]
+)
+def test_check_tax_period_before_2024(
     value: Optional[TaxPeriod],
     payment_type: PaymentType,
     payer_status: PayerStatus,
