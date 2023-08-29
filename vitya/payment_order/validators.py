@@ -1,7 +1,7 @@
 import re
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import Optional, Union
-from datetime import date
 
 from vitya.payment_order.errors import (
     AccountNumberValidationDigitsOnlyError,
@@ -43,11 +43,11 @@ from vitya.payment_order.errors import (
     UINValidationTypeError,
 )
 from vitya.payment_order.payments.constants import (
+    CHANGE_YEAR,
     CHARS_FOR_PURPOSE,
     PAYER_STATUSES,
     PAYER_STATUSES_AFTER_2024,
     REPLACE_CHARS_FOR_SPACE,
-    CHANGE_YEAR,
 )
 
 

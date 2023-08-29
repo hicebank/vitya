@@ -100,19 +100,19 @@ class BIC(FieldMixin, str):
 class OGRN(FieldMixin, str):
     @classmethod
     def _validate(cls, value: str) -> str:
-        return _validate_wrapper(validate_ogrn, "ogrn", value)
+        return _validate_wrapper(validate_ogrn, 'ogrn', value)
 
 
 class OGRNIP(FieldMixin, str):
     @classmethod
     def _validate(cls, value: str) -> str:
-        return _validate_wrapper(validate_ogrnip, "ogrn_ip", value)
+        return _validate_wrapper(validate_ogrnip, 'ogrn_ip', value)
 
 
 class SNILS(FieldMixin, str):
     @classmethod
     def _validate(cls, value: str) -> str:
-        return _validate_wrapper(validate_snils, "snils", value)
+        return _validate_wrapper(validate_snils, 'snils', value)
 
 
 class OKTMO(FieldMixin, str):

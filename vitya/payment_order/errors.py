@@ -1,5 +1,5 @@
-from typing import Any
 from datetime import date
+from typing import Any
 
 from pydantic.errors import PydanticTypeError, PydanticValueError
 
@@ -18,14 +18,14 @@ from vitya.errors_base import (
 )
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.payments.constants import (
+    CHANGE_YEAR,
     CUSTOMS_REASONS,
     DOCUMENT_NUMBERS,
+    FNS_KPP,
+    FTS_KPP,
+    FTS_OKTMO,
     PAYER_STATUSES,
     PAYER_STATUSES_AFTER_2024,
-    FTS_KPP,
-    FNS_KPP,
-    FTS_OKTMO,
-    CHANGE_YEAR,
 )
 
 

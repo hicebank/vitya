@@ -1,9 +1,9 @@
 from contextlib import nullcontext
-from typing import ContextManager, Optional, Type
 from datetime import datetime
+from typing import ContextManager, Optional, Type
 
-from freezegun import freeze_time
 import pytest
+from freezegun import freeze_time
 
 from tests.helpers import parametrize_with_dict
 from tests.payment_order.testdata import (
@@ -36,8 +36,8 @@ from vitya.payment_order.errors import (
     DocumentNumberValidationFNSOnlyEmptyError,
     OKTMOValidationEmptyNotAllowed,
     OKTMOValidationFNSEmptyNotAllowed,
-    OKTMOValidationZerosNotAllowed,
     OKTMOValidationFTS,
+    OKTMOValidationZerosNotAllowed,
     OperationKindValidationBudgetValueError,
     PayerINNValidationCustomsLen10Error,
     PayerINNValidationCustomsLen12Error,
@@ -60,10 +60,10 @@ from vitya.payment_order.errors import (
     ReceiverINNValidationLELenError,
     ReceiverINNValidationNonEmptyError,
     ReceiverKPPValidationEmptyNotAllowed,
-    ReceiverKPPValidationOnlyEmptyError,
-    ReceiverKPPValidationStartsWithZeros,
     ReceiverKPPValidationFNS,
     ReceiverKPPValidationFTS,
+    ReceiverKPPValidationOnlyEmptyError,
+    ReceiverKPPValidationStartsWithZeros,
     TaxPeriodValidationBOValueLenError,
     TaxPeriodValidationCustomsEmptyNotAllowed,
     TaxPeriodValidationCustomsValueLenError,
@@ -106,7 +106,12 @@ from vitya.payment_order.payments.checks import (
     check_tax_period,
     check_uin,
 )
-from vitya.payment_order.payments.constants import FNS_RECEIVER_ACCOUNT_NUMBER, FNS_KPP, FTS_OKTMO, CHANGE_YEAR
+from vitya.payment_order.payments.constants import (
+    CHANGE_YEAR,
+    FNS_KPP,
+    FNS_RECEIVER_ACCOUNT_NUMBER,
+    FTS_OKTMO,
+)
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 

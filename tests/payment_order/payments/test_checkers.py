@@ -1,9 +1,9 @@
-from typing import Optional, Tuple, Type
 from datetime import datetime
+from typing import Optional, Tuple, Type
 
 import pytest
-from pydantic import ValidationError
 from freezegun import freeze_time
+from pydantic import ValidationError
 
 from tests.helpers import parametrize_with_dict
 from tests.payment_order.testdata import (
@@ -89,7 +89,11 @@ from vitya.payment_order.payments.checkers import (
     TaxPeriodChecker,
     UINChecker,
 )
-from vitya.payment_order.payments.constants import FNS_RECEIVER_ACCOUNT_NUMBER, FTS_KPP, CHANGE_YEAR
+from vitya.payment_order.payments.constants import (
+    CHANGE_YEAR,
+    FNS_RECEIVER_ACCOUNT_NUMBER,
+    FTS_KPP,
+)
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
 

@@ -1,6 +1,6 @@
 import re
-from typing import Optional
 from datetime import date
+from typing import Optional
 
 from vitya.payment_order.enums import AccountKind, PaymentType
 from vitya.payment_order.errors import (
@@ -21,8 +21,8 @@ from vitya.payment_order.errors import (
     DocumentNumberValidationFNSOnlyEmptyError,
     OKTMOValidationEmptyNotAllowed,
     OKTMOValidationFNSEmptyNotAllowed,
-    OKTMOValidationZerosNotAllowed,
     OKTMOValidationFTS,
+    OKTMOValidationZerosNotAllowed,
     OperationKindValidationBudgetValueError,
     PayerINNValidationCustomsLen10Error,
     PayerINNValidationCustomsLen12Error,
@@ -47,10 +47,10 @@ from vitya.payment_order.errors import (
     ReceiverINNValidationLELenError,
     ReceiverINNValidationNonEmptyError,
     ReceiverKPPValidationEmptyNotAllowed,
-    ReceiverKPPValidationOnlyEmptyError,
-    ReceiverKPPValidationStartsWithZeros,
     ReceiverKPPValidationFNS,
     ReceiverKPPValidationFTS,
+    ReceiverKPPValidationOnlyEmptyError,
+    ReceiverKPPValidationStartsWithZeros,
     TaxPeriodValidationBOValueLenError,
     TaxPeriodValidationCustomsEmptyNotAllowed,
     TaxPeriodValidationCustomsValueLenError,
@@ -85,13 +85,13 @@ from vitya.payment_order.fields import (
     TaxPeriod,
 )
 from vitya.payment_order.payments.constants import (
+    CHANGE_YEAR,
     CUSTOMS_REASONS,
     DOCUMENT_NUMBERS,
-    FNS_RECEIVER_ACCOUNT_NUMBER,
     FNS_KPP,
+    FNS_RECEIVER_ACCOUNT_NUMBER,
     FTS_KPP,
     FTS_OKTMO,
-    CHANGE_YEAR,
 )
 from vitya.payment_order.payments.tools import get_account_kind
 from vitya.pydantic_fields import BIC, OKTMO
@@ -443,7 +443,7 @@ def check_document_number(
         if value is not None:
             if len(value) > 15:
                 raise DocumentNumberValidationBOValueLenError
-            if len(value) < 3 or value[2] != ";" or value[:2] not in DOCUMENT_NUMBERS:
+            if len(value) < 3 or value[2] != ';' or value[:2] not in DOCUMENT_NUMBERS:
                 raise DocumentNumberValidationBOValueError
         return value
     elif payment_type == PaymentType.CUSTOMS:

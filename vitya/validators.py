@@ -173,9 +173,9 @@ def validate_snils(snils: str) -> None:
 
     checksum = checksum % 101
     if checksum == 100:
-        checksum_str = "00"
+        checksum_str = '00'
     elif checksum < 10:
-        checksum_str = f"0{checksum}"
+        checksum_str = f'0{checksum}'
     else:
         checksum_str = str(checksum)
 
