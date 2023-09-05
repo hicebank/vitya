@@ -454,7 +454,7 @@ def check_document_number(
                 raise DocumentNumberValidationBOValueError
         return value
     elif payment_type == PaymentType.CUSTOMS:
-        if reason == '00' and (value is None or value != '00'):
+        if reason == '00' and value is not None and value not in ['00', '0']:
             raise DocumentNumberValidationCustoms00ValueError
         if reason in {'ПК', 'УВ', 'ТГ', 'ТБ', 'ТД', 'ПВ'} and value and len(value) > 7:
             raise DocumentNumberValidationCustomsValueLen7Error

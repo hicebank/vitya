@@ -714,7 +714,7 @@ def test_check_tax_period_before_2024(
         },
         {
             'case_id': 10,
-            'value': None,
+            'value': '1',
             'payment_type': PaymentType.CUSTOMS,
             'payer_status': '24',
             'receiver_account': '03212',
