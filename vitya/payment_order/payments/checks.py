@@ -327,18 +327,30 @@ def check_cbc(
 def check_oktmo(
     value: Optional[OKTMO],
     payment_type: PaymentType,
-    payer_status: Optional[PayerStatus],
 ) -> Optional[OKTMO]:
     if not payment_type.is_budget:
-        return None
-
-    if payment_type == PaymentType.FNS and payer_status in {'01', '13'} and value is None:
         return None
 
     if payment_type == PaymentType.CUSTOMS and value != FTS_OKTMO:
         raise OKTMOValidationFTS
 
     if payment_type in {PaymentType.CUSTOMS, PaymentType.BUDGET_OTHER} and value is None:
+        return None
+
+    if value is None:
+        raise OKTMOValidationEmptyNotAllowed
+
+    if all(c == '0' for c in value):
+        raise OKTMOValidationZerosNotAllowed
+    return value
+
+
+def check_oktmo_with_payer_status(
+    value: Optional[OKTMO],
+    payment_type: PaymentType,
+    payer_status: Optional[PayerStatus],
+) -> Optional[OKTMO]:
+    if payment_type == PaymentType.FNS and payer_status in {'01', '13'} and value is None:
         return None
 
     if (
@@ -349,11 +361,6 @@ def check_oktmo(
     ):
         raise OKTMOValidationFNSEmptyNotAllowed
 
-    if value is None:
-        raise OKTMOValidationEmptyNotAllowed
-
-    if all(c == '0' for c in value):
-        raise OKTMOValidationZerosNotAllowed
     return value
 
 
