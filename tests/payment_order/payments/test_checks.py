@@ -92,6 +92,7 @@ from vitya.payment_order.payments.checks import (
     check_document_date,
     check_document_number,
     check_oktmo,
+    check_oktmo_with_payer_status,
     check_operation_kind,
     check_payer_inn,
     check_payer_kpp,
@@ -478,6 +479,28 @@ def test_check_cbc(
 
 
 @pytest.mark.parametrize(
+    'value, payment_type, exception_handler, expected_value',
+    [
+        (None, PaymentType.FL, nullcontext(), None),
+        (FTS_OKTMO, PaymentType.CUSTOMS, nullcontext(), FTS_OKTMO),
+        (None, PaymentType.BUDGET_OTHER, nullcontext(), None),
+        (None, PaymentType.FNS, pytest.raises(OKTMOValidationEmptyNotAllowed), None),
+        ('0' * 8, PaymentType.FNS, pytest.raises(OKTMOValidationZerosNotAllowed), None),
+        (VALID_OKTMO, PaymentType.CUSTOMS, pytest.raises(OKTMOValidationFTS), None),
+        (VALID_OKTMO, PaymentType.FNS, nullcontext(), VALID_OKTMO),
+    ]
+)
+def test_check_oktmo(
+    value: Optional[OKTMO],
+    payment_type: PaymentType,
+    exception_handler: ContextManager,
+    expected_value: Optional[OKTMO],
+) -> None:
+    with exception_handler:
+        assert expected_value == check_oktmo(value=value, payment_type=payment_type)
+
+
+@pytest.mark.parametrize(
     'value, payment_type, payer_status, exception_handler, expected_value',
     [
         (None, PaymentType.FL, '01', nullcontext(), None),
@@ -486,13 +509,10 @@ def test_check_cbc(
         (FTS_OKTMO, PaymentType.CUSTOMS, '13', nullcontext(), FTS_OKTMO),
         (None, PaymentType.BUDGET_OTHER, '13', nullcontext(), None),
         (None, PaymentType.FNS, '02', pytest.raises(OKTMOValidationFNSEmptyNotAllowed), None),
-        (None, PaymentType.FNS, '06', pytest.raises(OKTMOValidationEmptyNotAllowed), None),
-        ('0' * 8, PaymentType.FNS, '06', pytest.raises(OKTMOValidationZerosNotAllowed), None),
-        (VALID_OKTMO, PaymentType.CUSTOMS, '13', pytest.raises(OKTMOValidationFTS), None),
         (VALID_OKTMO, PaymentType.FNS, '06', nullcontext(), VALID_OKTMO),
     ]
 )
-def test_check_oktmo(
+def test_check_oktmo_with_payer_status(
     value: Optional[OKTMO],
     payment_type: PaymentType,
     payer_status: PayerStatus,
@@ -500,7 +520,11 @@ def test_check_oktmo(
     expected_value: Optional[OKTMO],
 ) -> None:
     with exception_handler:
-        assert expected_value == check_oktmo(value=value, payment_type=payment_type, payer_status=payer_status)
+        assert expected_value == check_oktmo_with_payer_status(
+            value=value,
+            payment_type=payment_type,
+            payer_status=payer_status
+        )
 
 
 @pytest.mark.parametrize(

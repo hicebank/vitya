@@ -77,6 +77,7 @@ from vitya.payment_order.payments.checkers import (
     DocumentDateChecker,
     DocumentNumberChecker,
     OKTMOChecker,
+    OKTMOWithPayerStatusChecker,
     OperationKindChecker,
     PayerINNChecker,
     PayerKPPChecker,
@@ -466,28 +467,36 @@ def test_cbc_checker(
 class TestOktmoChecker(BaseModelChecker):
     oktmo: Optional[OKTMO]
     payment_type: PaymentType
+
+    __extra_wired_checkers__ = [
+        (OKTMOChecker, ['oktmo', 'payment_type']),
+    ]
+
+
+class TestOktmoWithPayerStatusChecker(BaseModelChecker):
+    oktmo: Optional[OKTMO]
+    payment_type: PaymentType
     payer_status: PayerStatus
 
     __extra_wired_checkers__ = [
-        (OKTMOChecker, ['oktmo', 'payment_type', 'payer_status']),
+        (OKTMOWithPayerStatusChecker, ['oktmo', 'payment_type', 'payer_status']),
     ]
 
 
 @pytest.mark.parametrize(
-    'oktmo, payment_type, payer_status, exception',
+    'oktmo, payment_type, exception',
     [
-        (None, PaymentType.FNS, '06', OKTMOValidationEmptyNotAllowed),
-        ('0' * 8, PaymentType.FNS, '06', OKTMOValidationZerosNotAllowed)
+        (None, PaymentType.FNS, OKTMOValidationEmptyNotAllowed),
+        ('0' * 8, PaymentType.FNS, OKTMOValidationZerosNotAllowed)
     ]
 )
 def test_oktmo_checker(
     oktmo: CBC,
     payment_type: PaymentType,
-    payer_status: PayerStatus,
     exception: Type[Exception]
 ) -> None:
     try:
-        TestOktmoChecker(oktmo=oktmo, payment_type=payment_type, payer_status=payer_status)
+        TestOktmoChecker(oktmo=oktmo, payment_type=payment_type)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:
@@ -508,7 +517,7 @@ def test_oktmo_checker_before_2024(
     exception: Type[Exception]
 ) -> None:
     try:
-        TestOktmoChecker(oktmo=oktmo, payment_type=payment_type, payer_status=payer_status)
+        TestOktmoWithPayerStatusChecker(oktmo=oktmo, payment_type=payment_type, payer_status=payer_status)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:
