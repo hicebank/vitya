@@ -685,7 +685,7 @@ class DocumentNumberCheckerChecker(BaseModelChecker):
             'exception': DocumentNumberValidationBOValueError,
         },
         {
-            'document_number': None,
+            'document_number': '1',
             'payment_type': PaymentType.CUSTOMS,
             'payer_status': '24',
             'receiver_account': IP_ACCOUNT,
