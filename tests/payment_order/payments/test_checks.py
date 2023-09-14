@@ -508,11 +508,32 @@ def test_check_oktmo(
         (None, PaymentType.FNS, '13', nullcontext(), None),
         (FTS_OKTMO, PaymentType.CUSTOMS, '13', nullcontext(), FTS_OKTMO),
         (None, PaymentType.BUDGET_OTHER, '13', nullcontext(), None),
-        (None, PaymentType.FNS, '02', pytest.raises(OKTMOValidationFNSEmptyNotAllowed), None),
         (VALID_OKTMO, PaymentType.FNS, '06', nullcontext(), VALID_OKTMO),
     ]
 )
 def test_check_oktmo_with_payer_status(
+    value: Optional[OKTMO],
+    payment_type: PaymentType,
+    payer_status: PayerStatus,
+    exception_handler: ContextManager,
+    expected_value: Optional[OKTMO],
+) -> None:
+    with exception_handler:
+        assert expected_value == check_oktmo_with_payer_status(
+            value=value,
+            payment_type=payment_type,
+            payer_status=payer_status
+        )
+
+
+@freeze_time(datetime(CHANGE_YEAR - 1, 12, 31))
+@pytest.mark.parametrize(
+    'value, payment_type, payer_status, exception_handler, expected_value',
+    [
+        (None, PaymentType.FNS, '02', pytest.raises(OKTMOValidationFNSEmptyNotAllowed), None),
+    ]
+)
+def test_check_oktmo_with_payer_status_before_2024(
     value: Optional[OKTMO],
     payment_type: PaymentType,
     payer_status: PayerStatus,
