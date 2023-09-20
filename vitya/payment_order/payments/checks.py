@@ -334,7 +334,7 @@ def check_oktmo(
     if payment_type == PaymentType.CUSTOMS and value != FTS_OKTMO:
         raise OKTMOValidationFTS
 
-    if payment_type in {PaymentType.CUSTOMS, PaymentType.BUDGET_OTHER} and value is None:
+    if payment_type in {PaymentType.FNS, PaymentType.BUDGET_OTHER} and value is None:
         return None
 
     if value is None:

@@ -484,7 +484,7 @@ def test_check_cbc(
         (None, PaymentType.FL, nullcontext(), None),
         (FTS_OKTMO, PaymentType.CUSTOMS, nullcontext(), FTS_OKTMO),
         (None, PaymentType.BUDGET_OTHER, nullcontext(), None),
-        (None, PaymentType.FNS, pytest.raises(OKTMOValidationEmptyNotAllowed), None),
+        (None, PaymentType.FNS, nullcontext(), None),
         ('0' * 8, PaymentType.FNS, pytest.raises(OKTMOValidationZerosNotAllowed), None),
         (VALID_OKTMO, PaymentType.CUSTOMS, pytest.raises(OKTMOValidationFTS), None),
         (VALID_OKTMO, PaymentType.FNS, nullcontext(), VALID_OKTMO),
