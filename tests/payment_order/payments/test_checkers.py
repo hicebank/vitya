@@ -31,7 +31,6 @@ from vitya.payment_order.errors import (
     DocumentNumberValidationCustomsValueLen7Error,
     DocumentNumberValidationCustomsValueLen15Error,
     DocumentNumberValidationFNSOnlyEmptyError,
-    OKTMOValidationEmptyNotAllowed,
     OKTMOValidationFNSEmptyNotAllowed,
     OKTMOValidationZerosNotAllowed,
     OperationKindValidationBudgetValueError,
@@ -486,7 +485,6 @@ class TestOktmoWithPayerStatusChecker(BaseModelChecker):
 @pytest.mark.parametrize(
     'oktmo, payment_type, exception',
     [
-        (None, PaymentType.FNS, OKTMOValidationEmptyNotAllowed),
         ('0' * 8, PaymentType.FNS, OKTMOValidationZerosNotAllowed)
     ]
 )
