@@ -31,7 +31,6 @@ from vitya.payment_order.errors import (
     DocumentNumberValidationCustomsValueLen7Error,
     DocumentNumberValidationCustomsValueLen15Error,
     DocumentNumberValidationFNSOnlyEmptyError,
-    OKTMOValidationEmptyNotAllowed,
     OKTMOValidationFNSEmptyNotAllowed,
     OKTMOValidationZerosNotAllowed,
     OperationKindValidationBudgetValueError,
