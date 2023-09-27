@@ -34,10 +34,10 @@ from vitya.payment_order.errors import (
     DocumentNumberValidationCustomsValueLen7Error,
     DocumentNumberValidationCustomsValueLen15Error,
     DocumentNumberValidationFNSOnlyEmptyError,
+    OKTMOValidationEmptyNotAllowed,
     OKTMOValidationFNSEmptyNotAllowed,
     OKTMOValidationFTS,
     OKTMOValidationZerosNotAllowed,
-    OKTMOValidationEmptyNotAllowed,
     OperationKindValidationBudgetValueError,
     PayerINNValidationCustomsLen10Error,
     PayerINNValidationCustomsLen12Error,
@@ -84,8 +84,8 @@ from vitya.payment_order.fields import (
     OperationKind,
     PayerStatus,
     Reason,
-    TaxPeriod,
     ReceiverAccountNumber,
+    TaxPeriod,
 )
 from vitya.payment_order.payments.checks import (
     check_account_by_bic,
