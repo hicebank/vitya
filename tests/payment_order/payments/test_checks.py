@@ -556,6 +556,7 @@ def test_check_oktmo_with_payer_status_before_2024(
         (VALID_OKTMO, PaymentType.FNS, '03100643000000019500', nullcontext(), VALID_OKTMO),
         (None, PaymentType.BUDGET_OTHER, '03100643000000019500', pytest.raises(OKTMOValidationEmptyNotAllowed), None),
         (None, PaymentType.BUDGET_OTHER, '03212643000000019500', nullcontext(), None),
+        (None, PaymentType.BUDGET_OTHER, '40503643000004019500', nullcontext(), None),
     ]
 )
 def test_check_oktmo_with_receiver_account_number(
