@@ -44,6 +44,7 @@ from vitya.payment_order.payments.checks import (
     check_document_number,
     check_oktmo,
     check_oktmo_with_payer_status,
+    check_oktmo_with_receiver_account_number,
     check_operation_kind,
     check_payer_inn,
     check_payer_kpp,
@@ -274,6 +275,25 @@ class OKTMOWithPayerStatusChecker(BaseChecker):
         check_oktmo_with_payer_status(value=self.oktmo, payment_type=self.payment_type, payer_status=self.payer_status)
 
 
+class OKTMOWithReceiverAccountNumberChecker(BaseChecker):
+    def __init__(
+        self,
+        oktmo: Optional[OKTMO],
+        payment_type: PaymentType,
+        receiver_account_number: ReceiverAccountNumber,
+    ) -> None:
+        self.oktmo = oktmo
+        self.payment_type = payment_type
+        self.receiver_account_number = receiver_account_number
+
+    def check(self) -> None:
+        check_oktmo_with_receiver_account_number(
+            value=self.oktmo,
+            payment_type=self.payment_type,
+            receiver_account_number=self.receiver_account_number
+        )
+
+
 class ReasonChecker(BaseChecker):
     def __init__(
         self,
@@ -365,6 +385,7 @@ class BaseModelChecker(BaseModel):
         CBCChecker,
         OKTMOChecker,
         OKTMOWithPayerStatusChecker,
+        OKTMOWithReceiverAccountNumberChecker,
         ReasonChecker,
         TaxPeriodChecker,
         DocumentNumberChecker,

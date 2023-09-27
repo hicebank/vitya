@@ -34,6 +34,7 @@ from vitya.payment_order.errors import (
     DocumentNumberValidationCustomsValueLen7Error,
     DocumentNumberValidationCustomsValueLen15Error,
     DocumentNumberValidationFNSOnlyEmptyError,
+    OKTMOValidationEmptyNotAllowed,
     OKTMOValidationFNSEmptyNotAllowed,
     OKTMOValidationFTS,
     OKTMOValidationZerosNotAllowed,
@@ -83,6 +84,7 @@ from vitya.payment_order.fields import (
     OperationKind,
     PayerStatus,
     Reason,
+    ReceiverAccountNumber,
     TaxPeriod,
 )
 from vitya.payment_order.payments.checks import (
@@ -92,6 +94,7 @@ from vitya.payment_order.payments.checks import (
     check_document_number,
     check_oktmo,
     check_oktmo_with_payer_status,
+    check_oktmo_with_receiver_account_number,
     check_operation_kind,
     check_payer_inn,
     check_payer_kpp,
@@ -544,6 +547,30 @@ def test_check_oktmo_with_payer_status_before_2024(
             value=value,
             payment_type=payment_type,
             payer_status=payer_status
+        )
+
+
+@pytest.mark.parametrize(
+    'value, payment_type, receiver_account_number, exception_handler, expected_value',
+    [
+        (VALID_OKTMO, PaymentType.FNS, '03100643000000019500', nullcontext(), VALID_OKTMO),
+        (None, PaymentType.BUDGET_OTHER, '03100643000000019500', pytest.raises(OKTMOValidationEmptyNotAllowed), None),
+        (None, PaymentType.BUDGET_OTHER, '03212643000000019500', nullcontext(), None),
+        (None, PaymentType.BUDGET_OTHER, '40503643000004019500', nullcontext(), None),
+    ]
+)
+def test_check_oktmo_with_receiver_account_number(
+    value: Optional[OKTMO],
+    payment_type: PaymentType,
+    receiver_account_number: ReceiverAccountNumber,
+    exception_handler: ContextManager,
+    expected_value: Optional[OKTMO],
+) -> None:
+    with exception_handler:
+        assert expected_value == check_oktmo_with_receiver_account_number(
+            value=value,
+            payment_type=payment_type,
+            receiver_account_number=receiver_account_number
         )
 
 
