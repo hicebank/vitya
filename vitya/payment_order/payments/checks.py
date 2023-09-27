@@ -375,7 +375,7 @@ def check_oktmo_with_receiver_account_number(
         if (
             receiver_account_number[:5] in OTHER_OKTMO_RECEIVER_ACCOUNT_PREFIXES
             or (
-                receiver_account_number[:5] in OTHER_OKTMO_RECEIVER_ACCOUNT_PREFIXES_2 
+                receiver_account_number[:5] in OTHER_OKTMO_RECEIVER_ACCOUNT_PREFIXES_2
                 and receiver_account_number[13] == 4
             )
         ):
