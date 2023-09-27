@@ -371,7 +371,7 @@ def check_oktmo_with_receiver_account_number(
     payment_type: PaymentType,
     receiver_account_number: ReceiverAccountNumber,
 ) -> Optional[OKTMO]:
-    if payment_type == PaymentType.BUDGET_OTHER:
+    if payment_type == PaymentType.BUDGET_OTHER and value is None or value == '0':
         if (
             receiver_account_number[:5] in OTHER_OKTMO_RECEIVER_ACCOUNT_PREFIXES
             or (
