@@ -92,6 +92,8 @@ from vitya.payment_order.payments.constants import (
     FNS_RECEIVER_ACCOUNT_NUMBER,
     FTS_KPP,
     FTS_OKTMO,
+    OTHER_OKTMO_RECEIVER_ACCOUNT_PREFIXES,
+    OTHER_OKTMO_RECEIVER_ACCOUNT_PREFIXES_2,
 )
 from vitya.payment_order.payments.tools import get_account_kind
 from vitya.pydantic_fields import BIC, OKTMO
@@ -360,6 +362,25 @@ def check_oktmo_with_payer_status(
         date.today().year < CHANGE_YEAR
     ):
         raise OKTMOValidationFNSEmptyNotAllowed
+
+    return value
+
+
+def check_oktmo_with_receiver_account_number(
+    value: Optional[OKTMO],
+    payment_type: PaymentType,
+    receiver_account_number: ReceiverAccountNumber,
+) -> Optional[OKTMO]:
+    if payment_type == PaymentType.BUDGET_OTHER:
+        if (
+            receiver_account_number[:5] in OTHER_OKTMO_RECEIVER_ACCOUNT_PREFIXES
+            or (
+                receiver_account_number[:5] in OTHER_OKTMO_RECEIVER_ACCOUNT_PREFIXES_2 
+                and receiver_account_number[13] == 4
+            )
+        ):
+            return None
+        raise OKTMOValidationEmptyNotAllowed
 
     return value
 
