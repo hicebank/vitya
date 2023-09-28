@@ -528,7 +528,7 @@ class CBCValidationValueCannotZerosOnly(CBCValidationError, IncorrectData):
     description_ru = 'не может состоять только из нулей'
 
 
-class OKTMOValidationEmptyNotAllowed(OKTMOValidationError):
+class OKTMOValidationEmptyNotAllowed(OKTMOValidationError, NeedRequiredField):
     target = 'oktmo'
     target_ru = 'ОКТМО'
     description = 'empty value is not allowed'
