@@ -211,7 +211,7 @@ def test_validate_purpose_code(
     'value, exception_handler, expected_value',
     [
         (None, pytest.raises(PurposeValidationTypeError), None),
-        ('', nullcontext(), '0'),
+        ('', nullcontext(), None),
         ('1' * 211, pytest.raises(PurposeValidationMaxLenError), None),
         ('的', nullcontext(), ''),
         ('some', nullcontext(), 'some'),

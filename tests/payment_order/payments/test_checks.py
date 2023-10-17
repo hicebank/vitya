@@ -51,6 +51,7 @@ from vitya.payment_order.errors import (
     PurposeCodeValidationFlError,
     PurposeCodeValidationNullError,
     PurposeValidationIPNDSError,
+    PurposeValidationValueEmptyErrorForNonFNS,
     ReasonValidationValueErrorCustoms,
     ReasonValidationValueErrorFNS,
     ReceiverAccountValidationBICValueError,
@@ -82,7 +83,9 @@ from vitya.payment_order.fields import (
     AccountNumber,
     DocumentNumber,
     OperationKind,
+    PayerAccountNumber,
     PayerStatus,
+    Purpose,
     Reason,
     ReceiverAccountNumber,
     TaxPeriod,
@@ -309,16 +312,27 @@ def test_check_uin_before_2024(
 @pytest.mark.parametrize(
     'value, payment_type, payer_account, exception_handler, expected_value',
     [
-        (None, PaymentType.IP, AccountNumber(IP_ACCOUNT), pytest.raises(PurposeValidationIPNDSError), None),
-        ('some', PaymentType.IP, AccountNumber(IP_ACCOUNT), pytest.raises(PurposeValidationIPNDSError), None),
-        ('some', PaymentType.BUDGET_OTHER, AccountNumber(IP_ACCOUNT), nullcontext(), 'some'),
-        ('some with НДС', PaymentType.IP, AccountNumber(IP_ACCOUNT), nullcontext(), 'some with НДС'),
+        (None, PaymentType.FNS, PayerAccountNumber(IP_ACCOUNT), nullcontext(), None),
+        *[
+            (
+                None,
+                payment_type,
+                PayerAccountNumber(IP_ACCOUNT),
+                pytest.raises(PurposeValidationValueEmptyErrorForNonFNS),
+                None,
+            )
+            for payment_type in PaymentType
+            if payment_type != PaymentType.FNS
+        ],
+        ('some', PaymentType.IP, PayerAccountNumber(IP_ACCOUNT), pytest.raises(PurposeValidationIPNDSError), None),
+        ('some', PaymentType.BUDGET_OTHER, PayerAccountNumber(IP_ACCOUNT), nullcontext(), 'some'),
+        ('some with НДС', PaymentType.IP, PayerAccountNumber(IP_ACCOUNT), nullcontext(), 'some with НДС'),
     ]
 )
 def test_check_purpose(
-    value: Optional[str],
+    value: Optional[Purpose],
     payment_type: PaymentType,
-    payer_account: AccountNumber,
+    payer_account: PayerAccountNumber,
     exception_handler: ContextManager,
     expected_value: str
 ) -> None:
