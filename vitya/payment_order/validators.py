@@ -209,12 +209,12 @@ def validate_purpose_code(value: int) -> int:
 _PURPOSE_TRANS_TABLE = str.maketrans({char: ' ' for char in REPLACE_CHARS_FOR_SPACE})
 
 
-def validate_purpose(value: str) -> str:
+def validate_purpose(value: str) -> Optional[str]:
     if not isinstance(value, str):
         raise PurposeValidationTypeError
 
     if value == '':
-        return '0'
+        return None
 
     value = ''.join(c for c in value.translate(_PURPOSE_TRANS_TABLE) if c in CHARS_FOR_PURPOSE)
     if len(value) > 210:

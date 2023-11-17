@@ -122,7 +122,7 @@ class Purpose(FieldMixin, str):
     """Назначение платежа (24)"""
 
     @classmethod
-    def _validate(cls, value: str) -> str:
+    def _validate(cls, value: str) -> Optional[str]:
         return validate_purpose(value)
 
 

@@ -261,6 +261,11 @@ class PurposeValidationIPNDSError(PurposeValidationError, IncorrectData):
     description_ru = 'для платежей ИП назначение должно содержать "НДС"'
 
 
+class PurposeValidationValueEmptyErrorForNonFNS(PurposeValidationError, NeedRequiredField):
+    description = 'value cannot be empty for non FNS payments'
+    description_ru = 'значение не может быть пустым для платежей не в ФНС'
+
+
 class PayerINNValidationError(INNValidationError):
     target = 'payer inn'
     target_ru = 'ИНН плательщика'

@@ -37,6 +37,7 @@ from vitya.payment_order.errors import (
     PurposeCodeValidationFlError,
     PurposeCodeValidationNullError,
     PurposeValidationIPNDSError,
+    PurposeValidationValueEmptyErrorForNonFNS,
     ReasonValidationValueErrorCustoms,
     ReasonValidationValueErrorFNS,
     ReceiverAccountValidationBICValueError,
@@ -183,6 +184,8 @@ def check_purpose(
     payer_account: PayerAccountNumber,
     payment_type: PaymentType,
 ) -> Optional[Purpose]:
+    if payment_type != PaymentType.FNS and value is None:
+        raise PurposeValidationValueEmptyErrorForNonFNS
     if (
         not payment_type.is_budget
         and get_account_kind(payer_account) == AccountKind.IP

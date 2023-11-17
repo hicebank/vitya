@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Optional, Type
 
 import pytest
 from pydantic import BaseModel
@@ -256,13 +256,13 @@ def test_purpose_code(
 
 
 class TestPurposeModel(BaseModel):
-    field: Purpose
+    field: Optional[Purpose]
 
 
 @pytest.mark.parametrize(
     'value, exception, expected',
     [
-        ('', None, '0'),
+        ('', None, None),
         ('1' * 211, PurposeValidationMaxLenError, None),
         ('的', None, ''),
         ('some', None, 'some'),
