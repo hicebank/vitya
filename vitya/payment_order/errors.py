@@ -301,7 +301,7 @@ class ReceiverINNValidationError(INNValidationError):
     target_ru = 'ИНН получателя'
 
 
-class ReceiverINNValidationNonEmptyError(ReceiverINNValidationError):
+class ReceiverINNValidationNonEmptyError(ReceiverINNValidationError, NeedRequiredField):
     description = 'cannot be empty'
     description_ru = 'не может быть пустым'
 
