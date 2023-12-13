@@ -321,12 +321,12 @@ class ReceiverINNValidationChameleonLenError(INNValidationLenError, ReceiverINNV
     description_ru = 'для платежей Хамелеону ИНН получателя должно быть пустым или содержать 12 или 10 символов'
 
 
-class ReceiverINNValidationIPLenError(ReceiverINNValidationError):
+class ReceiverINNValidationIPLenError(INNValidationLenError, ReceiverINNValidationError):
     description = 'for ip receiver inn must be 12'
     description_ru = 'для платежей ИП ИНН получателя должно быть 12 символов'
 
 
-class ReceiverINNValidationLELenError(ReceiverINNValidationError):
+class ReceiverINNValidationLELenError(INNValidationLenError, ReceiverINNValidationError):
     description = 'for fns, customs, bo and le inn must be 10'
     description_ru = 'для платежей в бюджет и платежей ЮЛ, ИНН должно быть 10 символов'
 
