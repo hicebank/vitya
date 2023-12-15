@@ -761,3 +761,15 @@ class BudgetPaymentForThirdPersonError(VityaDescribedError, PydanticValueError):
     target_ru = None
     description = 'budget payment can not for third person'
     description_ru = 'платеж в бюджет не может быть за третье лицо'
+
+
+class TypeOfIncomeValidationError(VityaDescribedError, PydanticValueError):
+    target = 'type of income'
+    target_ru = 'Код вида дохода'
+    description = 'type of income can be only in 1, 2, 3, 4, 5'
+    description_ru = 'код вида дохода может быть только 1, 2, 3, 4, 5'
+
+
+class TypeOfIncomeValidationTypeError(TypeOfIncomeValidationError):
+    description = 'must be str'
+    description_ru = 'должен быть строкой'

@@ -1,7 +1,7 @@
 from typing import Optional
 
 from tests.payment_order.testdata import LE_INN
-from vitya.error_description import AlertGenerator
+from vitya.error_description import AlertGenerator, AlertBody
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.fields import (
     Amount,
@@ -46,7 +46,9 @@ def test_alert_generator_not_none_field():
             dst_bic=ReceiverBIC('044525225'),
         )
     except Exception as e:
-        assert ALERT_GENERATOR.get_error_client_alerts(e) == ['Поле «Сумма» должно быть заполнено']
+        assert ALERT_GENERATOR.get_error_client_alerts(e) == [
+            AlertBody(alert='Поле «Сумма» должно быть заполнено', failed_field='amount')
+        ]
     else:
         raise RuntimeError
 
@@ -62,7 +64,7 @@ def test_alert_generator_incorrect_len():
         )
     except Exception as e:
         assert ALERT_GENERATOR.get_error_client_alerts(e) == [
-            'Поле «Сумма» содержит неправильное количество символов'
+            AlertBody(alert='Поле «Сумма» содержит неправильное количество символов', failed_field='amount')
         ]
     else:
         raise RuntimeError
@@ -79,7 +81,7 @@ def test_alert_generator_exact_field_len():
         )
     except Exception as e:
         assert ALERT_GENERATOR.get_error_client_alerts(e) == [
-            'Поле «Счет получателя» должно содержать ровно 20 символов'
+            AlertBody(alert='Поле «Счет получателя» должно содержать ровно 20 символов', failed_field='receiver account')
         ]
     else:
         raise RuntimeError
@@ -96,7 +98,7 @@ def test_alert_generator_incorrect_data():
         )
     except Exception as e:
         assert ALERT_GENERATOR.get_error_client_alerts(e) == [
-            'Поле «Сумма» содержит некорректные данные'
+            AlertBody(alert='Поле «Сумма» содержит некорректные данные', failed_field='amount')
         ]
     else:
         raise RuntimeError
@@ -117,7 +119,7 @@ def test_alert_generator_need_required_field():
         )
     except Exception as e:
         assert ALERT_GENERATOR.get_error_client_alerts(e) == [
-            'Поле «КПП плательщика» должно быть заполнено'
+            AlertBody(alert='Поле «КПП плательщика» должно быть заполнено', failed_field=None)
         ]
     else:
         raise RuntimeError

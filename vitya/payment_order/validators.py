@@ -41,6 +41,8 @@ from vitya.payment_order.errors import (
     UINValidationLenError,
     UINValidationOnlyZeroError,
     UINValidationTypeError,
+    TypeOfIncomeValidationError,
+    TypeOfIncomeValidationTypeError
 )
 from vitya.payment_order.payments.constants import (
     CHANGE_YEAR,
@@ -275,4 +277,14 @@ def validate_document_date(value: str) -> Optional[str]:
         raise DocumentDateValidationTypeError
     elif value in {'', '0'}:
         return None
+    return value
+
+
+def validate_type_of_income(value: str) -> Optional[str]:
+    if value in {'', None}:
+        return None
+    elif not isinstance(value, str):
+        raise TypeOfIncomeValidationTypeError
+    elif value not in {'1', '2', '3', '4', '5'}:
+        raise TypeOfIncomeValidationError
     return value

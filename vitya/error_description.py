@@ -31,6 +31,11 @@ class AlertKeyToFieldName(TypedDict):
     receiver_account_number: str
 
 
+class AlertBody(TypedDict):
+    alert: str
+    failed_field: str
+
+
 class AlertGenerator:
     _key_to_ru = {
         'amount': 'Сумма',
@@ -65,7 +70,7 @@ class AlertGenerator:
         if not isinstance(exc, ValidationError):
             alert = self._mixin_to_alert(exc)
             if alert is not None:
-                return [alert]
+                return [AlertBody(alert=alert, failed_field=getattr(exc, 'target', None))]
             return []
 
         result = []
@@ -74,15 +79,18 @@ class AlertGenerator:
                 for sub_error in error_wrapper.exc.errors:
                     alert = self._mixin_to_alert(sub_error)
                     if alert is not None:
-                        result.append(alert)
+                        result.append(AlertBody(alert=alert, failed_field=getattr(exc, 'target', None)))
             elif isinstance(error_wrapper.exc, (NoneIsNotAllowedError, MissingError)):
                 if len(error_wrapper.loc_tuple()) == 1:
                     field_name = error_wrapper.loc_tuple()[0]
                     if field_name in self._field_name_to_key:
                         target_ru = self._key_to_ru[self._field_name_to_key[field_name]]
-                        result.append(f'Поле «{target_ru}» должно быть заполнено')
+                        result.append(AlertBody(
+                            alert=f'Поле «{target_ru}» должно быть заполнено',
+                            failed_field=field_name
+                        ))
             else:
                 alert = self._mixin_to_alert(error_wrapper.exc)
                 if alert is not None:
-                    result.append(alert)
+                    result.append(AlertBody(alert=alert, failed_field=getattr(error_wrapper.exc, 'target', None)))
         return result
