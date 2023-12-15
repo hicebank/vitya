@@ -66,7 +66,7 @@ class AlertGenerator:
             )
         return None
 
-    def get_error_client_alerts(self, exc: Exception) -> List[str]:
+    def get_error_client_alerts(self, exc: Exception) -> List[AlertBody]:
         if not isinstance(exc, ValidationError):
             alert = self._mixin_to_alert(exc)
             if alert is not None:
@@ -87,7 +87,7 @@ class AlertGenerator:
                         target_ru = self._key_to_ru[self._field_name_to_key[field_name]]
                         result.append(AlertBody(
                             alert=f'Поле «{target_ru}» должно быть заполнено',
-                            failed_field=field_name
+                            failed_field=self._field_name_to_key[field_name]
                         ))
             else:
                 alert = self._mixin_to_alert(error_wrapper.exc)
