@@ -1,7 +1,7 @@
 from typing import Optional
 
 from tests.payment_order.testdata import LE_INN
-from vitya.error_description import AlertGenerator, AlertBody
+from vitya.error_description import AlertBody, AlertGenerator
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.fields import (
     Amount,

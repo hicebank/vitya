@@ -32,13 +32,13 @@ from vitya.payment_order.errors import (
     ReceiverValidationNameError,
     ReceiverValidationSizeError,
     TaxPeriodValidationTypeError,
+    TypeOfIncomeValidationError,
+    TypeOfIncomeValidationTypeError,
     UINValidationControlSumError,
     UINValidationDigitsOnlyError,
     UINValidationLenError,
     UINValidationOnlyZeroError,
     UINValidationTypeError,
-    TypeOfIncomeValidationError,
-    TypeOfIncomeValidationTypeError
 )
 from vitya.payment_order.validators import (
     validate_account_number,
@@ -56,9 +56,9 @@ from vitya.payment_order.validators import (
     validate_reason,
     validate_receiver,
     validate_tax_period,
+    validate_type_of_income,
     validate_uin,
     validate_uin_control_sum,
-    validate_type_of_income
 )
 
 

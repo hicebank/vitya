@@ -36,13 +36,13 @@ from vitya.payment_order.errors import (
     ReceiverValidationNameError,
     ReceiverValidationSizeError,
     TaxPeriodValidationTypeError,
+    TypeOfIncomeValidationError,
+    TypeOfIncomeValidationTypeError,
     UINValidationControlSumError,
     UINValidationDigitsOnlyError,
     UINValidationLenError,
     UINValidationOnlyZeroError,
     UINValidationTypeError,
-    TypeOfIncomeValidationError,
-    TypeOfIncomeValidationTypeError
 )
 from vitya.payment_order.payments.constants import (
     CHANGE_YEAR,

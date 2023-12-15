@@ -19,8 +19,8 @@ from vitya.payment_order.validators import (
     validate_receiver,
     validate_receiver_account_number,
     validate_tax_period,
-    validate_uin,
     validate_type_of_income,
+    validate_uin,
 )
 from vitya.pydantic_fields import BIC, INN, KPP, BoolWrapper, FieldMixin
 
