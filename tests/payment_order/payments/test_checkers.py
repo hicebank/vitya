@@ -317,7 +317,7 @@ class TestReceiverInnChecker(BaseModelChecker):
     'receiver_inn, payment_type, exception',
     [
         (LE_INN, PaymentType.IP, ReceiverINNValidationIPLenError),
-        (None, PaymentType.IP, ReceiverINNValidationIPLenError),
+        (None, PaymentType.IP, ReceiverINNValidationNonEmptyError),
         (LE_INN, PaymentType.FL, ReceiverINNValidationFLLenError),
         (None, PaymentType.CUSTOMS, ReceiverINNValidationNonEmptyError),
         (IP_INN, PaymentType.CUSTOMS, ReceiverINNValidationLELenError),

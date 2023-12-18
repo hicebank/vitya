@@ -233,6 +233,22 @@ def check_receiver_inn(
     value: Optional[ReceiverINN],
     payment_type: PaymentType,
 ) -> Optional[ReceiverINN]:
+    if payment_type in [
+        PaymentType.CUSTOMS,
+        PaymentType.FNS,
+        PaymentType.BUDGET_OTHER,
+        PaymentType.LE,
+        PaymentType.IP
+    ] and value is None:
+        raise ReceiverINNValidationNonEmptyError
+    if payment_type in [
+        PaymentType.CUSTOMS,
+        PaymentType.FNS,
+        PaymentType.BUDGET_OTHER,
+        PaymentType.LE
+    ] and len(value) != 10:
+        raise ReceiverINNValidationLELenError
+
     if payment_type == PaymentType.IP:
         if value is None or len(value) != 12:
             raise ReceiverINNValidationIPLenError
@@ -245,10 +261,6 @@ def check_receiver_inn(
         if value is not None and len(value) not in (10, 12):
             raise ReceiverINNValidationChameleonLenError
         return value
-    if value is None:
-        raise ReceiverINNValidationNonEmptyError
-    elif len(value) != 10:
-        raise ReceiverINNValidationLELenError
     return value
 
 

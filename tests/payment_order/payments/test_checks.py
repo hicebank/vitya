@@ -375,7 +375,7 @@ def test_check_payer_inn(
     [
         (IP_INN, PaymentType.IP, nullcontext(), IP_INN),
         (LE_INN, PaymentType.IP, pytest.raises(ReceiverINNValidationIPLenError), None),
-        (None, PaymentType.IP, pytest.raises(ReceiverINNValidationIPLenError), None),
+        (None, PaymentType.IP, pytest.raises(ReceiverINNValidationNonEmptyError), None),
 
         (None, PaymentType.FL, nullcontext(), None),
         (FL_INN, PaymentType.FL, nullcontext(), FL_INN),
