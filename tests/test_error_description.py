@@ -119,7 +119,7 @@ def test_alert_generator_need_required_field():
         )
     except Exception as e:
         assert ALERT_GENERATOR.get_error_client_alerts(e) == [
-            AlertBody(alert='Поле «КПП плательщика» должно быть заполнено', failed_field=None)
+            AlertBody(alert='Поле «КПП плательщика» должно быть заполнено', failed_field='payer kpp')
         ]
     else:
         raise RuntimeError
