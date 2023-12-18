@@ -70,7 +70,7 @@ class AlertGenerator:
         if not isinstance(exc, ValidationError):
             alert = self._mixin_to_alert(exc)
             if alert is not None:
-                return [AlertBody(alert=alert, failed_field=getattr(exc, 'target', None))]
+                return [AlertBody(alert=alert, failed_field=exc.target)]
             return []
 
         result = []
@@ -79,7 +79,7 @@ class AlertGenerator:
                 for sub_error in error_wrapper.exc.errors:
                     alert = self._mixin_to_alert(sub_error)
                     if alert is not None:
-                        result.append(AlertBody(alert=alert, failed_field=getattr(exc, 'target', None)))
+                        result.append(AlertBody(alert=alert, failed_field=sub_error.target))
             elif isinstance(error_wrapper.exc, (NoneIsNotAllowedError, MissingError)):
                 if len(error_wrapper.loc_tuple()) == 1:
                     field_name = error_wrapper.loc_tuple()[0]
@@ -92,5 +92,5 @@ class AlertGenerator:
             else:
                 alert = self._mixin_to_alert(error_wrapper.exc)
                 if alert is not None:
-                    result.append(AlertBody(alert=alert, failed_field=getattr(error_wrapper.exc, 'target', None)))
+                    result.append(AlertBody(alert=alert, failed_field=error_wrapper.exc.target))
         return result
