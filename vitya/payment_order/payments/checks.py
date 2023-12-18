@@ -246,7 +246,7 @@ def check_receiver_inn(
         PaymentType.FNS,
         PaymentType.BUDGET_OTHER,
         PaymentType.LE
-    ] and len(value) != 10:
+    ] and (value is None or len(value) != 10):
         raise ReceiverINNValidationLELenError
 
     if payment_type == PaymentType.IP:
