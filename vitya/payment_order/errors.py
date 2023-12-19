@@ -306,13 +306,13 @@ class ReceiverINNValidationNonEmptyError(ReceiverINNValidationError, NeedRequire
     description_ru = 'не может быть пустым'
 
 
-class ReceiverINNValidationFLenError(INNValidationLenError, ReceiverINNValidationError, ExactFieldLenError):
+class ReceiverINNValidationFLenError(ReceiverINNValidationError, ExactFieldLenError):
     required_len = 12
     description = 'for fl receiver inn must be 12'
     description_ru = 'для платежей ИП ИНН получателя должно быть длиной 12 символов'
 
 
-class ReceiverINNValidationFLLenError(INNValidationLenError, ReceiverINNValidationError, ExactFieldLenError):
+class ReceiverINNValidationFLLenError(ReceiverINNValidationError, ExactFieldLenError):
     required_len = 12
     description = 'for fl receiver inn must be empty or 12 chars'
     description_ru = 'для платежей ИП ИНН получателя должно быть пустым или содержать 12 символов'
@@ -323,13 +323,13 @@ class ReceiverINNValidationChameleonLenError(INNValidationLenError, ReceiverINNV
     description_ru = 'для платежей Хамелеону ИНН получателя должно быть пустым или содержать 12 или 10 символов'
 
 
-class ReceiverINNValidationIPLenError(INNValidationLenError, ReceiverINNValidationError, ExactFieldLenError):
+class ReceiverINNValidationIPLenError(ReceiverINNValidationError, ExactFieldLenError):
     required_len = 12
     description = 'for ip receiver inn must be 12'
     description_ru = 'для платежей ИП ИНН получателя должно быть 12 символов'
 
 
-class ReceiverINNValidationLELenError(INNValidationLenError, ReceiverINNValidationError, ExactFieldLenError):
+class ReceiverINNValidationLELenError(ReceiverINNValidationError, ExactFieldLenError):
     required_len = 10
     description = 'for fns, customs, bo and le inn must be 10'
     description_ru = 'для платежей в бюджет и платежей ЮЛ, ИНН должно быть 10 символов'
