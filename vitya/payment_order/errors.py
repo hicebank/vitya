@@ -402,6 +402,7 @@ class ReceiverAccountNumberValidationSizeError(
 class ReceiverAccountNumberValidationDigitsOnlyError(
     ReceiverAccountValidationError,
     AccountNumberValidationDigitsOnlyError,
+    IncorrectData
 ):
     pass
 
@@ -550,7 +551,7 @@ class OKTMOValidationFNSEmptyNotAllowed(OKTMOValidationEmptyNotAllowed, NeedRequ
     description_ru = 'для платежей в фнс со статусом плательщика "02" значение не может быть пустым'
 
 
-class OKTMOValidationZerosNotAllowed(OKTMOValidationError):
+class OKTMOValidationZerosNotAllowed(OKTMOValidationError, IncorrectData):
     description = 'cannot be all zeros'
     description_ru = 'не может состоять полностью из нулей'
 
