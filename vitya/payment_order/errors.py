@@ -93,7 +93,7 @@ class ReceiverValidationSizeError(ReceiverValidationError, CustomerValidationSiz
     pass
 
 
-class ReceiverValidationNameError(ReceiverValidationError):
+class ReceiverValidationNameError(ReceiverValidationError, IncorrectData):
     description = 'contains account number'
     description_ru = 'содержит номер счета'
 
