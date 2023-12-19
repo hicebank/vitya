@@ -184,7 +184,7 @@ def check_purpose(
     payer_account: PayerAccountNumber,
     payment_type: PaymentType,
 ) -> Optional[Purpose]:
-    if payment_type != PaymentType.FNS and value is None:
+    if payment_type != PaymentType.FNS and not value:
         raise PurposeValidationValueEmptyErrorForNonFNS
     if (
         not payment_type.is_budget
