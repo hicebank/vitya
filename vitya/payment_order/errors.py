@@ -409,6 +409,7 @@ class ReceiverAccountNumberValidationDigitsOnlyError(
 class ReceiverAccountValidationBICValueError(
     ReceiverAccountValidationError,
     AccountValidationBICValueError,
+    IncorrectData,
 ):
     pass
 
