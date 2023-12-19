@@ -283,7 +283,7 @@ def check_payer_status(
     if value is None:
         raise PayerStatusValidationNullNotAllowedError
 
-    if payment_type == PaymentType.CUSTOMS and for_third_person and value == '06':
+    if payment_type == PaymentType.CUSTOMS and for_third_person is False and value == '06':
         raise PayerStatusValidationCustoms05NotAllowedError
 
     return value
