@@ -71,6 +71,8 @@ def validate_inn_without_len(inn: str, is_ip: Optional[bool] = None):
     elif len(inn) == 5:
         return inn
 
+    return inn
+
 
 def validate_inn(inn: str, is_ip: Optional[bool] = None) -> Optional[str]:
     """

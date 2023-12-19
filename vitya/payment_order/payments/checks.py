@@ -64,6 +64,7 @@ from vitya.payment_order.errors import (
     UINValidationFNSValueZeroError,
     UINValidationValueZeroError,
 )
+from vitya.errors import INNValidationLenError
 from vitya.payment_order.fields import (
     CBC,
     UIN,
@@ -261,6 +262,9 @@ def check_receiver_inn(
         if value is not None and len(value) not in (10, 12):
             raise ReceiverINNValidationChameleonLenError
         return value
+    
+    if len(value) not in [5, 10, 12]:
+        raise INNValidationLenError
     return value
 
 

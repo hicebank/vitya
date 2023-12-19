@@ -134,6 +134,8 @@ class PayerINN(INN):
 
 class ReceiverINN(FieldMixin, str):
     """ИНН получателя (61)"""
+
+    @classmethod
     def _validate(cls, value: str) -> Optional[str]:
         return validate_inn_without_len(value)
 
