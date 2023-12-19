@@ -22,8 +22,8 @@ from vitya.payment_order.validators import (
     validate_type_of_income,
     validate_uin,
 )
-from vitya.validators import validate_inn_without_len
 from vitya.pydantic_fields import BIC, INN, KPP, BoolWrapper, FieldMixin
+from vitya.validators import validate_inn_without_len
 
 CallableGenerator = Generator[Callable[..., Any], None, None]
 
