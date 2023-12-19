@@ -350,7 +350,7 @@ class TestPayerStatusChecker(BaseModelChecker):
     'payer_status, payment_type, for_third_face, exception',
     [
         (None, PaymentType.CUSTOMS, False, PayerStatusValidationNullNotAllowedError),
-        ('06', PaymentType.CUSTOMS, True, PayerStatusValidationCustoms05NotAllowedError),
+        ('06', PaymentType.CUSTOMS, False, PayerStatusValidationCustoms05NotAllowedError),
     ]
 )
 def test_payer_status_checker(

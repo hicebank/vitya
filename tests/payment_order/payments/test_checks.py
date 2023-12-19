@@ -407,8 +407,8 @@ def test_check_receiver_inn(
         (None, PaymentType.FL, False, nullcontext(), None),
 
         (None, PaymentType.CUSTOMS, False, pytest.raises(PayerStatusValidationNullNotAllowedError), None),
-        ('06', PaymentType.CUSTOMS, True, pytest.raises(PayerStatusValidationCustoms05NotAllowedError), None),
-        ('06', PaymentType.CUSTOMS, False, nullcontext(), '06'),
+        ('06', PaymentType.CUSTOMS, False, pytest.raises(PayerStatusValidationCustoms05NotAllowedError), None),
+        ('06', PaymentType.CUSTOMS, True, nullcontext(), '06'),
         ('31', PaymentType.CUSTOMS, True, nullcontext(), '31')
     ]
 )
