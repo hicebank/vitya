@@ -42,6 +42,7 @@ from vitya.payment_order.errors import (
     PurposeValidationIPNDSError,
     ReasonValidationValueErrorCustoms,
     ReceiverAccountValidationBICValueError,
+    ReceiverAccountValidationCustomsValueError,
     ReceiverAccountValidationFNSValueError,
     ReceiverINNValidationFLLenError,
     ReceiverINNValidationIPLenError,
@@ -84,6 +85,7 @@ from vitya.payment_order.payments.checkers import (
     PurposeChecker,
     ReasonChecker,
     ReceiverAccountChecker,
+    ReceiverAccountCheckerWithPaymentType,
     ReceiverINNChecker,
     ReceiverKPPChecker,
     TaxPeriodChecker,
@@ -107,6 +109,15 @@ class TestReceiverAccountModelChecker(BaseModelChecker):
     ]
 
 
+class TestReceiverAccountModelCheckerWithPaymentType(BaseModelChecker):
+    account_number: AccountNumber
+    payment_type: PaymentType
+
+    __extra_wired_checkers__ = [
+        (ReceiverAccountCheckerWithPaymentType, ['account_number', 'payment_type'])
+    ]
+
+
 @pytest.mark.parametrize(
     'account_number, bic, payment_type, exception',
     [
@@ -124,6 +135,27 @@ def test_receiver_account_checker(
 ) -> None:
     try:
         TestReceiverAccountModelChecker(account_number=account_number, bic=bic, payment_type=payment_type)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        assert exception is None
+
+
+@pytest.mark.parametrize(
+    'account_number, payment_type, exception',
+    [
+        ('03100643000000019502', PaymentType.CUSTOMS, None),
+        ('03100643000000019503', PaymentType.CUSTOMS, ReceiverAccountValidationCustomsValueError),
+        ('03100643000000019503', PaymentType.FNS, None),
+    ]
+)
+def test_receiver_account_checker_with_payment_type(
+    account_number: AccountNumber,
+    payment_type: PaymentType,
+    exception: Type[Exception]
+) -> None:
+    try:
+        TestReceiverAccountModelCheckerWithPaymentType(account_number=account_number, payment_type=payment_type)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:

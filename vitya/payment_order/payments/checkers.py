@@ -53,6 +53,7 @@ from vitya.payment_order.payments.checks import (
     check_purpose,
     check_reason,
     check_receiver_account,
+    check_receiver_account_with_payment_type,
     check_receiver_inn,
     check_receiver_kpp,
     check_tax_period,
@@ -85,6 +86,15 @@ class ReceiverAccountChecker(BaseChecker):
 
     def check(self) -> None:
         check_receiver_account(value=self.account_number, payment_type=self.payment_type, receiver_bic=self.bic)
+
+
+class ReceiverAccountCheckerWithPaymentType(BaseChecker):
+    def __init__(self, account_number: ReceiverAccountNumber, payment_type: PaymentType) -> None:
+        self.account_number = account_number
+        self.payment_type = payment_type
+
+    def check(self) -> None:
+        check_receiver_account_with_payment_type(value=self.account_number, payment_type=self.payment_type)
 
 
 class OperationKindChecker(BaseChecker):
@@ -373,6 +383,7 @@ class BaseModelChecker(BaseModel):
     __extra_wired_checkers__: ClassVar[Sequence[WiredChecker]] = []
     __auto_checkers__: ClassVar[Sequence[Type[BaseChecker]]] = [
         ReceiverAccountChecker,
+        ReceiverAccountCheckerWithPaymentType,
         OperationKindChecker,
         PayerINNChecker,
         UINChecker,

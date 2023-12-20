@@ -41,6 +41,7 @@ from vitya.payment_order.payments.checkers import (
     PurposeChecker,
     ReasonChecker,
     ReceiverAccountChecker,
+    ReceiverAccountCheckerWithPaymentType,
     ReceiverINNChecker,
     ReceiverKPPChecker,
     TaxPeriodChecker,
@@ -57,6 +58,7 @@ def test_auto_wiring_non_unions():
 
     assert Payment.__final_wired_checkers__ == [
         (ReceiverAccountChecker, ['account_number', 'bic', 'payment_type']),
+        (ReceiverAccountCheckerWithPaymentType, ['account_number', 'payment_type']),
     ]
 
     class PaymentWithOperationKind(Payment):
@@ -64,6 +66,7 @@ def test_auto_wiring_non_unions():
 
     assert PaymentWithOperationKind.__final_wired_checkers__ == [
         (ReceiverAccountChecker, ['account_number', 'bic', 'payment_type']),
+        (ReceiverAccountCheckerWithPaymentType, ['account_number', 'payment_type']),
         (OperationKindChecker, ['operation_kind', 'payment_type']),
     ]
 
@@ -134,6 +137,7 @@ def test_auto_wiring_complex():
 
     assert Payment.__final_wired_checkers__ == [
         (ReceiverAccountChecker, ['dst_account', 'dst_bic', 'payment_type']),
+        (ReceiverAccountCheckerWithPaymentType, ['dst_account', 'payment_type']),
         (PayerINNChecker, ['src_inn', 'ts', 'for_third_person', 'payment_type']),
         (UINChecker, ['uin', 'dst_account', 'src_inn', 'ts', 'payment_type']),
         (PurposeChecker, ['purpose', 'payment_type', 'src_account']),
@@ -187,6 +191,7 @@ def test_auto_wiring_all_checkers():
 
     assert Payment.__final_wired_checkers__ == [
         (ReceiverAccountChecker, ['dst_account', 'dst_bic', 'payment_type']),
+        (ReceiverAccountCheckerWithPaymentType, ['dst_account', 'payment_type']),
         (OperationKindChecker, ['op_kind', 'payment_type']),
         (PayerINNChecker, ['src_inn', 'ts', 'for_third_person', 'payment_type']),
         (UINChecker, ['uin', 'dst_account', 'src_inn', 'ts', 'payment_type']),
@@ -219,6 +224,7 @@ def test_auto_wiring_excluding():
 
     assert Payment.__final_wired_checkers__ == [
         (ReceiverAccountChecker, ['account_number', 'bic', 'payment_type']),
+        (ReceiverAccountCheckerWithPaymentType, ['account_number', 'payment_type']),
         (OperationKindChecker, ['operation_kind', 'payment_type']),
     ]
 
@@ -227,10 +233,11 @@ def test_auto_wiring_excluding():
 
     assert PaymentExcludeOne.__final_wired_checkers__ == [
         (ReceiverAccountChecker, ['account_number', 'bic', 'payment_type']),
+        (ReceiverAccountCheckerWithPaymentType, ['account_number', 'payment_type']),
     ]
 
     class PaymentExcludeTwo(Payment):
-        __excluded_auto_checkers__ = {OperationKindChecker, ReceiverAccountChecker}
+        __excluded_auto_checkers__ = {OperationKindChecker, ReceiverAccountChecker, ReceiverAccountCheckerWithPaymentType}
 
     assert PaymentExcludeTwo.__final_wired_checkers__ == []
 
@@ -268,6 +275,7 @@ def test_extra_wired_checkers():
     assert Payment.__final_wired_checkers__ == [
         (MyChecker, ['bic', 'operation_kind']),
         (ReceiverAccountChecker, ['account_number', 'bic', 'payment_type']),
+        (ReceiverAccountCheckerWithPaymentType, ['account_number', 'payment_type']),
         (OperationKindChecker, ['operation_kind', 'payment_type']),
     ]
 

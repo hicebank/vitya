@@ -41,6 +41,7 @@ from vitya.payment_order.errors import (
     ReasonValidationValueErrorCustoms,
     ReasonValidationValueErrorFNS,
     ReceiverAccountValidationBICValueError,
+    ReceiverAccountValidationCustomsValueError,
     ReceiverAccountValidationFNSValueError,
     ReceiverINNValidationChameleonLenError,
     ReceiverINNValidationFLLenError,
@@ -88,6 +89,7 @@ from vitya.payment_order.fields import (
 from vitya.payment_order.payments.constants import (
     CHANGE_YEAR,
     CUSTOMS_REASONS,
+    CUSTOMS_RECEIVER_ACCOUNT_NUMBER,
     DOCUMENT_NUMBERS,
     FNS_KPP,
     FNS_RECEIVER_ACCOUNT_NUMBER,
@@ -124,6 +126,15 @@ def check_receiver_account(
             check_account_by_bic(account_number=value, bic=receiver_bic)
         except AccountValidationBICValueError as e:
             raise ReceiverAccountValidationBICValueError from e
+    return value
+
+
+def check_receiver_account_with_payment_type(
+    value: ReceiverAccountNumber,
+    payment_type: PaymentType,
+) -> str:
+    if payment_type == PaymentType.CUSTOMS and value != CUSTOMS_RECEIVER_ACCOUNT_NUMBER:
+        raise ReceiverAccountValidationCustomsValueError
     return value
 
 

@@ -415,6 +415,14 @@ class ReceiverAccountValidationBICValueError(
     pass
 
 
+class ReceiverAccountValidationCustomsValueError(
+    ReceiverAccountValidationError,
+    IncorrectData
+):
+    description = 'for customs payment account must be "03100643000000019502"'
+    description_ru = 'для платежей в таможню счет должен быть "03100643000000019502"'
+
+
 class PayerStatusValidationError(VityaDescribedError, PydanticValueError):
     target = 'payer status'
     target_ru = 'Статус плательщика'
