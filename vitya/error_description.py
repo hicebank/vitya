@@ -32,7 +32,7 @@ class AlertKeyToFieldName(TypedDict):
 
 
 class AlertBody(TypedDict):
-    alert: str
+    alert: Optional[str]
     failed_field: str
 
 
@@ -71,7 +71,7 @@ class AlertGenerator:
             alert = self._mixin_to_alert(exc)
             if alert is not None:
                 return [AlertBody(alert=alert, failed_field=exc.target)]  # type: ignore
-            return []
+            return [AlertBody(alert=None, failed_field=getattr(exc, 'target', None))]
 
         result = []
         for error_wrapper in flatten_error_wrappers(exc.raw_errors):
@@ -93,4 +93,6 @@ class AlertGenerator:
                 alert = self._mixin_to_alert(error_wrapper.exc)
                 if alert is not None:
                     result.append(AlertBody(alert=alert, failed_field=error_wrapper.exc.target))  # type: ignore
+                else:
+                    result.append(AlertBody(alert=None, failed_field=error_wrapper.exc.target))  # type: ignore
         return result
