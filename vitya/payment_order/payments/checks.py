@@ -253,18 +253,13 @@ def check_receiver_inn(
     if payment_type == PaymentType.IP:
         if value is None or len(value) != 12:
             raise ReceiverINNValidationIPLenError
-        return value
     elif payment_type == PaymentType.FL:
         if value is not None and len(value) != 12:
             raise ReceiverINNValidationFLLenError
-        return value
     elif payment_type == PaymentType.CHAMELEON:
         if value is not None and len(value) not in (10, 12):
             raise ReceiverINNValidationChameleonLenError
-        return value
-    
-    if len(value) not in [5, 10, 12]:
-        raise INNValidationLenError
+
     return value
 
 

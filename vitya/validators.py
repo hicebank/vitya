@@ -32,48 +32,6 @@ def _count_inn_checksum(inn: str, coefficients: List[int]) -> int:
     return n % 11 % 10
 
 
-def validate_inn_without_len(inn: str, is_ip: Optional[bool] = None):
-    """
-    Source:
-    https://www.consultant.ru/document/cons_doc_LAW_134082/947eeb5630c9f58cbc6103f0910440cef8eaccac/
-    https://ru.wikipedia.org/wiki/%D0%98%D0%B4%D0%B5%D0%BD%D1%82%D0%B8%D1%84%D0%B8%D0%BA%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D1%8B%D0%B9_%D0%BD%D0%BE%D0%BC%D0%B5%D1%80_%D0%BD%D0%B0%D0%BB%D0%BE%D0%B3%D0%BE%D0%BF%D0%BB%D0%B0%D1%82%D0%B5%D0%BB%D1%8C%D1%89%D0%B8%D0%BA%D0%B0
-    """
-    if not isinstance(inn, str):
-        raise INNValidationTypeError
-
-    if inn in {'', '0'}:
-        return None
-
-    if not re.fullmatch(r'[0-9]+', inn):
-        raise INNValidationDigitsOnlyError
-
-    if inn.startswith('00'):
-        raise INNValidationStartsWithZerosError
-
-    coefs10 = [2, 4, 10, 3, 5, 9, 4, 6, 8]
-    coefs11 = [7] + coefs10
-    coefs12 = [3] + coefs11
-
-    if len(inn) == 10 and is_ip is not True:
-        n10 = _count_inn_checksum(inn[:9], coefs10)
-        if n10 != int(inn[9]):
-            raise INNValidationControlSumError
-        return inn
-    elif len(inn) == 12 and is_ip is not False:
-        n11 = _count_inn_checksum(inn[:10], coefs11)
-        if n11 != int(inn[10]):
-            raise INNValidationControlSumError
-
-        n12 = _count_inn_checksum(inn[:11], coefs12)
-        if n12 != int(inn[11]):
-            raise INNValidationControlSumError
-        return inn
-    elif len(inn) == 5:
-        return inn
-
-    return inn
-
-
 def validate_inn(inn: str, is_ip: Optional[bool] = None) -> Optional[str]:
     """
     Source:

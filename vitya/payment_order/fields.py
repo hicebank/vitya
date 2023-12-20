@@ -23,7 +23,6 @@ from vitya.payment_order.validators import (
     validate_uin,
 )
 from vitya.pydantic_fields import BIC, INN, KPP, BoolWrapper, FieldMixin
-from vitya.validators import validate_inn_without_len
 
 CallableGenerator = Generator[Callable[..., Any], None, None]
 
@@ -132,12 +131,8 @@ class PayerINN(INN):
     """ИНН плательщика (60)"""
 
 
-class ReceiverINN(FieldMixin, str):
+class ReceiverINN(INN):
     """ИНН получателя (61)"""
-
-    @classmethod
-    def _validate(cls, value: str) -> Optional[str]:
-        return validate_inn_without_len(value)
 
 
 class ReceiverBIC(BIC):
