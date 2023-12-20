@@ -2,7 +2,6 @@ import re
 from datetime import date
 from typing import Optional
 
-from vitya.errors import INNValidationLenError
 from vitya.payment_order.enums import AccountKind, PaymentType
 from vitya.payment_order.errors import (
     AccountValidationBICValueError,
