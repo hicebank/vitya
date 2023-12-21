@@ -721,7 +721,7 @@ class DocumentNumberValidationBOValueLenError(DocumentNumberValidationError, Inc
     description_ru = 'для иных платежей в бюджет максимальная длина должна быть равна 15'
 
 
-class DocumentNumberValidationCustoms00ValueError(DocumentNumberValidationError):
+class DocumentNumberValidationCustoms00ValueError(DocumentNumberValidationError, IncorrectData):
     description = 'for customs with reason = "00" value must starts with "00"'
     description_ru = 'для платежей в таможню основание платежа должно быть равно "00", а номер должен начинаться с "00"'
 
