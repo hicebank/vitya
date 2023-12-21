@@ -9,6 +9,7 @@ from vitya.payment_order.errors import (
     CBCValidationEmptyNotAllowed,
     DocumentDateValidationBOLenError,
     DocumentDateValidationCustomsLenError,
+    DocumentDateValidationCustomsReasonValueError,
     DocumentDateValidationFNSOnlyEmptyError,
     DocumentNumberValidationBOEmptyNotAllowed,
     DocumentNumberValidationBOOnlyEmptyError,
@@ -536,3 +537,14 @@ def check_document_date(
             if len(value) > 10:
                 raise DocumentDateValidationBOLenError
             return value
+
+
+def check_document_date_with_reason(
+    value: Optional[DocumentDate],
+    payment_type: PaymentType,
+    reason: Reason,
+) -> Optional[DocumentDate]:
+    if payment_type == PaymentType.CUSTOMS and reason == '00':
+        if not (value is None or value in ['0', '00']):
+            raise DocumentDateValidationCustomsReasonValueError
+    return value

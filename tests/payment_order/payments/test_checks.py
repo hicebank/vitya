@@ -25,6 +25,7 @@ from vitya.payment_order.errors import (
     CBCValidationEmptyNotAllowed,
     DocumentDateValidationBOLenError,
     DocumentDateValidationCustomsLenError,
+    DocumentDateValidationCustomsReasonValueError,
     DocumentDateValidationFNSOnlyEmptyError,
     DocumentNumberValidationBOEmptyNotAllowed,
     DocumentNumberValidationBOOnlyEmptyError,
@@ -94,6 +95,7 @@ from vitya.payment_order.payments.checks import (
     check_account_by_bic,
     check_cbc,
     check_document_date,
+    check_document_date_with_reason,
     check_document_number,
     check_oktmo,
     check_oktmo_with_payer_status,
@@ -868,6 +870,25 @@ def test_check_document_date(
 ) -> None:
     with exception_handler:
         assert expected_value == check_document_date(value=value, payment_type=payment_type)
+
+
+@pytest.mark.parametrize(
+    'value, payment_type, reason, exception_handler, expected_value',
+    [
+        (None, PaymentType.CUSTOMS, '00', nullcontext(), None),
+        ('1' * 11, PaymentType.BUDGET_OTHER, '00', nullcontext(), '1' * 11),
+        ('1' * 11, PaymentType.CUSTOMS, '00', pytest.raises(DocumentDateValidationCustomsReasonValueError), None),
+    ]
+)
+def test_check_document_date_with_reason(
+    value: Optional[TaxPeriod],
+    payment_type: PaymentType,
+    reason: Optional[Reason],
+    exception_handler: ContextManager,
+    expected_value: Optional[TaxPeriod],
+) -> None:
+    with exception_handler:
+        assert expected_value == check_document_date_with_reason(value=value, payment_type=payment_type, reason=reason)
 
 
 @pytest.mark.parametrize(

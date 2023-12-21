@@ -29,6 +29,7 @@ from vitya.payment_order.payments.checkers import (
     BaseModelChecker,
     CBCChecker,
     DocumentDateChecker,
+    DocumentDateWithReasonChecker,
     DocumentNumberChecker,
     OKTMOChecker,
     OKTMOWithPayerStatusChecker,
@@ -153,7 +154,8 @@ def test_auto_wiring_complex():
         (ReasonChecker, ['reason', 'payment_type']),
         (TaxPeriodChecker, ['tp', 'payment_type', 'ts']),
         (DocumentNumberChecker, ['tn', 'payment_type', 'reason', 'ts', 'dst_account', 'uin', 'src_inn']),
-        (DocumentDateChecker, ['td', 'payment_type'])
+        (DocumentDateChecker, ['td', 'payment_type']),
+        (DocumentDateWithReasonChecker, ['td', 'payment_type', 'reason']),
     ]
 
 
@@ -208,7 +210,8 @@ def test_auto_wiring_all_checkers():
         (ReasonChecker, ['reason', 'payment_type']),
         (TaxPeriodChecker, ['tp', 'payment_type', 'ts']),
         (DocumentNumberChecker, ['tn', 'payment_type', 'reason', 'ts', 'dst_account', 'uin', 'src_inn']),
-        (DocumentDateChecker, ['td', 'payment_type'])
+        (DocumentDateChecker, ['td', 'payment_type']),
+        (DocumentDateWithReasonChecker, ['td', 'payment_type', 'reason']),
     ]
     assert len(Payment.__final_wired_checkers__) == len(Payment.__auto_checkers__)
 

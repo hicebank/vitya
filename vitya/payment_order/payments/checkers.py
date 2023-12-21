@@ -41,6 +41,7 @@ from vitya.payment_order.fields import (
 from vitya.payment_order.payments.checks import (
     check_cbc,
     check_document_date,
+    check_document_date_with_reason,
     check_document_number,
     check_oktmo,
     check_oktmo_with_payer_status,
@@ -376,6 +377,21 @@ class DocumentDateChecker(BaseChecker):
         check_document_date(value=self.document_date, payment_type=self.payment_type)
 
 
+class DocumentDateWithReasonChecker(BaseChecker):
+    def __init__(
+        self,
+        document_date: Optional[DocumentDate],
+        payment_type: PaymentType,
+        reason: Reason,
+    ) -> None:
+        self.document_date = document_date
+        self.payment_type = payment_type
+        self.reason = reason
+
+    def check(self) -> None:
+        check_document_date_with_reason(value=self.document_date, payment_type=self.payment_type, reason=self.reason)
+
+
 WiredChecker = Tuple[Type[BaseChecker], Sequence[str]]
 
 
@@ -401,6 +417,7 @@ class BaseModelChecker(BaseModel):
         TaxPeriodChecker,
         DocumentNumberChecker,
         DocumentDateChecker,
+        DocumentDateWithReasonChecker,
     ]
     __excluded_auto_checkers__: ClassVar[AbstractSet[Type[BaseChecker]]] = set()
     __wire_auto_checkers__: ClassVar[bool] = True  # disable to use only __extra_wired_checkers__

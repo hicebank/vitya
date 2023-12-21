@@ -770,6 +770,11 @@ class DocumentDateValidationBOLenError(DocumentDateValidationError, IncorrectLen
     description_ru = 'для иных платежей в бюджет значение не должно быть длиннее 10 символов'
 
 
+class DocumentDateValidationCustomsReasonValueError(DocumentDateValidationError, IncorrectData):
+    description = 'for customs with reason = "00" value have to be "0" or "00" or empty'
+    description_ru = 'для платежей в таможню c основанием платежа "00" значение должно быть пустым или "0" или "00"'
+
+
 class BudgetPaymentForThirdPersonError(VityaDescribedError, PydanticValueError):
     target = None
     target_ru = None

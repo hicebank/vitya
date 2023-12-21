@@ -22,6 +22,7 @@ from vitya.payment_order.errors import (
     CBCValidationEmptyNotAllowed,
     DocumentDateValidationBOLenError,
     DocumentDateValidationCustomsLenError,
+    DocumentDateValidationCustomsReasonValueError,
     DocumentDateValidationFNSOnlyEmptyError,
     DocumentNumberValidationBOEmptyNotAllowed,
     DocumentNumberValidationBOOnlyEmptyError,
@@ -75,6 +76,7 @@ from vitya.payment_order.payments.checkers import (
     BaseModelChecker,
     CBCChecker,
     DocumentDateChecker,
+    DocumentDateWithReasonChecker,
     DocumentNumberChecker,
     OKTMOChecker,
     OKTMOWithPayerStatusChecker,
@@ -797,6 +799,36 @@ def test_document_date_checker(
 ) -> None:
     try:
         TestDocumentDateChecker(document_date=document_date, payment_type=payment_type)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        assert exception is None
+
+
+class TestDocumentDateWithReasonChecker(BaseModelChecker):
+    document_date: Optional[DocumentDate]
+    payment_type: PaymentType
+    reason: Reason
+
+    __extra_wired_checkers__ = [
+        (DocumentDateWithReasonChecker, ['document_date', 'payment_type', 'reason']),
+    ]
+
+
+@pytest.mark.parametrize(
+    'document_date, payment_type, reason, exception',
+    [
+        ('1' * 11, PaymentType.CUSTOMS, '00', DocumentDateValidationCustomsReasonValueError),
+    ]
+)
+def test_document_date_with_reason_checker(
+    document_date: DocumentDate,
+    payment_type: PaymentType,
+    reason: Reason,
+    exception: Type[Exception]
+) -> None:
+    try:
+        TestDocumentDateWithReasonChecker(document_date=document_date, payment_type=payment_type, reason=reason)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:
