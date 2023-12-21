@@ -722,8 +722,8 @@ class DocumentNumberValidationBOValueLenError(DocumentNumberValidationError, Inc
 
 
 class DocumentNumberValidationCustoms00ValueError(DocumentNumberValidationError, IncorrectData):
-    description = 'for customs with reason = "00" value must starts with "00"'
-    description_ru = 'для платежей в таможню основание платежа должно быть равно "00", а номер должен начинаться с "00"'
+    description = 'for customs with reason = "00" value have to be "00" or "0"'
+    description_ru = 'для платежей в таможню основание платежа должно быть равно "00", а номер должен быть "00" или "0"'
 
 
 class DocumentNumberValidationCustomsValueLen7Error(DocumentNumberValidationError, IncorrectLen):
