@@ -41,6 +41,7 @@ from vitya.payment_order.fields import (
 from vitya.payment_order.payments.checks import (
     check_cbc,
     check_document_date,
+    check_document_date_with_reason,
     check_document_number,
     check_oktmo,
     check_oktmo_with_payer_status,
@@ -53,6 +54,7 @@ from vitya.payment_order.payments.checks import (
     check_purpose,
     check_reason,
     check_receiver_account,
+    check_receiver_account_with_payment_type,
     check_receiver_inn,
     check_receiver_kpp,
     check_tax_period,
@@ -85,6 +87,15 @@ class ReceiverAccountChecker(BaseChecker):
 
     def check(self) -> None:
         check_receiver_account(value=self.account_number, payment_type=self.payment_type, receiver_bic=self.bic)
+
+
+class ReceiverAccountCheckerWithPaymentType(BaseChecker):
+    def __init__(self, account_number: ReceiverAccountNumber, payment_type: PaymentType) -> None:
+        self.account_number = account_number
+        self.payment_type = payment_type
+
+    def check(self) -> None:
+        check_receiver_account_with_payment_type(value=self.account_number, payment_type=self.payment_type)
 
 
 class OperationKindChecker(BaseChecker):
@@ -366,6 +377,21 @@ class DocumentDateChecker(BaseChecker):
         check_document_date(value=self.document_date, payment_type=self.payment_type)
 
 
+class DocumentDateWithReasonChecker(BaseChecker):
+    def __init__(
+        self,
+        document_date: Optional[DocumentDate],
+        payment_type: PaymentType,
+        reason: Reason,
+    ) -> None:
+        self.document_date = document_date
+        self.payment_type = payment_type
+        self.reason = reason
+
+    def check(self) -> None:
+        check_document_date_with_reason(value=self.document_date, payment_type=self.payment_type, reason=self.reason)
+
+
 WiredChecker = Tuple[Type[BaseChecker], Sequence[str]]
 
 
@@ -373,6 +399,7 @@ class BaseModelChecker(BaseModel):
     __extra_wired_checkers__: ClassVar[Sequence[WiredChecker]] = []
     __auto_checkers__: ClassVar[Sequence[Type[BaseChecker]]] = [
         ReceiverAccountChecker,
+        ReceiverAccountCheckerWithPaymentType,
         OperationKindChecker,
         PayerINNChecker,
         UINChecker,
@@ -390,6 +417,7 @@ class BaseModelChecker(BaseModel):
         TaxPeriodChecker,
         DocumentNumberChecker,
         DocumentDateChecker,
+        DocumentDateWithReasonChecker,
     ]
     __excluded_auto_checkers__: ClassVar[AbstractSet[Type[BaseChecker]]] = set()
     __wire_auto_checkers__: ClassVar[bool] = True  # disable to use only __extra_wired_checkers__

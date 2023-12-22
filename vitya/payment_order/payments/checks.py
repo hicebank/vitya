@@ -9,6 +9,7 @@ from vitya.payment_order.errors import (
     CBCValidationEmptyNotAllowed,
     DocumentDateValidationBOLenError,
     DocumentDateValidationCustomsLenError,
+    DocumentDateValidationCustomsReasonValueError,
     DocumentDateValidationFNSOnlyEmptyError,
     DocumentNumberValidationBOEmptyNotAllowed,
     DocumentNumberValidationBOOnlyEmptyError,
@@ -41,6 +42,7 @@ from vitya.payment_order.errors import (
     ReasonValidationValueErrorCustoms,
     ReasonValidationValueErrorFNS,
     ReceiverAccountValidationBICValueError,
+    ReceiverAccountValidationCustomsValueError,
     ReceiverAccountValidationFNSValueError,
     ReceiverINNValidationChameleonLenError,
     ReceiverINNValidationFLLenError,
@@ -88,6 +90,7 @@ from vitya.payment_order.fields import (
 from vitya.payment_order.payments.constants import (
     CHANGE_YEAR,
     CUSTOMS_REASONS,
+    CUSTOMS_RECEIVER_ACCOUNT_NUMBER,
     DOCUMENT_NUMBERS,
     FNS_KPP,
     FNS_RECEIVER_ACCOUNT_NUMBER,
@@ -124,6 +127,15 @@ def check_receiver_account(
             check_account_by_bic(account_number=value, bic=receiver_bic)
         except AccountValidationBICValueError as e:
             raise ReceiverAccountValidationBICValueError from e
+    return value
+
+
+def check_receiver_account_with_payment_type(
+    value: ReceiverAccountNumber,
+    payment_type: PaymentType,
+) -> str:
+    if payment_type == PaymentType.CUSTOMS and value != CUSTOMS_RECEIVER_ACCOUNT_NUMBER:
+        raise ReceiverAccountValidationCustomsValueError
     return value
 
 
@@ -184,7 +196,7 @@ def check_purpose(
     payer_account: PayerAccountNumber,
     payment_type: PaymentType,
 ) -> Optional[Purpose]:
-    if payment_type != PaymentType.FNS and value is None:
+    if payment_type != PaymentType.FNS and not value:
         raise PurposeValidationValueEmptyErrorForNonFNS
     if (
         not payment_type.is_budget
@@ -233,22 +245,32 @@ def check_receiver_inn(
     value: Optional[ReceiverINN],
     payment_type: PaymentType,
 ) -> Optional[ReceiverINN]:
+    if payment_type in [
+        PaymentType.CUSTOMS,
+        PaymentType.FNS,
+        PaymentType.BUDGET_OTHER,
+        PaymentType.LE,
+        PaymentType.IP
+    ] and value is None:
+        raise ReceiverINNValidationNonEmptyError
+    if payment_type in [
+        PaymentType.CUSTOMS,
+        PaymentType.FNS,
+        PaymentType.BUDGET_OTHER,
+        PaymentType.LE
+    ] and (value is None or len(value) != 10):
+        raise ReceiverINNValidationLELenError
+
     if payment_type == PaymentType.IP:
         if value is None or len(value) != 12:
             raise ReceiverINNValidationIPLenError
-        return value
     elif payment_type == PaymentType.FL:
         if value is not None and len(value) != 12:
             raise ReceiverINNValidationFLLenError
-        return value
     elif payment_type == PaymentType.CHAMELEON:
         if value is not None and len(value) not in (10, 12):
             raise ReceiverINNValidationChameleonLenError
-        return value
-    if value is None:
-        raise ReceiverINNValidationNonEmptyError
-    elif len(value) != 10:
-        raise ReceiverINNValidationLELenError
+
     return value
 
 
@@ -271,7 +293,7 @@ def check_payer_status(
     if value is None:
         raise PayerStatusValidationNullNotAllowedError
 
-    if payment_type == PaymentType.CUSTOMS and for_third_person and value == '06':
+    if payment_type == PaymentType.CUSTOMS and for_third_person == False and value == '06':  # noqa
         raise PayerStatusValidationCustoms05NotAllowedError
 
     return value
@@ -515,3 +537,14 @@ def check_document_date(
             if len(value) > 10:
                 raise DocumentDateValidationBOLenError
             return value
+
+
+def check_document_date_with_reason(
+    value: Optional[DocumentDate],
+    payment_type: PaymentType,
+    reason: Reason,
+) -> Optional[DocumentDate]:
+    if payment_type == PaymentType.CUSTOMS and reason == '00':
+        if not (value is None or value in ['0', '00']):
+            raise DocumentDateValidationCustomsReasonValueError
+    return value

@@ -31,6 +31,11 @@ class AlertKeyToFieldName(TypedDict):
     receiver_account_number: str
 
 
+class AlertBody(TypedDict):
+    alert: Optional[str]
+    failed_field: str
+
+
 class AlertGenerator:
     _key_to_ru = {
         'amount': 'Сумма',
@@ -61,12 +66,12 @@ class AlertGenerator:
             )
         return None
 
-    def get_error_client_alerts(self, exc: Exception) -> List[str]:
+    def get_error_client_alerts(self, exc: Exception) -> List[AlertBody]:
         if not isinstance(exc, ValidationError):
             alert = self._mixin_to_alert(exc)
             if alert is not None:
-                return [alert]
-            return []
+                return [AlertBody(alert=alert, failed_field=exc.target)]  # type: ignore
+            return [AlertBody(alert=None, failed_field=getattr(exc, 'target', None))]
 
         result = []
         for error_wrapper in flatten_error_wrappers(exc.raw_errors):
@@ -74,15 +79,20 @@ class AlertGenerator:
                 for sub_error in error_wrapper.exc.errors:
                     alert = self._mixin_to_alert(sub_error)
                     if alert is not None:
-                        result.append(alert)
+                        result.append(AlertBody(alert=alert, failed_field=sub_error.target))  # type: ignore
             elif isinstance(error_wrapper.exc, (NoneIsNotAllowedError, MissingError)):
                 if len(error_wrapper.loc_tuple()) == 1:
                     field_name = error_wrapper.loc_tuple()[0]
                     if field_name in self._field_name_to_key:
                         target_ru = self._key_to_ru[self._field_name_to_key[field_name]]
-                        result.append(f'Поле «{target_ru}» должно быть заполнено')
+                        result.append(AlertBody(
+                            alert=f'Поле «{target_ru}» должно быть заполнено',
+                            failed_field=self._field_name_to_key[field_name]
+                        ))
             else:
                 alert = self._mixin_to_alert(error_wrapper.exc)
                 if alert is not None:
-                    result.append(alert)
+                    result.append(AlertBody(alert=alert, failed_field=error_wrapper.exc.target))  # type: ignore
+                else:
+                    result.append(AlertBody(alert=None, failed_field=error_wrapper.exc.target))  # type: ignore
         return result

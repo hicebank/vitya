@@ -22,6 +22,7 @@ from vitya.payment_order.errors import (
     CBCValidationEmptyNotAllowed,
     DocumentDateValidationBOLenError,
     DocumentDateValidationCustomsLenError,
+    DocumentDateValidationCustomsReasonValueError,
     DocumentDateValidationFNSOnlyEmptyError,
     DocumentNumberValidationBOEmptyNotAllowed,
     DocumentNumberValidationBOOnlyEmptyError,
@@ -42,6 +43,7 @@ from vitya.payment_order.errors import (
     PurposeValidationIPNDSError,
     ReasonValidationValueErrorCustoms,
     ReceiverAccountValidationBICValueError,
+    ReceiverAccountValidationCustomsValueError,
     ReceiverAccountValidationFNSValueError,
     ReceiverINNValidationFLLenError,
     ReceiverINNValidationIPLenError,
@@ -74,6 +76,7 @@ from vitya.payment_order.payments.checkers import (
     BaseModelChecker,
     CBCChecker,
     DocumentDateChecker,
+    DocumentDateWithReasonChecker,
     DocumentNumberChecker,
     OKTMOChecker,
     OKTMOWithPayerStatusChecker,
@@ -84,6 +87,7 @@ from vitya.payment_order.payments.checkers import (
     PurposeChecker,
     ReasonChecker,
     ReceiverAccountChecker,
+    ReceiverAccountCheckerWithPaymentType,
     ReceiverINNChecker,
     ReceiverKPPChecker,
     TaxPeriodChecker,
@@ -107,6 +111,15 @@ class TestReceiverAccountModelChecker(BaseModelChecker):
     ]
 
 
+class TestReceiverAccountModelCheckerWithPaymentType(BaseModelChecker):
+    account_number: AccountNumber
+    payment_type: PaymentType
+
+    __extra_wired_checkers__ = [
+        (ReceiverAccountCheckerWithPaymentType, ['account_number', 'payment_type'])
+    ]
+
+
 @pytest.mark.parametrize(
     'account_number, bic, payment_type, exception',
     [
@@ -124,6 +137,27 @@ def test_receiver_account_checker(
 ) -> None:
     try:
         TestReceiverAccountModelChecker(account_number=account_number, bic=bic, payment_type=payment_type)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        assert exception is None
+
+
+@pytest.mark.parametrize(
+    'account_number, payment_type, exception',
+    [
+        ('03100643000000019502', PaymentType.CUSTOMS, None),
+        ('03100643000000019503', PaymentType.CUSTOMS, ReceiverAccountValidationCustomsValueError),
+        ('03100643000000019503', PaymentType.FNS, None),
+    ]
+)
+def test_receiver_account_checker_with_payment_type(
+    account_number: AccountNumber,
+    payment_type: PaymentType,
+    exception: Type[Exception]
+) -> None:
+    try:
+        TestReceiverAccountModelCheckerWithPaymentType(account_number=account_number, payment_type=payment_type)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:
@@ -317,7 +351,7 @@ class TestReceiverInnChecker(BaseModelChecker):
     'receiver_inn, payment_type, exception',
     [
         (LE_INN, PaymentType.IP, ReceiverINNValidationIPLenError),
-        (None, PaymentType.IP, ReceiverINNValidationIPLenError),
+        (None, PaymentType.IP, ReceiverINNValidationNonEmptyError),
         (LE_INN, PaymentType.FL, ReceiverINNValidationFLLenError),
         (None, PaymentType.CUSTOMS, ReceiverINNValidationNonEmptyError),
         (IP_INN, PaymentType.CUSTOMS, ReceiverINNValidationLELenError),
@@ -350,7 +384,7 @@ class TestPayerStatusChecker(BaseModelChecker):
     'payer_status, payment_type, for_third_face, exception',
     [
         (None, PaymentType.CUSTOMS, False, PayerStatusValidationNullNotAllowedError),
-        ('06', PaymentType.CUSTOMS, True, PayerStatusValidationCustoms05NotAllowedError),
+        ('06', PaymentType.CUSTOMS, False, PayerStatusValidationCustoms05NotAllowedError),
     ]
 )
 def test_payer_status_checker(
@@ -765,6 +799,36 @@ def test_document_date_checker(
 ) -> None:
     try:
         TestDocumentDateChecker(document_date=document_date, payment_type=payment_type)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        assert exception is None
+
+
+class TestDocumentDateWithReasonChecker(BaseModelChecker):
+    document_date: Optional[DocumentDate]
+    payment_type: PaymentType
+    reason: Reason
+
+    __extra_wired_checkers__ = [
+        (DocumentDateWithReasonChecker, ['document_date', 'payment_type', 'reason']),
+    ]
+
+
+@pytest.mark.parametrize(
+    'document_date, payment_type, reason, exception',
+    [
+        ('1' * 11, PaymentType.CUSTOMS, '00', DocumentDateValidationCustomsReasonValueError),
+    ]
+)
+def test_document_date_with_reason_checker(
+    document_date: DocumentDate,
+    payment_type: PaymentType,
+    reason: Reason,
+    exception: Type[Exception]
+) -> None:
+    try:
+        TestDocumentDateWithReasonChecker(document_date=document_date, payment_type=payment_type, reason=reason)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:

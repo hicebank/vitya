@@ -32,6 +32,8 @@ from vitya.payment_order.errors import (
     ReceiverValidationNameError,
     ReceiverValidationSizeError,
     TaxPeriodValidationTypeError,
+    TypeOfIncomeValidationError,
+    TypeOfIncomeValidationTypeError,
     UINValidationControlSumError,
     UINValidationDigitsOnlyError,
     UINValidationLenError,
@@ -54,6 +56,7 @@ from vitya.payment_order.validators import (
     validate_reason,
     validate_receiver,
     validate_tax_period,
+    validate_type_of_income,
     validate_uin,
     validate_uin_control_sum,
 )
@@ -370,3 +373,20 @@ def test_validate_document_date(
 ) -> None:
     with exception_handler:
         assert validate_document_date(value=value) == expected_value
+
+
+@pytest.mark.parametrize(
+    'value, exception_handler, expected_value',
+    [
+        (2, pytest.raises(TypeOfIncomeValidationTypeError), None),
+        ('373', pytest.raises(TypeOfIncomeValidationError), None),
+        ('1', nullcontext(), '1'),
+    ]
+)
+def test_validate_type_of_income(
+    value: str,
+    exception_handler: ContextManager,
+    expected_value: Optional[str]
+) -> None:
+    with exception_handler:
+        assert validate_type_of_income(value=value) == expected_value
