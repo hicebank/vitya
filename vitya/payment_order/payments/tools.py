@@ -12,8 +12,11 @@ FL_ACCOUNTS_PREFIXES_5 = {
 FL_ACCOUNTS_PREFIXES_3 = {
     '423', '426', '455', '457',
 }
+CHAMELEON_PREFIXES_3 = {
+    '454',
+}
 CHAMELEON_PREFIXES_5 = {
-    '40804', '40805', '40915', '40806', '40809', '40812', '454',
+    '40804', '40805', '40915', '40806', '40809', '40812',
     '40814', '40815', '40827', '40828', '40830', '40831', '40911',
 }
 
@@ -24,6 +27,7 @@ PREFIX_5_TO_ACCOUNT_KIND = {
 }
 PREFIX_3_TO_ACCOUNT_KIND = {
     **{prefix: AccountKind.FL for prefix in FL_ACCOUNTS_PREFIXES_3},
+    **{prefix: AccountKind.CHAMELEON for prefix in CHAMELEON_PREFIXES_3},
 }
 
 
