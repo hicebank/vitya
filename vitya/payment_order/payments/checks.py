@@ -37,9 +37,9 @@ from vitya.payment_order.errors import (
     PurposeCodeValidationChameleonError,
     PurposeCodeValidationFlError,
     PurposeCodeValidationNullError,
+    PurposeValidationForThirdPersonError,
     PurposeValidationIPNDSError,
     PurposeValidationValueEmptyErrorForNonFNS,
-    PurposeValidationForThirdPersonError,
     ReasonValidationValueErrorCustoms,
     ReasonValidationValueErrorFNS,
     ReceiverAccountValidationBICValueError,
@@ -290,7 +290,7 @@ def check_purpose_for_third_person(
     if not for_third_person:
         return value
 
-    if not value or not re.match(r"^\d+\/\/[a-zA-Zа-яА-Я\s\W]+\/\/[a-zA-Zа-яА-Я\s\W\d]+$", value):
+    if not value or not re.match(r'^\d+\/\/[a-zA-Zа-яА-Я\s\W]+\/\/[a-zA-Zа-яА-Я\s\W\d]+$', value):
         raise PurposeValidationForThirdPersonError
 
     return value

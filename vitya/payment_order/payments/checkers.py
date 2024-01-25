@@ -26,11 +26,11 @@ from vitya.payment_order.fields import (
     DocumentNumber,
     ForThirdPerson,
     OperationKind,
+    Payer,
     PayerAccountNumber,
     PayerINN,
     PayerKPP,
     PayerStatus,
-    Payer,
     Purpose,
     Reason,
     ReceiverAccountNumber,
@@ -53,6 +53,7 @@ from vitya.payment_order.payments.checks import (
     check_payer_status,
     check_payment_type_and_for_third_person,
     check_purpose,
+    check_purpose_for_third_person,
     check_reason,
     check_receiver_account,
     check_receiver_account_with_payment_type,
@@ -60,7 +61,6 @@ from vitya.payment_order.payments.checks import (
     check_receiver_kpp,
     check_tax_period,
     check_uin,
-    check_purpose_for_third_person,
 )
 from vitya.pydantic_fields import OKTMO
 from vitya.typing_helpers import is_union, normalize_type
