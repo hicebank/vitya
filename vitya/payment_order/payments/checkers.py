@@ -26,7 +26,6 @@ from vitya.payment_order.fields import (
     DocumentNumber,
     ForThirdPerson,
     OperationKind,
-    Payer,
     PayerAccountNumber,
     PayerINN,
     PayerKPP,
