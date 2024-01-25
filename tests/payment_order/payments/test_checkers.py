@@ -45,6 +45,7 @@ from vitya.payment_order.errors import (
     ReceiverAccountValidationBICValueError,
     ReceiverAccountValidationCustomsValueError,
     ReceiverAccountValidationFNSValueError,
+    PurposeValidationForThirdPersonError,
     ReceiverINNValidationFLLenError,
     ReceiverINNValidationIPLenError,
     ReceiverINNValidationLELenError,
@@ -71,6 +72,7 @@ from vitya.payment_order.fields import (
     Purpose,
     Reason,
     TaxPeriod,
+    ForThirdPerson,
 )
 from vitya.payment_order.payments.checkers import (
     BaseModelChecker,
@@ -81,6 +83,7 @@ from vitya.payment_order.payments.checkers import (
     OKTMOChecker,
     OKTMOWithPayerStatusChecker,
     OperationKindChecker,
+    ForThirdPersonAndPurposeChecker,
     PayerINNChecker,
     PayerKPPChecker,
     PayerStatusChecker,
@@ -411,6 +414,15 @@ class TestPayerKppChecker(BaseModelChecker):
     ]
 
 
+class TestForThirdPersonAndPurposeChecker(BaseModelChecker):
+    purpose: Optional[Purpose]
+    for_third_person: ForThirdPerson
+
+    __extra_wired_checkers__ = [
+        (ForThirdPersonAndPurposeChecker, ['purpose', 'for_third_person']),
+    ]
+
+
 @pytest.mark.parametrize(
     'payer_kpp, payment_type, payer_inn, exception',
     [
@@ -429,6 +441,28 @@ def test_payer_kpp_checker(
     try:
         TestPayerKppChecker(payer_kpp=payer_kpp, payment_type=payment_type, payer_inn=payer_inn)
     except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        assert exception is None
+
+
+@pytest.mark.parametrize(
+    'purpose, for_third_person, exception',
+    [
+        ('sic mundus creatus est', False, None),
+        ('sic mundus creatus est', True, PurposeValidationForThirdPersonError),
+        (f'{VALID_INN}//Балашов Александр Владимирович//sic mundus creatus est', True, None),
+    ]
+)
+def test_for_third_person_and_purpose_checker(
+    purpose: Purpose,
+    for_third_person: ForThirdPerson,
+    exception: Type[Exception]
+) -> None:
+    try:
+        TestForThirdPersonAndPurposeChecker(purpose=purpose, for_third_person=ForThirdPerson(for_third_person))
+    except ValidationError as e:
+        print(e)
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:
         assert exception is None

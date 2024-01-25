@@ -30,6 +30,7 @@ from vitya.payment_order.fields import (
     PayerINN,
     PayerKPP,
     PayerStatus,
+    Payer,
     Purpose,
     Reason,
     ReceiverAccountNumber,
@@ -59,6 +60,7 @@ from vitya.payment_order.payments.checks import (
     check_receiver_kpp,
     check_tax_period,
     check_uin,
+    check_purpose_for_third_person,
 )
 from vitya.pydantic_fields import OKTMO
 from vitya.typing_helpers import is_union, normalize_type
@@ -213,6 +215,22 @@ class PaymentTypeAndForThirdPersonChecker(BaseChecker):
     def check(self) -> None:
         check_payment_type_and_for_third_person(
             payment_type=self.payment_type,
+            for_third_person=self.for_third_person
+        )
+
+
+class ForThirdPersonAndPurposeChecker(BaseChecker):
+    def __init__(
+        self,
+        purpose: Optional[Purpose],
+        for_third_person: ForThirdPerson,
+    ) -> None:
+        self.purpose = purpose
+        self.for_third_person = for_third_person
+
+    def check(self) -> None:
+        check_purpose_for_third_person(
+            value=self.purpose,
             for_third_person=self.for_third_person
         )
 
@@ -407,6 +425,7 @@ class BaseModelChecker(BaseModel):
         ReceiverINNChecker,
         PayerStatusChecker,
         PaymentTypeAndForThirdPersonChecker,
+        ForThirdPersonAndPurposeChecker,
         PayerKPPChecker,
         ReceiverKPPChecker,
         CBCChecker,
