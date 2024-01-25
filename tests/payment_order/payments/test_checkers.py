@@ -462,7 +462,6 @@ def test_for_third_person_and_purpose_checker(
     try:
         TestForThirdPersonAndPurposeChecker(purpose=purpose, for_third_person=ForThirdPerson(for_third_person))
     except ValidationError as e:
-        print(e)
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:
         assert exception is None
