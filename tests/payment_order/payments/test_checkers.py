@@ -454,6 +454,7 @@ def test_payer_kpp_checker(
         ('5474774784d//Балашов Александр Владимирович//sic mundus creatus est', True, PurposeValidationForThirdPersonError),
         (f'{VALID_INN}//Александр 4 Хозяин Земли Русской//sic mundus creatus est', True, PurposeValidationForThirdPersonError),
         (f'{VALID_INN}//Балашов Александр Владимирович//sic mundus creatus est//', True, None),
+        (f'{VALID_INN}//Балашов Александр Владимирович//sic mundus creatus est//in hoc signo vinces', True, None),
         (f'{VALID_INN}//Балашов Александр Владимирович//sic mundus creatus est', True, None),
     ]
 )
