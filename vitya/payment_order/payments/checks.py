@@ -37,6 +37,7 @@ from vitya.payment_order.errors import (
     PurposeCodeValidationChameleonError,
     PurposeCodeValidationFlError,
     PurposeCodeValidationNullError,
+    PurposeValidationForThirdPersonError,
     PurposeValidationIPNDSError,
     PurposeValidationValueEmptyErrorForNonFNS,
     ReasonValidationValueErrorCustoms,
@@ -280,6 +281,19 @@ def check_payment_type_and_for_third_person(
 ) -> None:
     if for_third_person and not payment_type.is_budget:
         raise BudgetPaymentForThirdPersonError
+
+
+def check_purpose_for_third_person(
+    value: Optional[Purpose],
+    for_third_person: ForThirdPerson,
+) -> Optional[Purpose]:
+    if not for_third_person:
+        return value
+
+    if not value or not re.match(r'^\d+\/\/[a-zA-Zа-яА-Я\s\W]+\/\/[a-zA-Zа-яА-Я\s\W\d]+$', value):
+        raise PurposeValidationForThirdPersonError
+
+    return value
 
 
 def check_payer_status(

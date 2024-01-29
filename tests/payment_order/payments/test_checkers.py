@@ -40,6 +40,7 @@ from vitya.payment_order.errors import (
     PayerKPPValidationINN12OnlyEmptyError,
     PayerStatusValidationCustoms05NotAllowedError,
     PayerStatusValidationNullNotAllowedError,
+    PurposeValidationForThirdPersonError,
     PurposeValidationIPNDSError,
     ReasonValidationValueErrorCustoms,
     ReceiverAccountValidationBICValueError,
@@ -66,6 +67,7 @@ from vitya.payment_order.fields import (
     AccountNumber,
     DocumentDate,
     DocumentNumber,
+    ForThirdPerson,
     OperationKind,
     PayerStatus,
     Purpose,
@@ -78,6 +80,7 @@ from vitya.payment_order.payments.checkers import (
     DocumentDateChecker,
     DocumentDateWithReasonChecker,
     DocumentNumberChecker,
+    ForThirdPersonAndPurposeChecker,
     OKTMOChecker,
     OKTMOWithPayerStatusChecker,
     OperationKindChecker,
@@ -411,6 +414,15 @@ class TestPayerKppChecker(BaseModelChecker):
     ]
 
 
+class TestForThirdPersonAndPurposeChecker(BaseModelChecker):
+    purpose: Optional[Purpose]
+    for_third_person: ForThirdPerson
+
+    __extra_wired_checkers__ = [
+        (ForThirdPersonAndPurposeChecker, ['purpose', 'for_third_person']),
+    ]
+
+
 @pytest.mark.parametrize(
     'payer_kpp, payment_type, payer_inn, exception',
     [
@@ -428,6 +440,31 @@ def test_payer_kpp_checker(
 ) -> None:
     try:
         TestPayerKppChecker(payer_kpp=payer_kpp, payment_type=payment_type, payer_inn=payer_inn)
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        assert exception is None
+
+
+@pytest.mark.parametrize(
+    'purpose, for_third_person, exception',
+    [
+        ('sic mundus creatus est', False, None),
+        ('sic mundus creatus est', True, PurposeValidationForThirdPersonError),
+        ('5474774784d//Балашов Александр Владимирович//sic mundus creatus est', True, PurposeValidationForThirdPersonError),
+        (f'{VALID_INN}//Александр 4 Хозяин Земли Русской//sic mundus creatus est', True, PurposeValidationForThirdPersonError),
+        (f'{VALID_INN}//Балашов Александр Владимирович//sic mundus creatus est//', True, None),
+        (f'{VALID_INN}//Балашов Александр Владимирович//sic mundus creatus est//in hoc signo vinces', True, None),
+        (f'{VALID_INN}//Балашов Александр Владимирович//sic mundus creatus est', True, None),
+    ]
+)
+def test_for_third_person_and_purpose_checker(
+    purpose: Purpose,
+    for_third_person: ForThirdPerson,
+    exception: Type[Exception]
+) -> None:
+    try:
+        TestForThirdPersonAndPurposeChecker(purpose=purpose, for_third_person=ForThirdPerson(for_third_person))
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:

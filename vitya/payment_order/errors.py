@@ -166,6 +166,11 @@ class PurposeCodeValidationChameleonError(PurposeCodeValidationError):
     description_ru = 'для платежей хамелеону должен быть одним из {1, 2, 3, 4, 5} или быть пустым'
 
 
+class PurposeValidationForThirdPersonError(PurposeCodeValidationError):
+    description = 'for third person purpose must match pattern inn//name//purpose'
+    description_ru = 'для платежей за третьих лиц назначение должно соответствовать шаблону ИНН//ФИО//Назначение'
+
+
 class UINValidationError(VityaDescribedError, PydanticValueError):
     target = 'uin'
     target_ru = 'УИН'
