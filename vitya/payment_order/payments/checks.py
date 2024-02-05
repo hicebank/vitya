@@ -290,7 +290,8 @@ def check_purpose_for_third_person(
     if not for_third_person:
         return value
 
-    if not value or not re.match(r'^\d+\/\/[a-zA-Zа-яА-ЯёЁ\s\W]+\/\/[a-zA-Zа-яА-ЯёЁ\s\W\d]+$', value):
+    print(re.match(r'^\d+\/\/[a-zA-Zа-яА-ЯёЁ\s\W]+\/\/[а-яА-ЯёЁ\s!-~]*$', value))
+    if not value or not re.match(r'^\d+\/\/[a-zA-Zа-яА-ЯёЁ\s\W]+\/\/[а-яА-ЯёЁ\s!-~]*$', value):
         raise PurposeValidationForThirdPersonError
 
     return value
