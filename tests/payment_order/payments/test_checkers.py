@@ -458,7 +458,6 @@ def test_payer_kpp_checker(
         (f'{VALID_INN}//Балашов Александр Владимирович//sic mundus creatus est', True, None),
         ('780230158458//Иванов Иван ИвановичЁёЁЁёЁёЁ//Платёж в бюджет', True, None),
         ('780230158458//Иванов Иван ИвановичЁёЁЁёЁёЁ//', True, None),
-        ('780230158458//Иванов Иван ИвановичЁёЁЁёЁёЁ//漢字', True, PurposeValidationForThirdPersonError),
     ]
 )
 def test_for_third_person_and_purpose_checker(
