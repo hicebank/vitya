@@ -80,9 +80,16 @@ class KPPValidationValueLenError(KPPValidationError, ExactFieldLenError):
     required_len = 9
 
 
-class KPPValidationValueDigitsOnlyError(KPPValidationError, IncorrectData):
+class ReceiverKPPValidationValueDigitsOnlyError(KPPValidationError, IncorrectData):
     description = 'only digits allowed'
     description_ru = 'должен состоять только из цифр'
+    target = 'receiver kpp'
+
+
+class PayerKPPValidationValueDigitsOnlyError(KPPValidationError, IncorrectData):
+    description = 'only digits allowed'
+    description_ru = 'должен состоять только из цифр'
+    target = 'payer kpp'
 
 
 class KPPValidationValueError(KPPValidationError, IncorrectData):
@@ -90,9 +97,16 @@ class KPPValidationValueError(KPPValidationError, IncorrectData):
     description_ru = 'должен матчиться с [0-9]{4}[0-9A-Z]{2}[0-9]{3}'
 
 
-class KPPValidationValueCannotZerosStarts(KPPValidationError, IncorrectData):
+class PayerKPPValidationValueCannotZerosStarts(KPPValidationError, IncorrectData):
     description = 'cannot starts with "00"'
     description_ru = 'не может начинаться с "00"'
+    target = 'payer kpp'
+
+
+class ReceiverKPPValidationValueCannotZerosStarts(KPPValidationError, IncorrectData):
+    description = 'cannot starts with "00"'
+    description_ru = 'не может начинаться с "00"'
+    target = 'receiver kpp'
 
 
 class BICValidationError(VityaDescribedError, PydanticValueError):

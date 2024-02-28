@@ -11,7 +11,7 @@ from vitya.payment_order.validators import (
     validate_number,
     validate_operation_kind,
     validate_payer,
-    validate_payer_and_receiver_kpp,
+    validate_payer_kpp,
     validate_payer_status,
     validate_payment_order,
     validate_purpose,
@@ -19,6 +19,7 @@ from vitya.payment_order.validators import (
     validate_reason,
     validate_receiver,
     validate_receiver_account_number,
+    validate_receiver_kpp,
     validate_tax_period,
     validate_type_of_income,
     validate_uin,
@@ -145,7 +146,7 @@ class ReceiverKPP(KPP):
 
     @classmethod
     def _validate(cls, value: str) -> Optional[str]:
-        return validate_payer_and_receiver_kpp(value)
+        return validate_receiver_kpp(value)
 
 
 class PayerKPP(KPP):
@@ -153,7 +154,7 @@ class PayerKPP(KPP):
 
     @classmethod
     def _validate(cls, value: str) -> Optional[str]:
-        return validate_payer_and_receiver_kpp(value)
+        return validate_payer_kpp(value)
 
 
 class PayerStatus(FieldMixin, str):
