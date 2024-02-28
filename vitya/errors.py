@@ -80,7 +80,7 @@ class KPPValidationValueLenError(KPPValidationError, ExactFieldLenError):
     required_len = 9
 
 
-class KPPValidationValueDigitsOnlyError(KPPValidationError):
+class KPPValidationValueDigitsOnlyError(KPPValidationError, IncorrectData):
     description = 'only digits allowed'
     description_ru = 'должен состоять только из цифр'
 
@@ -90,7 +90,7 @@ class KPPValidationValueError(KPPValidationError, IncorrectData):
     description_ru = 'должен матчиться с [0-9]{4}[0-9A-Z]{2}[0-9]{3}'
 
 
-class KPPValidationValueCannotZerosStarts(KPPValidationError):
+class KPPValidationValueCannotZerosStarts(KPPValidationError, IncorrectData):
     description = 'cannot starts with "00"'
     description_ru = 'не может начинаться с "00"'
 
