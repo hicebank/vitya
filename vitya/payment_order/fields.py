@@ -11,6 +11,7 @@ from vitya.payment_order.validators import (
     validate_number,
     validate_operation_kind,
     validate_payer,
+    validate_payer_and_receiver_kpp,
     validate_payer_status,
     validate_payment_order,
     validate_purpose,
@@ -142,9 +143,17 @@ class ReceiverBIC(BIC):
 class ReceiverKPP(KPP):
     """КПП плательщика (103)"""
 
+    @classmethod
+    def _validate(cls, value: str) -> Optional[str]:
+        return validate_payer_and_receiver_kpp(value)
+
 
 class PayerKPP(KPP):
     """КПП получателя (102)"""
+
+    @classmethod
+    def _validate(cls, value: str) -> Optional[str]:
+        return validate_payer_and_receiver_kpp(value)
 
 
 class PayerStatus(FieldMixin, str):
