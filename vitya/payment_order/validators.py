@@ -4,8 +4,10 @@ from decimal import Decimal, InvalidOperation
 from typing import Optional, Union
 
 from vitya.errors import (
-    KPPValidationValueCannotZerosStarts,
-    KPPValidationValueDigitsOnlyError,
+    PayerKPPValidationValueCannotZerosStarts,
+    PayerKPPValidationValueDigitsOnlyError,
+    ReceiverKPPValidationValueCannotZerosStarts,
+    ReceiverKPPValidationValueDigitsOnlyError,
 )
 from vitya.payment_order.errors import (
     AccountNumberValidationDigitsOnlyError,
@@ -294,13 +296,25 @@ def validate_type_of_income(value: str) -> Optional[str]:
     return value
 
 
-def validate_payer_and_receiver_kpp(value: str) -> Optional[str]:
+def validate_payer_kpp(value: str) -> Optional[str]:
     if value in {'0', '', None}:
         return None
 
     if value.startswith('00'):
-        raise KPPValidationValueCannotZerosStarts
+        raise PayerKPPValidationValueCannotZerosStarts
     if not value.isnumeric():
-        raise KPPValidationValueDigitsOnlyError
+        raise PayerKPPValidationValueDigitsOnlyError
+
+    return value
+
+
+def validate_receiver_kpp(value: str) -> Optional[str]:
+    if value in {'0', '', None}:
+        return None
+
+    if value.startswith('00'):
+        raise ReceiverKPPValidationValueCannotZerosStarts
+    if not value.isnumeric():
+        raise ReceiverKPPValidationValueDigitsOnlyError
 
     return value
