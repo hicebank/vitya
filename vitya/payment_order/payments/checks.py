@@ -471,7 +471,7 @@ def check_tax_period(
                 raise TaxPeriodValidationFNS01OnlyEmpty
             return None
 
-        if payer_status == '02' and len(value) != 10 and date.today().year < CHANGE_YEAR:
+        if payer_status == '02' and len(value or '') != 10 and date.today().year < CHANGE_YEAR:
             raise TaxPeriodValidationFNSValueLenError
         return value
 
