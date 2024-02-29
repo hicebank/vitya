@@ -60,7 +60,6 @@ from vitya.payment_order.errors import (
     TaxPeriodValidationCustomsValueLenError,
     TaxPeriodValidationFNS01OnlyEmpty,
     TaxPeriodValidationFNS02EmptyNotAllowed,
-    TaxPeriodValidationFNSEmptyNotAllowed,
     TaxPeriodValidationFNSValueLenError,
     UINValidationBONotEmpty,
     UINValidationFNSNotValueZeroError,
@@ -472,9 +471,7 @@ def check_tax_period(
                 raise TaxPeriodValidationFNS01OnlyEmpty
             return None
 
-        if value is None:
-            raise TaxPeriodValidationFNSEmptyNotAllowed
-        elif payer_status == '02' and len(value) != 10 and date.today().year < CHANGE_YEAR:
+        if payer_status == '02' and len(value) != 10 and date.today().year < CHANGE_YEAR:
             raise TaxPeriodValidationFNSValueLenError
         return value
 

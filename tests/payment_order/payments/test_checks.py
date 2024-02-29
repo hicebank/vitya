@@ -71,7 +71,6 @@ from vitya.payment_order.errors import (
     TaxPeriodValidationCustomsValueLenError,
     TaxPeriodValidationFNS01OnlyEmpty,
     TaxPeriodValidationFNS02EmptyNotAllowed,
-    TaxPeriodValidationFNSEmptyNotAllowed,
     TaxPeriodValidationFNSValueLenError,
     UINValidationBONotEmpty,
     UINValidationFNSNotValueZeroError,
@@ -626,7 +625,6 @@ def test_check_reason(
         ('1', PaymentType.FNS, '13', pytest.raises(TaxPeriodValidationFNS01OnlyEmpty), None),
         (None, PaymentType.FNS, '01', nullcontext(), None),
         (None, PaymentType.FNS, '13', nullcontext(), None),
-        (None, PaymentType.FNS, '30', pytest.raises(TaxPeriodValidationFNSEmptyNotAllowed), None),
         ('1' * 10, PaymentType.FNS, '30', nullcontext(), '1' * 10),
     ]
 )

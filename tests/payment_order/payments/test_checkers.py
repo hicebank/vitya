@@ -57,7 +57,6 @@ from vitya.payment_order.errors import (
     TaxPeriodValidationCustomsValueLenError,
     TaxPeriodValidationFNS01OnlyEmpty,
     TaxPeriodValidationFNS02EmptyNotAllowed,
-    TaxPeriodValidationFNSEmptyNotAllowed,
     TaxPeriodValidationFNSValueLenError,
     UINValidationValueZeroError,
 )
@@ -641,7 +640,6 @@ class TestTaxPeriodChecker(BaseModelChecker):
         ('2022022', PaymentType.CUSTOMS, '01', TaxPeriodValidationCustomsValueLenError),
         ('1', PaymentType.FNS, '01', TaxPeriodValidationFNS01OnlyEmpty),
         ('1', PaymentType.FNS, '13', TaxPeriodValidationFNS01OnlyEmpty),
-        (None, PaymentType.FNS, '30', TaxPeriodValidationFNSEmptyNotAllowed),
     ]
 )
 def test_tax_period_checker(
