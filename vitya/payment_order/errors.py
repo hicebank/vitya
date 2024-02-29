@@ -648,11 +648,6 @@ class TaxPeriodValidationFNS01OnlyEmpty(TaxPeriodValidationError, IncorrectData)
     description_ru = 'для платежей в ФНС со статусом плательщика "01" или "13" значение должно быть пустым'
 
 
-class TaxPeriodValidationFNSEmptyNotAllowed(TaxPeriodValidationEmptyNotAllowed, NeedRequiredField):
-    description = 'for fns empty is not allowed'
-    description_ru = 'для платежей в ФНС пустое значение недопустимо'
-
-
 class TaxPeriodValidationFNSValueLenError(TaxPeriodValidationValueLenError, ExactFieldLenError):
     description = 'for fns len must be 10 chars'
     description_ru = 'для платежей в ФНС длина значения должна быть 10 символов'
