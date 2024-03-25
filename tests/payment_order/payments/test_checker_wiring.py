@@ -44,6 +44,7 @@ from vitya.payment_order.payments.checkers import (
     ReasonChecker,
     ReceiverAccountChecker,
     ReceiverAccountCheckerWithPaymentType,
+    ReceiverAccountCheckerWithPaymentTypeAndPayerStatus,
     ReceiverINNChecker,
     ReceiverKPPChecker,
     TaxPeriodChecker,
@@ -140,14 +141,15 @@ def test_auto_wiring_complex():
     assert Payment.__final_wired_checkers__ == [
         (ReceiverAccountChecker, ['dst_account', 'dst_bic', 'payment_type']),
         (ReceiverAccountCheckerWithPaymentType, ['dst_account', 'payment_type']),
-        (PayerINNChecker, ['src_inn', 'ts', 'for_third_person', 'payment_type']),
+        (ReceiverAccountCheckerWithPaymentTypeAndPayerStatus, ['dst_account', 'payment_type', 'ts']),
+        (PayerINNChecker, ['src_inn', 'ts', 'dst_account', 'uin', 'for_third_person', 'payment_type']),
         (UINChecker, ['uin', 'dst_account', 'src_inn', 'ts', 'payment_type']),
         (PurposeChecker, ['purpose', 'payment_type', 'src_account']),
         (ReceiverINNChecker, ['dst_inn', 'payment_type']),
         (PayerStatusChecker, ['ts', 'payment_type', 'for_third_person']),
         (PaymentTypeAndForThirdPersonChecker, ['payment_type', 'for_third_person']),
         (ForThirdPersonAndPurposeChecker, ['purpose', 'for_third_person']),
-        (PayerKPPChecker, ['src_kpp', 'payment_type', 'src_inn']),
+        (PayerKPPChecker, ['src_kpp', 'payment_type', 'src_inn', 'ts']),
         (ReceiverKPPChecker, ['dst_kpp', 'payment_type']),
         (CBCChecker, ['cbccode', 'payment_type']),
         (OKTMOChecker, ['oktmo', 'payment_type']),
@@ -155,7 +157,7 @@ def test_auto_wiring_complex():
         (OKTMOWithReceiverAccountNumberChecker, ['oktmo', 'payment_type', 'dst_account']),
         (ReasonChecker, ['reason', 'payment_type']),
         (TaxPeriodChecker, ['tp', 'payment_type', 'ts']),
-        (DocumentNumberChecker, ['tn', 'payment_type', 'reason', 'ts', 'dst_account', 'uin', 'src_inn']),
+        (DocumentNumberChecker, ['tn', 'payment_type', 'reason', 'ts', 'uin', 'src_inn']),
         (DocumentDateChecker, ['td', 'payment_type']),
         (DocumentDateWithReasonChecker, ['td', 'payment_type', 'reason']),
     ]
@@ -196,15 +198,16 @@ def test_auto_wiring_all_checkers():
     assert Payment.__final_wired_checkers__ == [
         (ReceiverAccountChecker, ['dst_account', 'dst_bic', 'payment_type']),
         (ReceiverAccountCheckerWithPaymentType, ['dst_account', 'payment_type']),
+        (ReceiverAccountCheckerWithPaymentTypeAndPayerStatus, ['dst_account', 'payment_type', 'ts']),
         (OperationKindChecker, ['op_kind', 'payment_type']),
-        (PayerINNChecker, ['src_inn', 'ts', 'for_third_person', 'payment_type']),
+        (PayerINNChecker, ['src_inn', 'ts', 'dst_account', 'uin', 'for_third_person', 'payment_type']),
         (UINChecker, ['uin', 'dst_account', 'src_inn', 'ts', 'payment_type']),
         (PurposeChecker, ['purpose', 'payment_type', 'src_account']),
         (ReceiverINNChecker, ['dst_inn', 'payment_type']),
         (PayerStatusChecker, ['ts', 'payment_type', 'for_third_person']),
         (PaymentTypeAndForThirdPersonChecker, ['payment_type', 'for_third_person']),
         (ForThirdPersonAndPurposeChecker, ['purpose', 'for_third_person']),
-        (PayerKPPChecker, ['src_kpp', 'payment_type', 'src_inn']),
+        (PayerKPPChecker, ['src_kpp', 'payment_type', 'src_inn', 'ts']),
         (ReceiverKPPChecker, ['dst_kpp', 'payment_type']),
         (CBCChecker, ['cbccode', 'payment_type']),
         (OKTMOChecker, ['oktmo', 'payment_type']),
@@ -212,7 +215,7 @@ def test_auto_wiring_all_checkers():
         (OKTMOWithReceiverAccountNumberChecker, ['oktmo', 'payment_type', 'dst_account']),
         (ReasonChecker, ['reason', 'payment_type']),
         (TaxPeriodChecker, ['tp', 'payment_type', 'ts']),
-        (DocumentNumberChecker, ['tn', 'payment_type', 'reason', 'ts', 'dst_account', 'uin', 'src_inn']),
+        (DocumentNumberChecker, ['tn', 'payment_type', 'reason', 'ts', 'uin', 'src_inn']),
         (DocumentDateChecker, ['td', 'payment_type']),
         (DocumentDateWithReasonChecker, ['td', 'payment_type', 'reason']),
     ]
@@ -243,7 +246,11 @@ def test_auto_wiring_excluding():
     ]
 
     class PaymentExcludeTwo(Payment):
-        __excluded_auto_checkers__ = {OperationKindChecker, ReceiverAccountChecker, ReceiverAccountCheckerWithPaymentType}
+        __excluded_auto_checkers__ = {
+            OperationKindChecker,
+            ReceiverAccountChecker,
+            ReceiverAccountCheckerWithPaymentType
+        }
 
     assert PaymentExcludeTwo.__final_wired_checkers__ == []
 

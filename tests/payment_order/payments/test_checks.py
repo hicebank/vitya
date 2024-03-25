@@ -8,12 +8,15 @@ from freezegun import freeze_time
 from tests.helpers import parametrize_with_dict
 from tests.payment_order.testdata import (
     FL_INN,
+    INVALID_LEN_UIN,
+    INVALID_VALUE_UIN,
     IP_ACCOUNT,
     IP_INN,
     LE_INN,
     VALID_BIC,
     VALID_CBC,
     VALID_INN,
+    VALID_INN_LEN_5,
     VALID_KPP,
     VALID_OKTMO,
     VALID_UIN,
@@ -44,6 +47,7 @@ from vitya.payment_order.errors import (
     PayerINNValidationCustomsLen12Error,
     PayerINNValidationEmptyNotAllowedError,
     PayerINNValidationStartWithZerosError,
+    PayerKPPValidationINN5EmptyNotAllowed,
     PayerKPPValidationINN10EmptyNotAllowed,
     PayerKPPValidationINN12OnlyEmptyError,
     PayerStatusValidationCustoms05NotAllowedError,
@@ -56,6 +60,8 @@ from vitya.payment_order.errors import (
     ReasonValidationValueErrorCustoms,
     ReasonValidationValueErrorFNS,
     ReceiverAccountValidationBICValueError,
+    ReceiverAccountValidationBudgetOtherPayerStatusError,
+    ReceiverAccountValidationBudgetPayerStatusError,
     ReceiverAccountValidationFNSValueError,
     ReceiverINNValidationFLLenError,
     ReceiverINNValidationIPLenError,
@@ -75,6 +81,7 @@ from vitya.payment_order.errors import (
     UINValidationBONotEmpty,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
+    UINValidationValueBudget31PayerStatusIncorrectLength,
     UINValidationValueZeroError,
 )
 from vitya.payment_order.fields import (
@@ -108,6 +115,7 @@ from vitya.payment_order.payments.checks import (
     check_purpose_code,
     check_reason,
     check_receiver_account,
+    check_receiver_account_with_payment_type_and_payer_status,
     check_receiver_inn,
     check_receiver_kpp,
     check_tax_period,
@@ -118,6 +126,7 @@ from vitya.payment_order.payments.constants import (
     FNS_KPP,
     FNS_RECEIVER_ACCOUNT_NUMBER,
     FTS_OKTMO,
+    OTHER_RECEIVER_ACCOUNT_NUMBER,
 )
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 
@@ -140,6 +149,36 @@ def test_check_receiver_account(
 ) -> None:
     with exception_handler:
         assert check_receiver_account(value=value, payment_type=payment_type, receiver_bic=receiver_bic) == expected_value
+
+
+@pytest.mark.parametrize(
+    'value, payment_type, payer_status, exception_handler, expected_value',
+    [
+        (IP_ACCOUNT, PaymentType.BUDGET_OTHER, '01', pytest.raises(ReceiverAccountValidationBudgetPayerStatusError), None),
+        (FNS_RECEIVER_ACCOUNT_NUMBER, PaymentType.BUDGET_OTHER, '01', nullcontext(), FNS_RECEIVER_ACCOUNT_NUMBER),
+        (OTHER_RECEIVER_ACCOUNT_NUMBER, PaymentType.BUDGET_OTHER, '31', nullcontext(), OTHER_RECEIVER_ACCOUNT_NUMBER),
+        (
+            IP_ACCOUNT,
+            PaymentType.BUDGET_OTHER,
+            '31',
+            pytest.raises(ReceiverAccountValidationBudgetOtherPayerStatusError),
+            None
+        ),
+    ]
+)
+def test_check_receiver_account_with_payment_type_and_payer_status(
+    value: AccountNumber,
+    payment_type: PaymentType,
+    payer_status: PayerStatus,
+    exception_handler: ContextManager,
+    expected_value: str
+) -> None:
+    with exception_handler:
+        assert check_receiver_account_with_payment_type_and_payer_status(
+            value=value,
+            payment_type=payment_type,
+            payer_status=payer_status,
+        ) == expected_value
 
 
 @pytest.mark.parametrize(
@@ -246,6 +285,24 @@ def test_check_purpose_code(
             nullcontext(),
             VALID_UIN,
         ),
+        (
+            INVALID_LEN_UIN,
+            PaymentType.FNS,
+            AccountNumber(IP_ACCOUNT),
+            '33',
+            '',
+            pytest.raises(UINValidationValueBudget31PayerStatusIncorrectLength),
+            None,
+        ),
+        (
+            INVALID_VALUE_UIN,
+            PaymentType.FNS,
+            AccountNumber(IP_ACCOUNT),
+            '33',
+            '',
+            pytest.raises(UINValidationValueBudget31PayerStatusIncorrectLength),
+            None,
+        ),
     ]
 )
 def test_check_uin(
@@ -342,19 +399,20 @@ def test_check_purpose(
 
 
 @pytest.mark.parametrize(
-    'value, payment_type, payer_status, for_third_person, exception_handler, expected_value',
+    'value, payment_type, payer_status, for_third_person, receiver_account, uin, exception_handler, expected_value',
     [
-        (VALID_INN, PaymentType.FL, '', False, nullcontext(), VALID_INN),
-        (None, PaymentType.BUDGET_OTHER, '', False, nullcontext(), None),
-        (None, PaymentType.FNS, '13', False, nullcontext(), None),
-        (None, PaymentType.CUSTOMS, '30', False, nullcontext(), None),
-        (None, PaymentType.FNS, '14', False, pytest.raises(PayerINNValidationEmptyNotAllowedError), None),
-        (None, PaymentType.CUSTOMS, '31', False, pytest.raises(PayerINNValidationEmptyNotAllowedError), None),
-        ('12345', PaymentType.CUSTOMS, '06', True, pytest.raises(PayerINNValidationCustomsLen10Error), None),
-        ('12345', PaymentType.CUSTOMS, '16', False, pytest.raises(PayerINNValidationCustomsLen12Error), None),
-        ('00123', PaymentType.CUSTOMS, '', False, pytest.raises(PayerINNValidationStartWithZerosError), None),
-        ('00000', PaymentType.CUSTOMS, '', False, pytest.raises(PayerINNValidationStartWithZerosError), None),
-        (VALID_INN, PaymentType.CUSTOMS, '', False, nullcontext(), VALID_INN),
+        (VALID_INN, PaymentType.FL, '', False, None, None, nullcontext(), VALID_INN),
+        (None, PaymentType.BUDGET_OTHER, '', False, None, None, nullcontext(), None),
+        (None, PaymentType.FNS, '13', False, None, None, pytest.raises(PayerINNValidationEmptyNotAllowedError), None),
+        (VALID_INN, PaymentType.FNS, '13', False, FNS_RECEIVER_ACCOUNT_NUMBER, VALID_UIN, nullcontext(), VALID_INN),
+        (None, PaymentType.CUSTOMS, '30', False, None, None, nullcontext(), None),
+        (None, PaymentType.FNS, '14', False, None, None, pytest.raises(PayerINNValidationEmptyNotAllowedError), None),
+        (None, PaymentType.CUSTOMS, '31', False, None, None, pytest.raises(PayerINNValidationEmptyNotAllowedError), None),
+        ('12345', PaymentType.CUSTOMS, '06', True, None, None, pytest.raises(PayerINNValidationCustomsLen10Error), None),
+        ('12345', PaymentType.CUSTOMS, '16', False, None, None, pytest.raises(PayerINNValidationCustomsLen12Error), None),
+        ('00123', PaymentType.CUSTOMS, '', False, None, None, pytest.raises(PayerINNValidationStartWithZerosError), None),
+        ('00000', PaymentType.CUSTOMS, '', False, None, None, pytest.raises(PayerINNValidationStartWithZerosError), None),
+        (VALID_INN, PaymentType.CUSTOMS, '', False, None, None, nullcontext(), VALID_INN),
     ]
 )
 def test_check_payer_inn(
@@ -362,12 +420,19 @@ def test_check_payer_inn(
     payment_type: PaymentType,
     payer_status: PayerStatus,
     for_third_person: bool,
+    receiver_account: ReceiverAccountNumber,
+    uin: UIN,
     exception_handler: ContextManager,
     expected_value: str
 ) -> None:
     with exception_handler:
         assert expected_value == check_payer_inn(
-            value=value, payment_type=payment_type, payer_status=payer_status, for_third_person=for_third_person
+            value=value,
+            payment_type=payment_type,
+            payer_status=payer_status,
+            for_third_person=for_third_person,
+            receiver_account=receiver_account,
+            uin=uin,
         )
 
 
@@ -429,26 +494,34 @@ def test_check_payer_status(
 
 
 @pytest.mark.parametrize(
-    'value, payment_type, payer_inn, exception_handler, expected_value',
+    'value, payment_type, payer_inn, payer_status, exception_handler, expected_value',
     [
-        (VALID_KPP, PaymentType.FL, VALID_INN, nullcontext(), None),
-        (None, PaymentType.FL, VALID_INN, nullcontext(), None),
+        (VALID_KPP, PaymentType.FL, VALID_INN, None, nullcontext(), None),
+        (None, PaymentType.FL, VALID_INN, None, nullcontext(), None),
 
-        (None, PaymentType.CUSTOMS, LE_INN, pytest.raises(PayerKPPValidationINN10EmptyNotAllowed), None),
-        (VALID_KPP, PaymentType.CUSTOMS, IP_INN, pytest.raises(PayerKPPValidationINN12OnlyEmptyError), None),
+        (None, PaymentType.CUSTOMS, LE_INN, None, pytest.raises(PayerKPPValidationINN10EmptyNotAllowed), None),
+        (None, PaymentType.CUSTOMS, LE_INN, '01', nullcontext(), None),
+        (None, PaymentType.CUSTOMS, VALID_INN_LEN_5, None, pytest.raises(PayerKPPValidationINN5EmptyNotAllowed), None),
+        (VALID_KPP, PaymentType.CUSTOMS, IP_INN, None, pytest.raises(PayerKPPValidationINN12OnlyEmptyError), None),
 
-        (VALID_KPP, PaymentType.CUSTOMS, LE_INN, nullcontext(), VALID_KPP),
+        (VALID_KPP, PaymentType.CUSTOMS, LE_INN, None, nullcontext(), VALID_KPP),
     ]
 )
 def test_check_payer_kpp(
     value: Optional[KPP],
     payment_type: PaymentType,
     payer_inn: INN,
+    payer_status: PayerStatus,
     exception_handler: ContextManager,
     expected_value: Optional[KPP],
 ) -> None:
     with exception_handler:
-        assert expected_value == check_payer_kpp(value=value, payment_type=payment_type, payer_inn=payer_inn)
+        assert expected_value == check_payer_kpp(
+            value=value,
+            payment_type=payment_type,
+            payer_inn=payer_inn,
+            payer_status=payer_status,
+        )
 
 
 @pytest.mark.parametrize(
@@ -661,7 +734,7 @@ def test_check_tax_period_before_2024(
 
 @parametrize_with_dict(
     [
-        'value', 'payment_type', 'payer_status', 'receiver_account',
+        'value', 'payment_type', 'payer_status',
         'payer_inn', 'uin', 'reason', 'exception_handler', 'expected_value'
     ],
     [
@@ -670,7 +743,6 @@ def test_check_tax_period_before_2024(
             'value': None,
             'payment_type': PaymentType.FL,
             'payer_status': '',
-            'receiver_account': '',
             'payer_inn': '',
             'uin': '',
             'reason': '',
@@ -682,7 +754,6 @@ def test_check_tax_period_before_2024(
             'value': None,
             'payment_type': PaymentType.FNS,
             'payer_status': '',
-            'receiver_account': '',
             'payer_inn': '',
             'uin': '',
             'reason': '',
@@ -694,7 +765,6 @@ def test_check_tax_period_before_2024(
             'value': '02;1222',
             'payment_type': PaymentType.FNS,
             'payer_status': '',
-            'receiver_account': '',
             'payer_inn': '',
             'uin': '',
             'reason': '',
@@ -706,7 +776,6 @@ def test_check_tax_period_before_2024(
             'value': '02;1222',
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '31',
-            'receiver_account': '03212',
             'payer_inn': '',
             'uin': VALID_UIN,
             'reason': '',
@@ -718,7 +787,6 @@ def test_check_tax_period_before_2024(
             'value': None,
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '31',
-            'receiver_account': '03212',
             'payer_inn': '',
             'uin': VALID_UIN,
             'reason': '',
@@ -730,7 +798,6 @@ def test_check_tax_period_before_2024(
             'value': None,
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '24',
-            'receiver_account': '03212',
             'payer_inn': None,
             'uin': None,
             'reason': '',
@@ -742,7 +809,6 @@ def test_check_tax_period_before_2024(
             'value': None,
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '24',
-            'receiver_account': '03212',
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': '',
@@ -754,7 +820,6 @@ def test_check_tax_period_before_2024(
             'value': '1' * 16,
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '24',
-            'receiver_account': '03212',
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': '',
@@ -766,7 +831,6 @@ def test_check_tax_period_before_2024(
             'value': '18;',
             'payment_type': PaymentType.BUDGET_OTHER,
             'payer_status': '24',
-            'receiver_account': '03212',
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': '',
@@ -778,7 +842,6 @@ def test_check_tax_period_before_2024(
             'value': '1',
             'payment_type': PaymentType.CUSTOMS,
             'payer_status': '24',
-            'receiver_account': '03212',
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': '00',
@@ -790,7 +853,6 @@ def test_check_tax_period_before_2024(
             'value': '1' * 8,
             'payment_type': PaymentType.CUSTOMS,
             'payer_status': '24',
-            'receiver_account': '03212',
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': 'ПК',
@@ -802,7 +864,6 @@ def test_check_tax_period_before_2024(
             'value': None,
             'payment_type': PaymentType.CUSTOMS,
             'payer_status': '24',
-            'receiver_account': '03212',
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': 'ИЛ',
@@ -814,7 +875,6 @@ def test_check_tax_period_before_2024(
             'value': '01',
             'payment_type': PaymentType.CUSTOMS,
             'payer_status': '24',
-            'receiver_account': '03212',
             'payer_inn': VALID_INN,
             'uin': None,
             'reason': 'ИЛ',
@@ -827,7 +887,6 @@ def test_check_document_number(
     value: Optional[DocumentNumber],
     payment_type: PaymentType,
     payer_status: Optional[PayerStatus],
-    receiver_account: AccountNumber,
     payer_inn: Optional[INN],
     uin: Optional[UIN],
     reason: Optional[str],
@@ -839,7 +898,6 @@ def test_check_document_number(
             value=value,
             payment_type=payment_type,
             payer_status=payer_status,
-            receiver_account=receiver_account,
             payer_inn=payer_inn,
             uin=uin,
             reason=reason,

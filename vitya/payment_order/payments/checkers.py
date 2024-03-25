@@ -56,6 +56,7 @@ from vitya.payment_order.payments.checks import (
     check_reason,
     check_receiver_account,
     check_receiver_account_with_payment_type,
+    check_receiver_account_with_payment_type_and_payer_status,
     check_receiver_inn,
     check_receiver_kpp,
     check_tax_period,
@@ -99,6 +100,25 @@ class ReceiverAccountCheckerWithPaymentType(BaseChecker):
         check_receiver_account_with_payment_type(value=self.account_number, payment_type=self.payment_type)
 
 
+class ReceiverAccountCheckerWithPaymentTypeAndPayerStatus(BaseChecker):
+    def __init__(
+        self,
+        account_number: ReceiverAccountNumber,
+        payment_type: PaymentType,
+        payer_status: Optional[PayerStatus]
+    ) -> None:
+        self.account_number = account_number
+        self.payment_type = payment_type
+        self.payer_status = payer_status
+
+    def check(self) -> None:
+        check_receiver_account_with_payment_type_and_payer_status(
+            value=self.account_number,
+            payment_type=self.payment_type,
+            payer_status=self.payer_status,
+        )
+
+
 class OperationKindChecker(BaseChecker):
     def __init__(self, operation_kind: OperationKind, payment_type: PaymentType) -> None:
         self.operation_kind = operation_kind
@@ -113,6 +133,8 @@ class PayerINNChecker(BaseChecker):
         self,
         payer_inn: Optional[PayerINN],
         payer_status: Optional[PayerStatus],
+        receiver_account: Optional[ReceiverAccountNumber],
+        uin: Optional[UIN],
         for_third_person: ForThirdPerson,
         payment_type: PaymentType
     ) -> None:
@@ -120,13 +142,17 @@ class PayerINNChecker(BaseChecker):
         self.payer_status = payer_status
         self.for_third_person = for_third_person
         self.payment_type = payment_type
+        self.receiver_account = receiver_account
+        self.uin = uin
 
     def check(self) -> None:
         check_payer_inn(
             value=self.payer_inn,
             payment_type=self.payment_type,
             payer_status=self.payer_status,
-            for_third_person=self.for_third_person
+            for_third_person=self.for_third_person,
+            receiver_account=self.receiver_account,
+            uin=self.uin,
         )
 
 
@@ -240,13 +266,20 @@ class PayerKPPChecker(BaseChecker):
         payer_kpp: Optional[PayerKPP],
         payment_type: PaymentType,
         payer_inn: Optional[PayerINN],
+        payer_status: Optional[PayerStatus],
     ) -> None:
         self.payer_kpp = payer_kpp
         self.payment_type = payment_type
         self.payer_inn = payer_inn
+        self.payer_status = payer_status
 
     def check(self) -> None:
-        check_payer_kpp(value=self.payer_kpp, payment_type=self.payment_type, payer_inn=self.payer_inn)
+        check_payer_kpp(
+            value=self.payer_kpp,
+            payment_type=self.payment_type,
+            payer_inn=self.payer_inn,
+            payer_status=self.payer_status,
+        )
 
 
 class ReceiverKPPChecker(BaseChecker):
@@ -357,7 +390,6 @@ class DocumentNumberChecker(BaseChecker):
         payment_type: PaymentType,
         reason: Optional[Reason],
         payer_status: Optional[PayerStatus],
-        receiver_account: ReceiverAccountNumber,
         uin: Optional[UIN],
         payer_inn: Optional[PayerINN],
     ) -> None:
@@ -365,7 +397,6 @@ class DocumentNumberChecker(BaseChecker):
         self.payment_type = payment_type
         self.reason = reason
         self.payer_status = payer_status
-        self.receiver_account = receiver_account
         self.uin = uin
         self.payer_inn = payer_inn
 
@@ -375,7 +406,6 @@ class DocumentNumberChecker(BaseChecker):
             payment_type=self.payment_type,
             reason=self.reason,
             payer_status=self.payer_status,
-            receiver_account=self.receiver_account,
             uin=self.uin,
             payer_inn=self.payer_inn,
         )
@@ -417,6 +447,7 @@ class BaseModelChecker(BaseModel):
     __auto_checkers__: ClassVar[Sequence[Type[BaseChecker]]] = [
         ReceiverAccountChecker,
         ReceiverAccountCheckerWithPaymentType,
+        ReceiverAccountCheckerWithPaymentTypeAndPayerStatus,
         OperationKindChecker,
         PayerINNChecker,
         UINChecker,

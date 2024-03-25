@@ -29,6 +29,7 @@ from vitya.payment_order.errors import (
     PayerINNValidationCustomsLen12Error,
     PayerINNValidationEmptyNotAllowedError,
     PayerINNValidationStartWithZerosError,
+    PayerKPPValidationINN5EmptyNotAllowed,
     PayerKPPValidationINN10EmptyNotAllowed,
     PayerKPPValidationINN12OnlyEmptyError,
     PayerStatusValidationCustoms05NotAllowedError,
@@ -43,6 +44,8 @@ from vitya.payment_order.errors import (
     ReasonValidationValueErrorCustoms,
     ReasonValidationValueErrorFNS,
     ReceiverAccountValidationBICValueError,
+    ReceiverAccountValidationBudgetOtherPayerStatusError,
+    ReceiverAccountValidationBudgetPayerStatusError,
     ReceiverAccountValidationCustomsValueError,
     ReceiverAccountValidationFNSValueError,
     ReceiverINNValidationChameleonLenError,
@@ -64,6 +67,7 @@ from vitya.payment_order.errors import (
     UINValidationBONotEmpty,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
+    UINValidationValueBudget31PayerStatusIncorrectLength,
     UINValidationValueZeroError,
 )
 from vitya.payment_order.fields import (
@@ -139,6 +143,28 @@ def check_receiver_account_with_payment_type(
     return value
 
 
+def check_receiver_account_with_payment_type_and_payer_status(
+    value: ReceiverAccountNumber,
+    payment_type: PaymentType,
+    payer_status: Optional[PayerStatus],
+) -> str:
+    if (
+        payment_type.is_budget
+        and payer_status in ['01', '02', '04', '06', '07', '13', '16', '17', '28', '30']
+    ):
+        if not value.startswith('03100'):
+            raise ReceiverAccountValidationBudgetPayerStatusError
+
+    if (
+        payment_type == PaymentType.BUDGET_OTHER
+        and payer_status == '31'
+    ):
+        if not value.startswith('03212'):
+            raise ReceiverAccountValidationBudgetOtherPayerStatusError
+
+    return value
+
+
 def check_operation_kind(
     value: OperationKind,
     payment_type: PaymentType
@@ -175,6 +201,10 @@ def check_uin(
 
     if payer_status == '31' and value is None:
         raise UINValidationValueZeroError
+
+    if payment_type.is_budget and payer_status == '33':
+        if not value or len(value) not in [20, 25] or value == '0' * len(value):
+            raise UINValidationValueBudget31PayerStatusIncorrectLength
 
     if payment_type == PaymentType.BUDGET_OTHER:
         if receiver_account.startswith('03212') and value is None:
@@ -214,6 +244,8 @@ def check_payer_inn(
     value: Optional[PayerINN],
     payment_type: PaymentType,
     payer_status: Optional[PayerStatus],
+    receiver_account: Optional[ReceiverAccountNumber],
+    uin: Optional[UIN],
     for_third_person: ForThirdPerson,
 ) -> Optional[PayerINN]:
     if not payment_type.is_budget:
@@ -222,7 +254,14 @@ def check_payer_inn(
     if value is None:
         if payment_type == PaymentType.BUDGET_OTHER:
             return None
-        elif payment_type == PaymentType.FNS and payer_status == '13':
+        elif (
+            payment_type == PaymentType.FNS
+            and payer_status == '13'
+            and receiver_account is not None
+            and receiver_account.startswith('03100')
+            and uin is not None
+            and len(uin) in [20, 25]
+        ):
             return None
         elif payment_type == PaymentType.CUSTOMS and payer_status == '30':
             return None
@@ -316,11 +355,18 @@ def check_payer_kpp(
     value: Optional[PayerKPP],
     payment_type: PaymentType,
     payer_inn: Optional[PayerINN],
+    payer_status: Optional[PayerStatus],
 ) -> Optional[PayerKPP]:
     if not payment_type.is_budget:
         return None
 
+    if payer_inn is not None and len(payer_inn) == 5:
+        if value is None:
+            raise PayerKPPValidationINN5EmptyNotAllowed
+
     if payer_inn is not None and len(payer_inn) == 10 and value is None:
+        if payer_status == '01':
+            return value
         raise PayerKPPValidationINN10EmptyNotAllowed
     elif payer_inn is not None and len(payer_inn) == 12 and value is not None:
         raise PayerKPPValidationINN12OnlyEmptyError
@@ -481,7 +527,6 @@ def check_document_number(
     payment_type: PaymentType,
     reason: Optional[Reason],
     payer_status: Optional[PayerStatus],
-    receiver_account: ReceiverAccountNumber,
     uin: Optional[UIN],
     payer_inn: Optional[PayerINN],
 ) -> Optional[DocumentNumber]:
@@ -497,7 +542,7 @@ def check_document_number(
             if value is not None:
                 raise DocumentNumberValidationBOPayerStatus33OnlyEmptyError
             return None
-        if receiver_account.startswith('03212') and payer_status == '31' and uin is not None:
+        if payer_status == '31':
             if value is not None:
                 raise DocumentNumberValidationBOOnlyEmptyError
             return None

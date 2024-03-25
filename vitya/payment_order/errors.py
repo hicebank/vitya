@@ -203,6 +203,11 @@ class UINValidationValueZeroError(UINValidationError, NeedRequiredField):
     description_ru = 'значение не может быть нулем'
 
 
+class UINValidationValueBudget31PayerStatusIncorrectLength(UINValidationError, NeedRequiredField):
+    description = 'value cannot consist of zeros and be of any length aprt from 20 or 25 if payer status is 31'
+    description_ru = 'значение не может состоять из нулей и быть любой длины кроме 20 или 25 если статус плательщика 31'
+
+
 class UINValidationBOLenError(UINValidationLenError):
     description = 'len uin for bo payment must be 4, 20 or 25 len'
     description_ru = 'длина для платежей с типом иные должна быть 4, 30 или 25'
@@ -485,6 +490,11 @@ class PayerKPPValidationINN10EmptyNotAllowed(PayerKPPValidationError, KPPValidat
 class PayerKPPValidationINN12OnlyEmptyError(PayerKPPValidationOnlyEmptyError, IncorrectData):
     description = 'for budget with inn length 12 kpp only empty allowed'
     description_ru = 'для платежей в бюджет с длиной ИНН равной 12 значение КПП должно быть пустым'
+
+
+class PayerKPPValidationINN5EmptyNotAllowed(PayerKPPValidationError, KPPValidationEmptyNotAllowed, NeedRequiredField):
+    description = 'for budget payment with inn length 5 kpp empty value is not allowed'
+    description_ru = 'для платежей в бюджет с длиной ИНН равной 5 значение КПП должно быть заполнено'
 
 
 class ReceiverKPPValidationError(KPPValidationError):
@@ -792,3 +802,23 @@ class TypeOfIncomeValidationError(VityaDescribedError, PydanticValueError):
 class TypeOfIncomeValidationTypeError(TypeOfIncomeValidationError):
     description = 'must be str'
     description_ru = 'должен быть строкой'
+
+
+class ReceiverAccountValidationBudgetPayerStatusError(ReceiverAccountValidationError, IncorrectData):
+    description = (
+        'for budget payment with payer status in 01, 02, 04, 06, 07, 13, 16, 17, 28, 30 '
+        'account must start with "03100"'
+    )
+    description_ru = (
+        'для платежей в бюджет со статусом плательщика 01, 02, 04, 06, 07, 13, 16, 17, '
+        '28, 30 счет должен начинаться с "03100"'
+    )
+
+
+class ReceiverAccountValidationBudgetOtherPayerStatusError(ReceiverAccountValidationError, IncorrectData):
+    description = (
+        'for budget other payment with payer status = 31 account must start with "03212"'
+    )
+    description_ru = (
+        'для иных платежей в бюджет со статусом плательщика 31 счет должен начинаться с "03212"'
+    )
