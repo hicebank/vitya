@@ -151,16 +151,16 @@ def check_receiver_account_with_payment_type_and_payer_status(
     if (
         payment_type.is_budget
         and payer_status in ['01', '02', '04', '06', '07', '13', '16', '17', '28', '30']
+        and not value.startswith('03100')
     ):
-        if not value.startswith('03100'):
-            raise ReceiverAccountValidationBudgetPayerStatusError
+        raise ReceiverAccountValidationBudgetPayerStatusError
 
     elif (
         payment_type == PaymentType.BUDGET_OTHER
         and payer_status == '31'
+        and not value.startswith('03212')
     ):
-        if not value.startswith('03212'):
-            raise ReceiverAccountValidationBudgetOtherPayerStatusError
+        raise ReceiverAccountValidationBudgetOtherPayerStatusError
 
     return value
 
@@ -202,9 +202,11 @@ def check_uin(
     if payer_status == '31' and value is None:
         raise UINValidationValueZeroError
 
-    if payment_type.is_budget and payer_status == '33':
-        if not value or len(value) not in [20, 25] or value == '0' * len(value):
-            raise UINValidationValueBudget31PayerStatusIncorrectLength
+    if (
+        payment_type.is_budget and payer_status == '33'
+        and (not value or len(value) not in [20, 25] or value == '0' * len(value))
+    ):
+        raise UINValidationValueBudget31PayerStatusIncorrectLength
 
     if payment_type == PaymentType.BUDGET_OTHER:
         if receiver_account.startswith('03212') and value is None:
@@ -360,11 +362,9 @@ def check_payer_kpp(
     if not payment_type.is_budget:
         return None
 
-    if payer_inn is not None and len(payer_inn) == 5:
-        if value is None:
-            raise PayerKPPValidationINN5EmptyNotAllowed
-
-    if payer_inn is not None and len(payer_inn) == 10 and value is None and payer_status != '01':
+    if payer_inn is not None and len(payer_inn) == 5 and value is None:
+        raise PayerKPPValidationINN5EmptyNotAllowed
+    elif payer_inn is not None and len(payer_inn) == 10 and value is None and payer_status != '01':
         raise PayerKPPValidationINN10EmptyNotAllowed
     elif payer_inn is not None and len(payer_inn) == 12 and value is not None:
         raise PayerKPPValidationINN12OnlyEmptyError
