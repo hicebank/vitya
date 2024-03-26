@@ -8,6 +8,7 @@ from vitya.payment_order.fields import (
     PayerAccountNumber,
     PayerINN,
     PayerKPP,
+    PayerStatus,
     Receiver,
     ReceiverAccountNumber,
     ReceiverBIC,
@@ -108,6 +109,7 @@ class TestPayerKppChecker(BaseModelChecker):
     payer_kpp: Optional[PayerKPP]
     payment_type: PaymentType
     payer_inn: PayerINN
+    payer_status: Optional[PayerStatus]
 
 
 def test_alert_generator_need_required_field():
@@ -116,6 +118,7 @@ def test_alert_generator_need_required_field():
             payer_kpp=None,
             payment_type=PaymentType.CUSTOMS,
             payer_inn=LE_INN,
+            payer_status=None,
         )
     except Exception as e:
         assert ALERT_GENERATOR.get_error_client_alerts(e) == [
