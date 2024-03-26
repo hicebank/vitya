@@ -13,6 +13,7 @@ from tests.payment_order.testdata import (
     IP_ACCOUNT,
     IP_INN,
     LE_INN,
+    OTHER_RECEIVER_ACCOUNT_NUMBER,
     VALID_BIC,
     VALID_CBC,
     VALID_INN,
@@ -20,7 +21,6 @@ from tests.payment_order.testdata import (
     VALID_KPP,
     VALID_OKTMO,
     VALID_UIN,
-    OTHER_RECEIVER_ACCOUNT_NUMBER,
 )
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
