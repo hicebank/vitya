@@ -20,6 +20,7 @@ from tests.payment_order.testdata import (
     VALID_KPP,
     VALID_OKTMO,
     VALID_UIN,
+    OTHER_RECEIVER_ACCOUNT_NUMBER,
 )
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
@@ -126,7 +127,6 @@ from vitya.payment_order.payments.constants import (
     FNS_KPP,
     FNS_RECEIVER_ACCOUNT_NUMBER,
     FTS_OKTMO,
-    OTHER_RECEIVER_ACCOUNT_NUMBER,
 )
 from vitya.pydantic_fields import BIC, INN, KPP, OKTMO
 

@@ -155,7 +155,7 @@ def check_receiver_account_with_payment_type_and_payer_status(
         if not value.startswith('03100'):
             raise ReceiverAccountValidationBudgetPayerStatusError
 
-    if (
+    elif (
         payment_type == PaymentType.BUDGET_OTHER
         and payer_status == '31'
     ):
@@ -364,9 +364,7 @@ def check_payer_kpp(
         if value is None:
             raise PayerKPPValidationINN5EmptyNotAllowed
 
-    if payer_inn is not None and len(payer_inn) == 10 and value is None:
-        if payer_status == '01':
-            return value
+    if payer_inn is not None and len(payer_inn) == 10 and value is None and payer_status != '01':
         raise PayerKPPValidationINN10EmptyNotAllowed
     elif payer_inn is not None and len(payer_inn) == 12 and value is not None:
         raise PayerKPPValidationINN12OnlyEmptyError
