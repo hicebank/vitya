@@ -67,7 +67,7 @@ from vitya.payment_order.errors import (
     UINValidationBONotEmpty,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
-    UINValidationValueBudget31PayerStatusIncorrectLength,
+    UINValidationValueBudget33PayerStatusIncorrectLength,
     UINValidationValueZeroError,
 )
 from vitya.payment_order.fields import (
@@ -206,7 +206,7 @@ def check_uin(
         payment_type.is_budget and payer_status == '33'
         and (not value or len(value) not in [20, 25] or value == '0' * len(value))
     ):
-        raise UINValidationValueBudget31PayerStatusIncorrectLength
+        raise UINValidationValueBudget33PayerStatusIncorrectLength
 
     if payment_type == PaymentType.BUDGET_OTHER:
         if receiver_account.startswith('03212') and value is None:

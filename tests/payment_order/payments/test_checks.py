@@ -82,7 +82,7 @@ from vitya.payment_order.errors import (
     UINValidationBONotEmpty,
     UINValidationFNSNotValueZeroError,
     UINValidationFNSValueZeroError,
-    UINValidationValueBudget31PayerStatusIncorrectLength,
+    UINValidationValueBudget33PayerStatusIncorrectLength,
     UINValidationValueZeroError,
 )
 from vitya.payment_order.fields import (
@@ -291,7 +291,7 @@ def test_check_purpose_code(
             AccountNumber(IP_ACCOUNT),
             '33',
             '',
-            pytest.raises(UINValidationValueBudget31PayerStatusIncorrectLength),
+            pytest.raises(UINValidationValueBudget33PayerStatusIncorrectLength),
             None,
         ),
         (
@@ -300,7 +300,7 @@ def test_check_purpose_code(
             AccountNumber(IP_ACCOUNT),
             '33',
             '',
-            pytest.raises(UINValidationValueBudget31PayerStatusIncorrectLength),
+            pytest.raises(UINValidationValueBudget33PayerStatusIncorrectLength),
             None,
         ),
     ]
