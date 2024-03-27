@@ -203,9 +203,9 @@ class UINValidationValueZeroError(UINValidationError, NeedRequiredField):
     description_ru = 'значение не может быть нулем'
 
 
-class UINValidationValueBudget31PayerStatusIncorrectLength(UINValidationError, NeedRequiredField):
-    description = 'value cannot consist of zeros and be of any length aprt from 20 or 25 if payer status is 31'
-    description_ru = 'значение не может состоять из нулей и быть любой длины кроме 20 или 25 если статус плательщика 31'
+class UINValidationValueBudget33PayerStatusIncorrectLength(UINValidationError, NeedRequiredField):
+    description = 'value cannot consist of zeros and be of any length aprt from 20 or 25 if payer status is 33'
+    description_ru = 'значение не может состоять из нулей и быть любой длины кроме 20 или 25 если статус плательщика 33'
 
 
 class UINValidationBOLenError(UINValidationLenError):
