@@ -531,6 +531,11 @@ def check_document_number(
     if not payment_type.is_budget:
         return None
 
+    if payer_status == '31':
+        if value is not None:
+            raise DocumentNumberValidationBOOnlyEmptyError
+        return None
+
     if payment_type == PaymentType.FNS:
         if value is not None:
             raise DocumentNumberValidationFNSOnlyEmptyError
@@ -540,11 +545,6 @@ def check_document_number(
             if value is not None:
                 raise DocumentNumberValidationBOPayerStatus33OnlyEmptyError
             return None
-        if payer_status == '31':
-            if value is not None:
-                raise DocumentNumberValidationBOOnlyEmptyError
-            return None
-
         if payer_status == '24' and payer_inn is None and uin is None and value is None:
             raise DocumentNumberValidationBOEmptyNotAllowed
         if value is not None:
