@@ -18,7 +18,7 @@ from tests.payment_order.testdata import (
     VALID_UIN,
 )
 from vitya.payment_order.enums import PaymentType
-from vitya.payment_order.errors import (
+from vitya.payment_order.errors import (  # DocumentNumberValidationBOValueError,
     AccountValidationBICValueError,
     CBCValidationEmptyNotAllowed,
     DocumentDateValidationBOLenError,
@@ -27,7 +27,6 @@ from vitya.payment_order.errors import (
     DocumentDateValidationFNSOnlyEmptyError,
     DocumentNumberValidationBOEmptyNotAllowed,
     DocumentNumberValidationBOOnlyEmptyError,
-    # DocumentNumberValidationBOValueError,
     DocumentNumberValidationBOValueLenError,
     DocumentNumberValidationCustoms00ValueError,
     DocumentNumberValidationCustomsValueLen7Error,

@@ -3,7 +3,7 @@ from datetime import date
 from typing import Optional
 
 from vitya.payment_order.enums import AccountKind, PaymentType
-from vitya.payment_order.errors import (
+from vitya.payment_order.errors import (  # DocumentNumberValidationBOValueError,
     AccountValidationBICValueError,
     BudgetPaymentForThirdPersonError,
     CBCValidationEmptyNotAllowed,
@@ -14,7 +14,6 @@ from vitya.payment_order.errors import (
     DocumentNumberValidationBOEmptyNotAllowed,
     DocumentNumberValidationBOOnlyEmptyError,
     DocumentNumberValidationBOPayerStatus33OnlyEmptyError,
-    # DocumentNumberValidationBOValueError,
     DocumentNumberValidationBOValueLenError,
     DocumentNumberValidationCustoms00ValueError,
     DocumentNumberValidationCustomsValueLen7Error,
