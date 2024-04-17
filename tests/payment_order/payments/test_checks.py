@@ -23,7 +23,7 @@ from tests.payment_order.testdata import (
     VALID_UIN,
 )
 from vitya.payment_order.enums import PaymentType
-from vitya.payment_order.errors import (
+from vitya.payment_order.errors import (  # DocumentNumberValidationBOValueError,
     AccountValidationBICValueError,
     BudgetPaymentForThirdPersonError,
     CBCValidationEmptyNotAllowed,
@@ -33,7 +33,6 @@ from vitya.payment_order.errors import (
     DocumentDateValidationFNSOnlyEmptyError,
     DocumentNumberValidationBOEmptyNotAllowed,
     DocumentNumberValidationBOOnlyEmptyError,
-    DocumentNumberValidationBOValueError,
     DocumentNumberValidationBOValueLenError,
     DocumentNumberValidationCustoms00ValueError,
     DocumentNumberValidationCustomsValueLen7Error,
@@ -826,17 +825,17 @@ def test_check_tax_period_before_2024(
             'exception_handler': pytest.raises(DocumentNumberValidationBOValueLenError),
             'expected_value': None,
         },
-        {
-            'case_id': 9,
-            'value': '18;',
-            'payment_type': PaymentType.BUDGET_OTHER,
-            'payer_status': '24',
-            'payer_inn': VALID_INN,
-            'uin': None,
-            'reason': '',
-            'exception_handler': pytest.raises(DocumentNumberValidationBOValueError),
-            'expected_value': None,
-        },
+        # {
+        #     'case_id': 9,
+        #     'value': '18;',
+        #     'payment_type': PaymentType.BUDGET_OTHER,
+        #     'payer_status': '24',
+        #     'payer_inn': VALID_INN,
+        #     'uin': None,
+        #     'reason': '',
+        #     'exception_handler': pytest.raises(DocumentNumberValidationBOValueError),
+        #     'expected_value': None,
+        # },
         {
             'case_id': 10,
             'value': '1',

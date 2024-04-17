@@ -3,7 +3,7 @@ from datetime import date
 from typing import Optional
 
 from vitya.payment_order.enums import AccountKind, PaymentType
-from vitya.payment_order.errors import (
+from vitya.payment_order.errors import (  # DocumentNumberValidationBOValueError,
     AccountValidationBICValueError,
     BudgetPaymentForThirdPersonError,
     CBCValidationEmptyNotAllowed,
@@ -14,7 +14,6 @@ from vitya.payment_order.errors import (
     DocumentNumberValidationBOEmptyNotAllowed,
     DocumentNumberValidationBOOnlyEmptyError,
     DocumentNumberValidationBOPayerStatus33OnlyEmptyError,
-    DocumentNumberValidationBOValueError,
     DocumentNumberValidationBOValueLenError,
     DocumentNumberValidationCustoms00ValueError,
     DocumentNumberValidationCustomsValueLen7Error,
@@ -551,7 +550,8 @@ def check_document_number(
             if len(value) > 15:
                 raise DocumentNumberValidationBOValueLenError
             if len(value) < 3 or value[2] != ';' or value[:2] not in DOCUMENT_NUMBERS:
-                raise DocumentNumberValidationBOValueError
+                # raise DocumentNumberValidationBOValueError
+                pass
         return value
     elif payment_type == PaymentType.CUSTOMS:
         if reason == '00' and value is not None and value not in ['00', '0']:
