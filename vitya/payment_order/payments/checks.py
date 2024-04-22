@@ -2,7 +2,7 @@ import re
 from datetime import date
 from typing import Optional
 
-from vitya.payment_order.enums import AccountKind, PaymentType
+from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (  # DocumentNumberValidationBOValueError,
     AccountValidationBICValueError,
     BudgetPaymentForThirdPersonError,
@@ -101,7 +101,6 @@ from vitya.payment_order.payments.constants import (
     OTHER_OKTMO_RECEIVER_ACCOUNT_PREFIXES,
     OTHER_OKTMO_RECEIVER_ACCOUNT_PREFIXES_2,
 )
-from vitya.payment_order.payments.tools import get_account_kind
 from vitya.pydantic_fields import BIC, OKTMO
 
 
