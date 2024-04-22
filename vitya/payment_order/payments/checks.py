@@ -38,7 +38,6 @@ from vitya.payment_order.errors import (  # DocumentNumberValidationBOValueError
     PurposeCodeValidationFlError,
     PurposeCodeValidationNullError,
     PurposeValidationForThirdPersonError,
-    PurposeValidationIPNDSError,
     PurposeValidationValueEmptyErrorForNonFNS,
     ReasonValidationValueErrorCustoms,
     ReasonValidationValueErrorFNS,
