@@ -229,15 +229,6 @@ def check_purpose(
 ) -> Optional[Purpose]:
     if payment_type != PaymentType.FNS and not value:
         raise PurposeValidationValueEmptyErrorForNonFNS
-    if (
-        not payment_type.is_budget
-        and get_account_kind(payer_account) == AccountKind.IP
-        and (
-            value is None
-            or not re.search(r'(?i)\bНДС\b', value)
-        )
-    ):
-        raise PurposeValidationIPNDSError
     return value
 
 

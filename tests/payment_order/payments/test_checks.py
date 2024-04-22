@@ -55,7 +55,6 @@ from vitya.payment_order.errors import (  # DocumentNumberValidationBOValueError
     PurposeCodeValidationChameleonError,
     PurposeCodeValidationFlError,
     PurposeCodeValidationNullError,
-    PurposeValidationIPNDSError,
     PurposeValidationValueEmptyErrorForNonFNS,
     ReasonValidationValueErrorCustoms,
     ReasonValidationValueErrorFNS,
@@ -381,7 +380,7 @@ def test_check_uin_before_2024(
             for payment_type in PaymentType
             if payment_type != PaymentType.FNS
         ],
-        ('some', PaymentType.IP, PayerAccountNumber(IP_ACCOUNT), pytest.raises(PurposeValidationIPNDSError), None),
+        ('some', PaymentType.IP, PayerAccountNumber(IP_ACCOUNT), nullcontext(), 'some'),
         ('some', PaymentType.BUDGET_OTHER, PayerAccountNumber(IP_ACCOUNT), nullcontext(), 'some'),
         ('some with НДС', PaymentType.IP, PayerAccountNumber(IP_ACCOUNT), nullcontext(), 'some with НДС'),
     ]

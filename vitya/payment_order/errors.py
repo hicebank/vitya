@@ -266,11 +266,6 @@ class PurposeValidationMaxLenError(PurposeValidationError, IncorrectLen):
     description_ru = 'длина должна быть от 1 до 210 символов'
 
 
-class PurposeValidationIPNDSError(PurposeValidationError, IncorrectData):
-    description = 'for IP payment purpose must contains "НДС"'
-    description_ru = 'для платежей ИП назначение должно содержать "НДС"'
-
-
 class PurposeValidationValueEmptyErrorForNonFNS(PurposeValidationError, NeedRequiredField):
     description = 'value cannot be empty for non FNS payments'
     description_ru = 'значение не может быть пустым для платежей не в ФНС'
