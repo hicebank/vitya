@@ -42,7 +42,6 @@ from vitya.payment_order.errors import (  # DocumentNumberValidationBOValueError
     PayerStatusValidationCustoms05NotAllowedError,
     PayerStatusValidationNullNotAllowedError,
     PurposeValidationForThirdPersonError,
-    PurposeValidationIPNDSError,
     ReasonValidationValueErrorCustoms,
     ReceiverAccountValidationBICValueError,
     ReceiverAccountValidationCustomsValueError,
@@ -307,7 +306,7 @@ class TestPurposeChecker(BaseModelChecker):
 @pytest.mark.parametrize(
     'purpose, payment_type, payer_account, exception',
     [
-        ('some', PaymentType.IP, AccountNumber(IP_ACCOUNT), PurposeValidationIPNDSError),
+        ('some', PaymentType.IP, AccountNumber(IP_ACCOUNT), None),
         ('some', PaymentType.BUDGET_OTHER, AccountNumber(IP_ACCOUNT), None),
         ('some НДС', PaymentType.IP, AccountNumber(IP_ACCOUNT), None),
     ]
