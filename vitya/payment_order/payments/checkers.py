@@ -48,6 +48,7 @@ from vitya.payment_order.payments.checks import (
     check_oktmo_with_receiver_account_number,
     check_operation_kind,
     check_payer_inn,
+    check_payer_inn_with_uin_and_receiver_account,
     check_payer_kpp,
     check_payer_status,
     check_payment_type_and_for_third_person,
@@ -133,8 +134,6 @@ class PayerINNChecker(BaseChecker):
         self,
         payer_inn: Optional[PayerINN],
         payer_status: Optional[PayerStatus],
-        receiver_account: Optional[ReceiverAccountNumber],
-        uin: Optional[UIN],
         for_third_person: ForThirdPerson,
         payment_type: PaymentType
     ) -> None:
@@ -142,8 +141,6 @@ class PayerINNChecker(BaseChecker):
         self.payer_status = payer_status
         self.for_third_person = for_third_person
         self.payment_type = payment_type
-        self.receiver_account = receiver_account
-        self.uin = uin
 
     def check(self) -> None:
         check_payer_inn(
@@ -151,6 +148,29 @@ class PayerINNChecker(BaseChecker):
             payment_type=self.payment_type,
             payer_status=self.payer_status,
             for_third_person=self.for_third_person,
+        )
+
+
+class PayerINNWithUinAndReceiverAccountChecker(BaseChecker):
+    def __init__(
+        self,
+        payer_inn: Optional[PayerINN],
+        payer_status: Optional[PayerStatus],
+        receiver_account: Optional[ReceiverAccountNumber],
+        uin: Optional[UIN],
+        payment_type: PaymentType
+    ) -> None:
+        self.payer_inn = payer_inn
+        self.payer_status = payer_status
+        self.payment_type = payment_type
+        self.receiver_account = receiver_account
+        self.uin = uin
+
+    def check(self) -> None:
+        check_payer_inn_with_uin_and_receiver_account(
+            value=self.payer_inn,
+            payment_type=self.payment_type,
+            payer_status=self.payer_status,
             receiver_account=self.receiver_account,
             uin=self.uin,
         )
@@ -450,6 +470,7 @@ class BaseModelChecker(BaseModel):
         ReceiverAccountCheckerWithPaymentTypeAndPayerStatus,
         OperationKindChecker,
         PayerINNChecker,
+        PayerINNWithUinAndReceiverAccountChecker,
         UINChecker,
         PurposeChecker,
         ReceiverINNChecker,

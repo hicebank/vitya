@@ -107,6 +107,7 @@ from vitya.payment_order.payments.checks import (
     check_oktmo_with_receiver_account_number,
     check_operation_kind,
     check_payer_inn,
+    check_payer_inn_with_uin_and_receiver_account,
     check_payer_kpp,
     check_payer_status,
     check_payment_type_and_for_third_person,
@@ -397,20 +398,18 @@ def test_check_purpose(
 
 
 @pytest.mark.parametrize(
-    'value, payment_type, payer_status, for_third_person, receiver_account, uin, exception_handler, expected_value',
+    'value, payment_type, payer_status, for_third_person, exception_handler, expected_value',
     [
-        (VALID_INN, PaymentType.FL, '', False, None, None, nullcontext(), VALID_INN),
-        (None, PaymentType.BUDGET_OTHER, '', False, None, None, nullcontext(), None),
-        (None, PaymentType.FNS, '13', False, None, None, pytest.raises(PayerINNValidationEmptyNotAllowedError), None),
-        (VALID_INN, PaymentType.FNS, '13', False, FNS_RECEIVER_ACCOUNT_NUMBER, VALID_UIN, nullcontext(), VALID_INN),
-        (None, PaymentType.CUSTOMS, '30', False, None, None, nullcontext(), None),
-        (None, PaymentType.FNS, '14', False, None, None, pytest.raises(PayerINNValidationEmptyNotAllowedError), None),
-        (None, PaymentType.CUSTOMS, '31', False, None, None, pytest.raises(PayerINNValidationEmptyNotAllowedError), None),
-        ('12345', PaymentType.CUSTOMS, '06', True, None, None, pytest.raises(PayerINNValidationCustomsLen10Error), None),
-        ('12345', PaymentType.CUSTOMS, '16', False, None, None, pytest.raises(PayerINNValidationCustomsLen12Error), None),
-        ('00123', PaymentType.CUSTOMS, '', False, None, None, pytest.raises(PayerINNValidationStartWithZerosError), None),
-        ('00000', PaymentType.CUSTOMS, '', False, None, None, pytest.raises(PayerINNValidationStartWithZerosError), None),
-        (VALID_INN, PaymentType.CUSTOMS, '', False, None, None, nullcontext(), VALID_INN),
+        (VALID_INN, PaymentType.FL, '', False, nullcontext(), VALID_INN),
+        (None, PaymentType.BUDGET_OTHER, '', False, nullcontext(), None),
+        (VALID_INN, PaymentType.FNS, '13', False, nullcontext(), VALID_INN),
+        (None, PaymentType.CUSTOMS, '30', False, nullcontext(), None),
+        (None, PaymentType.CUSTOMS, '31', False, pytest.raises(PayerINNValidationEmptyNotAllowedError), None),
+        ('12345', PaymentType.CUSTOMS, '06', True, pytest.raises(PayerINNValidationCustomsLen10Error), None),
+        ('12345', PaymentType.CUSTOMS, '16', False, pytest.raises(PayerINNValidationCustomsLen12Error), None),
+        ('00123', PaymentType.CUSTOMS, '', False, pytest.raises(PayerINNValidationStartWithZerosError), None),
+        ('00000', PaymentType.CUSTOMS, '', False, pytest.raises(PayerINNValidationStartWithZerosError), None),
+        (VALID_INN, PaymentType.CUSTOMS, '', False, nullcontext(), VALID_INN),
     ]
 )
 def test_check_payer_inn(
@@ -418,8 +417,6 @@ def test_check_payer_inn(
     payment_type: PaymentType,
     payer_status: PayerStatus,
     for_third_person: bool,
-    receiver_account: ReceiverAccountNumber,
-    uin: UIN,
     exception_handler: ContextManager,
     expected_value: str
 ) -> None:
@@ -429,6 +426,30 @@ def test_check_payer_inn(
             payment_type=payment_type,
             payer_status=payer_status,
             for_third_person=for_third_person,
+        )
+
+
+@pytest.mark.parametrize(
+    'value, payment_type, payer_status, receiver_account, uin, exception_handler, expected_value',
+    [
+        (None, PaymentType.FNS, '13', None, None, pytest.raises(PayerINNValidationEmptyNotAllowedError), None),
+        (None, PaymentType.FNS, '14', None, None, pytest.raises(PayerINNValidationEmptyNotAllowedError), None),
+    ]
+)
+def test_check_payer_inn_with_uin_and_receiver_account(
+    value: Optional[str],
+    payment_type: PaymentType,
+    payer_status: PayerStatus,
+    receiver_account: ReceiverAccountNumber,
+    uin: UIN,
+    exception_handler: ContextManager,
+    expected_value: str
+) -> None:
+    with exception_handler:
+        assert expected_value == check_payer_inn_with_uin_and_receiver_account(
+            value=value,
+            payment_type=payment_type,
+            payer_status=payer_status,
             receiver_account=receiver_account,
             uin=uin,
         )

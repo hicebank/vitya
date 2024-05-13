@@ -234,8 +234,6 @@ def check_payer_inn(
     value: Optional[PayerINN],
     payment_type: PaymentType,
     payer_status: Optional[PayerStatus],
-    receiver_account: Optional[ReceiverAccountNumber],
-    uin: Optional[UIN],
     for_third_person: ForThirdPerson,
 ) -> Optional[PayerINN]:
     if not payment_type.is_budget:
@@ -244,14 +242,7 @@ def check_payer_inn(
     if value is None:
         if payment_type == PaymentType.BUDGET_OTHER:
             return None
-        elif (
-            payment_type == PaymentType.FNS
-            and payer_status == '13'
-            and receiver_account is not None
-            and receiver_account.startswith('03100')
-            and uin is not None
-            and len(uin) in [20, 25]
-        ):
+        elif payment_type == PaymentType.FNS:
             return None
         elif payment_type == PaymentType.CUSTOMS and payer_status == '30':
             return None
@@ -268,6 +259,26 @@ def check_payer_inn(
         raise PayerINNValidationStartWithZerosError
 
     return value
+
+
+def check_payer_inn_with_uin_and_receiver_account(
+    value: Optional[PayerINN],
+    payment_type: PaymentType,
+    payer_status: Optional[PayerStatus],
+    receiver_account: Optional[ReceiverAccountNumber],
+    uin: Optional[UIN],
+) -> Optional[PayerINN]:
+    if value is None and payment_type == PaymentType.FNS:
+        if not (
+            payer_status == '13'
+            and receiver_account is not None
+            and receiver_account.startswith('03100')
+            and uin is not None
+            and len(uin) in [20, 25]
+        ):
+            raise PayerINNValidationEmptyNotAllowedError
+
+    return None
 
 
 def check_receiver_inn(

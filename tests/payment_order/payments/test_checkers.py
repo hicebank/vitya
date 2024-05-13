@@ -85,6 +85,7 @@ from vitya.payment_order.payments.checkers import (
     OKTMOWithPayerStatusChecker,
     OperationKindChecker,
     PayerINNChecker,
+    PayerINNWithUinAndReceiverAccountChecker,
     PayerKPPChecker,
     PayerStatusChecker,
     PurposeChecker,
@@ -213,19 +214,16 @@ class TestPayerInnChecker(BaseModelChecker):
     payer_status: PayerStatus
     for_third_face: bool
     payment_type: PaymentType
-    receiver_account: Optional[ReceiverAccountNumber]
-    uin: Optional[UIN]
 
     __extra_wired_checkers__ = [
-        (PayerINNChecker, ['payer_inn', 'payer_status', 'receiver_account', 'uin', 'for_third_face', 'payment_type']),
+        (PayerINNChecker, ['payer_inn', 'payer_status', 'for_third_face', 'payment_type']),
     ]
 
 
 @pytest.mark.parametrize(
-    'payer_inn, payer_status, for_third_face, payment_type, receiver_account, uin, exception',
+    'payer_inn, payer_status, for_third_face, payment_type, exception',
     [
-        (VALID_INN, '01', False, PaymentType.IP, None, None, None),
-        (None, '30', False, PaymentType.FNS, None, None, PayerINNValidationEmptyNotAllowedError)
+        (VALID_INN, '01', False, PaymentType.IP, None),
     ]
 )
 def test_payer_inn_checker(
@@ -233,8 +231,6 @@ def test_payer_inn_checker(
     payer_status: PayerStatus,
     for_third_face: bool,
     payment_type: PaymentType,
-    receiver_account: Optional[ReceiverAccountNumber],
-    uin: Optional[UIN],
     exception: Type[Exception]
 ) -> None:
     try:
@@ -242,6 +238,44 @@ def test_payer_inn_checker(
             payer_inn=payer_inn,
             payer_status=payer_status,
             for_third_face=for_third_face,
+            payment_type=payment_type,
+        )
+    except ValidationError as e:
+        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+    else:
+        assert exception is None
+
+
+class TestPayerINNWithUinAndReceiverAccountChecker(BaseModelChecker):
+    payer_inn: Optional[INN]
+    payer_status: PayerStatus
+    payment_type: PaymentType
+    receiver_account: Optional[ReceiverAccountNumber]
+    uin: Optional[UIN]
+
+    __extra_wired_checkers__ = [
+        (PayerINNWithUinAndReceiverAccountChecker, ['payer_inn', 'payer_status', 'receiver_account', 'uin', 'payment_type']),
+    ]
+
+
+@pytest.mark.parametrize(
+    'payer_inn, payer_status, payment_type, receiver_account, uin, exception',
+    [
+        (None, '30', PaymentType.FNS, None, None, PayerINNValidationEmptyNotAllowedError)
+    ]
+)
+def test_payer_inn_with_uin_and_receiver_account_checker(
+    payer_inn: INN,
+    payer_status: PayerStatus,
+    payment_type: PaymentType,
+    receiver_account: Optional[ReceiverAccountNumber],
+    uin: Optional[UIN],
+    exception: Type[Exception]
+) -> None:
+    try:
+        TestPayerINNWithUinAndReceiverAccountChecker(
+            payer_inn=payer_inn,
+            payer_status=payer_status,
             payment_type=payment_type,
             receiver_account=receiver_account,
             uin=uin,
