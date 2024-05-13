@@ -277,7 +277,7 @@ def check_payer_inn_with_uin_and_receiver_account(
             and len(uin) in [20, 25]
         ):
             raise PayerINNValidationEmptyNotAllowedError
-        
+
     return None
 
 
