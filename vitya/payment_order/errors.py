@@ -467,7 +467,9 @@ class PayerStatusValidationFNSIncorrectDataError(PayerStatusValidationError, Inc
 
 class PayerStatusValidationOtherIncorrectDataError(PayerStatusValidationError, IncorrectData):
     description = 'for other payment values "01", "13", "06", "16", "17", "28", "30", "31" not allowed'
-    description_ru = 'для платежей в иные организации значение статуса не может быть "01", "13", "06", "16", "17", "28", "30", "31"'
+    description_ru = (
+        'для платежей в иные организации значение статуса не может быть "01", "13", "06", "16", "17", "28", "30", "31"'
+    )
 
 
 class KPPValidationOnlyEmptyError(KPPValidationError):
