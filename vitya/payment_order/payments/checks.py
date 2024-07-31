@@ -32,7 +32,10 @@ from vitya.payment_order.errors import (  # DocumentNumberValidationBOValueError
     PayerKPPValidationINN10EmptyNotAllowed,
     PayerKPPValidationINN12OnlyEmptyError,
     PayerStatusValidationCustoms05NotAllowedError,
+    PayerStatusValidationCustomsIncorrectDataError,
+    PayerStatusValidationFNSIncorrectDataError,
     PayerStatusValidationNullNotAllowedError,
+    PayerStatusValidationOtherIncorrectDataError,
     PaymentTypeValueError,
     PurposeCodeValidationChameleonError,
     PurposeCodeValidationFlError,
@@ -96,8 +99,10 @@ from vitya.payment_order.payments.constants import (
     DOCUMENT_NUMBERS,
     FNS_KPP,
     FNS_RECEIVER_ACCOUNT_NUMBER,
+    FNS_TAX_PAYER_STATUSES,
     FTS_KPP,
     FTS_OKTMO,
+    FTS_TAX_PAYER_STATUSES,
     OTHER_OKTMO_RECEIVER_ACCOUNT_PREFIXES,
     OTHER_OKTMO_RECEIVER_ACCOUNT_PREFIXES_2,
 )
@@ -338,13 +343,22 @@ def check_purpose_for_third_person(
 def check_payer_status(
     value: Optional[PayerStatus],
     payment_type: PaymentType,
-    for_third_person: ForThirdPerson,
+    for_third_person: Optional[ForThirdPerson],
 ) -> Optional[PayerStatus]:
     if not payment_type.is_budget:
         return None
 
     if value is None:
         raise PayerStatusValidationNullNotAllowedError
+
+    if payment_type == PaymentType.FNS and value not in FNS_TAX_PAYER_STATUSES:
+        raise PayerStatusValidationFNSIncorrectDataError
+
+    if payment_type == PaymentType.CUSTOMS and value not in FTS_TAX_PAYER_STATUSES:
+        raise PayerStatusValidationCustomsIncorrectDataError
+
+    if payment_type == PaymentType.BUDGET_OTHER and value in FNS_TAX_PAYER_STATUSES + FTS_TAX_PAYER_STATUSES:
+        raise PayerStatusValidationOtherIncorrectDataError
 
     if payment_type == PaymentType.CUSTOMS and for_third_person == False and value == '06':  # noqa
         raise PayerStatusValidationCustoms05NotAllowedError

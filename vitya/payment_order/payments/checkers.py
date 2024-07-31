@@ -234,7 +234,7 @@ class PayerStatusChecker(BaseChecker):
         self,
         payer_status: Optional[PayerStatus],
         payment_type: PaymentType,
-        for_third_person: ForThirdPerson,
+        for_third_person: Optional[ForThirdPerson],
     ) -> None:
         self.payer_status = payer_status
         self.payment_type = payment_type
