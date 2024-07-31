@@ -51,7 +51,10 @@ from vitya.payment_order.errors import (  # DocumentNumberValidationBOValueError
     PayerKPPValidationINN10EmptyNotAllowed,
     PayerKPPValidationINN12OnlyEmptyError,
     PayerStatusValidationCustoms05NotAllowedError,
+    PayerStatusValidationCustomsIncorrectDataError,
+    PayerStatusValidationFNSIncorrectDataError,
     PayerStatusValidationNullNotAllowedError,
+    PayerStatusValidationOtherIncorrectDataError,
     PurposeCodeValidationChameleonError,
     PurposeCodeValidationFlError,
     PurposeCodeValidationNullError,
@@ -494,7 +497,10 @@ def test_check_receiver_inn(
         (None, PaymentType.CUSTOMS, False, pytest.raises(PayerStatusValidationNullNotAllowedError), None),
         ('06', PaymentType.CUSTOMS, False, pytest.raises(PayerStatusValidationCustoms05NotAllowedError), None),
         ('06', PaymentType.CUSTOMS, True, nullcontext(), '06'),
-        ('31', PaymentType.CUSTOMS, True, nullcontext(), '31')
+        ('31', PaymentType.CUSTOMS, True, nullcontext(), '31'),
+        ('13', PaymentType.CUSTOMS, None, pytest.raises(PayerStatusValidationCustomsIncorrectDataError), None),
+        ('06', PaymentType.FNS, None, pytest.raises(PayerStatusValidationFNSIncorrectDataError), None),
+        ('06', PaymentType.BUDGET_OTHER, None, pytest.raises(PayerStatusValidationOtherIncorrectDataError), None),
     ]
 )
 def test_check_payer_status(

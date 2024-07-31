@@ -40,7 +40,10 @@ from vitya.payment_order.errors import (  # DocumentNumberValidationBOValueError
     PayerKPPValidationINN10EmptyNotAllowed,
     PayerKPPValidationINN12OnlyEmptyError,
     PayerStatusValidationCustoms05NotAllowedError,
+    PayerStatusValidationCustomsIncorrectDataError,
+    PayerStatusValidationFNSIncorrectDataError,
     PayerStatusValidationNullNotAllowedError,
+    PayerStatusValidationOtherIncorrectDataError,
     PurposeValidationForThirdPersonError,
     ReasonValidationValueErrorCustoms,
     ReceiverAccountValidationBICValueError,
@@ -427,7 +430,7 @@ def test_receiver_inn_checker(
 class TestPayerStatusChecker(BaseModelChecker):
     payer_status: Optional[PayerStatus]
     payment_type: PaymentType
-    for_third_face: bool
+    for_third_face: Optional[bool]
 
     __extra_wired_checkers__ = [
         (PayerStatusChecker, ['payer_status', 'payment_type', 'for_third_face']),
@@ -439,6 +442,10 @@ class TestPayerStatusChecker(BaseModelChecker):
     [
         (None, PaymentType.CUSTOMS, False, PayerStatusValidationNullNotAllowedError),
         ('06', PaymentType.CUSTOMS, False, PayerStatusValidationCustoms05NotAllowedError),
+        ('13', PaymentType.CUSTOMS, None, PayerStatusValidationCustomsIncorrectDataError),
+        ('06', PaymentType.FNS, None, PayerStatusValidationFNSIncorrectDataError),
+        ('06', PaymentType.BUDGET_OTHER, None, PayerStatusValidationOtherIncorrectDataError),
+        ('06', PaymentType.CUSTOMS, None, None),
     ]
 )
 def test_payer_status_checker(

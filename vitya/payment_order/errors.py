@@ -455,6 +455,23 @@ class PayerStatusValidationCustoms05NotAllowedError(PayerStatusValidationError, 
     description_ru = 'для платежей в таможню и для платежей за третьих лиц значение статуса не может быть "06"'
 
 
+class PayerStatusValidationCustomsIncorrectDataError(PayerStatusValidationError, IncorrectData):
+    description = 'for customs payment only values "06", "16", "17", "28", "30", "31" are allowed'
+    description_ru = 'для платежей в таможню значение статуса может быть только "06", "16", "17", "28", "30", "31"'
+
+
+class PayerStatusValidationFNSIncorrectDataError(PayerStatusValidationError, IncorrectData):
+    description = 'for fns payment only values "01", "13" are allowed'
+    description_ru = 'для платежей в налоговую значение статуса может быть только "01", "13"'
+
+
+class PayerStatusValidationOtherIncorrectDataError(PayerStatusValidationError, IncorrectData):
+    description = 'for other payment values "01", "13", "06", "16", "17", "28", "30", "31" not allowed'
+    description_ru = (
+        'для платежей в иные организации значение статуса не может быть "01", "13", "06", "16", "17", "28", "30", "31"'
+    )
+
+
 class KPPValidationOnlyEmptyError(KPPValidationError):
     description = 'only empty is allowed'
     description_ru = 'должно быть пустым'
