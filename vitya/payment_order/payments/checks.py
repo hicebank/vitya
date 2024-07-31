@@ -14,6 +14,7 @@ from vitya.payment_order.errors import (  # DocumentNumberValidationBOValueError
     DocumentNumberValidationBOEmptyNotAllowed,
     DocumentNumberValidationBOOnlyEmptyError,
     DocumentNumberValidationBOPayerStatus33OnlyEmptyError,
+    DocumentNumberValidationBOValueError,
     DocumentNumberValidationBOValueLenError,
     DocumentNumberValidationCustoms00ValueError,
     DocumentNumberValidationCustomsValueLen7Error,
@@ -563,9 +564,12 @@ def check_document_number(
         if value is not None:
             if len(value) > 15:
                 raise DocumentNumberValidationBOValueLenError
-            if len(value) < 3 or value[2] != ';' or value[:2] not in DOCUMENT_NUMBERS:
-                # raise DocumentNumberValidationBOValueError
-                pass
+            if (
+                payer_status == '24' and (
+                    len(value) < 3 or value[2] != ';' or value[:2] not in DOCUMENT_NUMBERS
+                )
+            ):
+                raise DocumentNumberValidationBOValueError
         return value
     elif payment_type == PaymentType.CUSTOMS:
         if reason == '00' and value is not None and value not in ['00', '0']:
