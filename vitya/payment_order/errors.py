@@ -731,9 +731,12 @@ class DocumentNumberValidationBOOnlyEmptyError(DocumentNumberValidationOnlyEmpty
 
 
 class DocumentNumberValidationBOValueError(DocumentNumberValidationError):
-    description = f'for bo first two chars should be in {DOCUMENT_NUMBERS}, and third is equal to ";"'
+    description = (
+        f'for bo with tax payer status 24 first two chars should be '
+        f'in {DOCUMENT_NUMBERS}, and third is equal to ";"'
+    )
     description_ru = (
-        f'для иных платежей в бюджет первые два символы должны быть в {DOCUMENT_NUMBERS},'
+        f'для иных платежей в бюджет со статусом плательщика 24 первые два символы должны быть в {DOCUMENT_NUMBERS},'
         f' а третий символ должен быть равен ";"'
     )
 

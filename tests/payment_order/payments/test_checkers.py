@@ -18,7 +18,7 @@ from tests.payment_order.testdata import (
     VALID_UIN,
 )
 from vitya.payment_order.enums import PaymentType
-from vitya.payment_order.errors import (  # DocumentNumberValidationBOValueError,
+from vitya.payment_order.errors import (
     AccountValidationBICValueError,
     CBCValidationEmptyNotAllowed,
     DocumentDateValidationBOLenError,
@@ -27,6 +27,7 @@ from vitya.payment_order.errors import (  # DocumentNumberValidationBOValueError
     DocumentDateValidationFNSOnlyEmptyError,
     DocumentNumberValidationBOEmptyNotAllowed,
     DocumentNumberValidationBOOnlyEmptyError,
+    DocumentNumberValidationBOValueError,
     DocumentNumberValidationBOValueLenError,
     DocumentNumberValidationCustoms00ValueError,
     DocumentNumberValidationCustomsValueLen7Error,
@@ -806,15 +807,15 @@ class DocumentNumberCheckerChecker(BaseModelChecker):
             'reason': '',
             'exception': DocumentNumberValidationBOValueLenError,
         },
-        # {
-        #     'document_number': '18;',
-        #     'payment_type': PaymentType.BUDGET_OTHER,
-        #     'payer_status': '24',
-        #     'payer_inn': VALID_INN,
-        #     'uin': None,
-        #     'reason': '',
-        #     'exception': DocumentNumberValidationBOValueError,
-        # },
+        {
+            'document_number': '18;',
+            'payment_type': PaymentType.BUDGET_OTHER,
+            'payer_status': '24',
+            'payer_inn': VALID_INN,
+            'uin': None,
+            'reason': '',
+            'exception': DocumentNumberValidationBOValueError,
+        },
         {
             'document_number': '1',
             'payment_type': PaymentType.CUSTOMS,
