@@ -67,7 +67,7 @@ class AlertGenerator:
             )
         return None
 
-    def _format_failed_field_class_name(self, failed_field_class_name: str) -> Optional[str]:  # type: ignore
+    def _format_failed_field_class_name(self, failed_field_class_name: str) -> Optional[str]:
         if failed_field_class_name == '__root__':
             return None
         return failed_field_class_name
@@ -100,7 +100,7 @@ class AlertGenerator:
                             alert=alert,
                             failed_field=sub_error.target,  # type: ignore
                             failed_field_class_name=self._format_failed_field_class_name(
-                                error_wrapper.loc_tuple()[0]
+                                error_wrapper.loc_tuple()[0]  # type: ignore
                             )
                         ))
             elif isinstance(error_wrapper.exc, (NoneIsNotAllowedError, MissingError)):
@@ -112,7 +112,7 @@ class AlertGenerator:
                         result.append(AlertBody(
                             alert=f'Поле «{target_ru}» должно быть заполнено',
                             failed_field=self._field_name_to_key[field_name],
-                            failed_field_class_name=self._format_failed_field_class_name(field_name)
+                            failed_field_class_name=self._format_failed_field_class_name(field_name)  # type: ignore
                         ))
             else:
                 print(f'else {error_wrapper=}')
@@ -122,7 +122,7 @@ class AlertGenerator:
                         alert=alert,
                         failed_field=error_wrapper.exc.target,  # type: ignore
                         failed_field_class_name=self._format_failed_field_class_name(
-                            error_wrapper.loc_tuple()[0]
+                            error_wrapper.loc_tuple()[0]  # type: ignore
                         )
                     ))
                 else:
@@ -130,7 +130,7 @@ class AlertGenerator:
                         alert=None,
                         failed_field=error_wrapper.exc.target,  # type: ignore
                         failed_field_class_name=self._format_failed_field_class_name(
-                            error_wrapper.loc_tuple()[0]
+                            error_wrapper.loc_tuple()[0]  # type: ignore
                         )
                     ))
         return result
