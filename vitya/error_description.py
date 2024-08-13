@@ -67,7 +67,7 @@ class AlertGenerator:
             )
         return None
 
-    def _format_failed_field_class_name(self, failed_field_class_name: str) -> Optional[str]:
+    def _format_failed_field_class_name(self, failed_field_class_name: str) -> Optional[str]:  # type: ignore
         if failed_field_class_name == '__root__':
             return None
         return failed_field_class_name
