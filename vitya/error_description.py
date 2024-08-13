@@ -34,6 +34,7 @@ class AlertKeyToFieldName(TypedDict):
 class AlertBody(TypedDict):
     alert: Optional[str]
     failed_field: str
+    failed_field_class_name: Optional[str]
 
 
 class AlertGenerator:
@@ -66,33 +67,70 @@ class AlertGenerator:
             )
         return None
 
+    def _format_failed_field_class_name(self, failed_field_class_name: str) -> Optional[str]:
+        if failed_field_class_name == '__root__':
+            return None
+        return failed_field_class_name
+
     def get_error_client_alerts(self, exc: Exception) -> List[AlertBody]:
         if not isinstance(exc, ValidationError):
+            print(f'2 {exc=}')
             alert = self._mixin_to_alert(exc)
             if alert is not None:
-                return [AlertBody(alert=alert, failed_field=exc.target)]  # type: ignore
-            return [AlertBody(alert=None, failed_field=getattr(exc, 'target', None))]
+                return [AlertBody(
+                    alert=alert,
+                    failed_field=exc.target,  # type: ignore
+                    failed_field_class_name=None
+                )]
+            return [AlertBody(
+                alert=None,
+                failed_field=getattr(exc, 'target', None),
+                failed_field_class_name=None
+            )]
 
         result = []
         for error_wrapper in flatten_error_wrappers(exc.raw_errors):
+            print(f'1 {error_wrapper=}')
             if isinstance(error_wrapper.exc, CheckerError):
                 for sub_error in error_wrapper.exc.errors:
                     alert = self._mixin_to_alert(sub_error)
+                    print(f'{sub_error=}')
                     if alert is not None:
-                        result.append(AlertBody(alert=alert, failed_field=sub_error.target))  # type: ignore
+                        result.append(AlertBody(
+                            alert=alert,
+                            failed_field=sub_error.target,  # type: ignore
+                            failed_field_class_name=self._format_failed_field_class_name(
+                                error_wrapper.loc_tuple()[0]
+                            )
+                        ))
             elif isinstance(error_wrapper.exc, (NoneIsNotAllowedError, MissingError)):
                 if len(error_wrapper.loc_tuple()) == 1:
                     field_name = error_wrapper.loc_tuple()[0]
+                    print(f'{field_name=}')
                     if field_name in self._field_name_to_key:
                         target_ru = self._key_to_ru[self._field_name_to_key[field_name]]
                         result.append(AlertBody(
                             alert=f'Поле «{target_ru}» должно быть заполнено',
-                            failed_field=self._field_name_to_key[field_name]
+                            failed_field=self._field_name_to_key[field_name],
+                            failed_field_class_name=self._format_failed_field_class_name(field_name)
                         ))
             else:
+                print(f'else {error_wrapper=}')
                 alert = self._mixin_to_alert(error_wrapper.exc)
                 if alert is not None:
-                    result.append(AlertBody(alert=alert, failed_field=error_wrapper.exc.target))  # type: ignore
+                    result.append(AlertBody(
+                        alert=alert,
+                        failed_field=error_wrapper.exc.target,  # type: ignore
+                        failed_field_class_name=self._format_failed_field_class_name(
+                            error_wrapper.loc_tuple()[0]
+                        )
+                    ))
                 else:
-                    result.append(AlertBody(alert=None, failed_field=error_wrapper.exc.target))  # type: ignore
+                    result.append(AlertBody(
+                        alert=None,
+                        failed_field=error_wrapper.exc.target,  # type: ignore
+                        failed_field_class_name=self._format_failed_field_class_name(
+                            error_wrapper.loc_tuple()[0]
+                        )
+                    ))
         return result
