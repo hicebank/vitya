@@ -516,7 +516,7 @@ class ReceiverKPPValidationError(KPPValidationError):
     description_ru = 'базовая ошибка'
 
 
-class ReceiverKPPValidationOnlyEmptyError(ReceiverKPPValidationError, KPPValidationOnlyEmptyError):
+class ReceiverKPPValidationOnlyEmptyError(ReceiverKPPValidationError, KPPValidationOnlyEmptyError, IncorrectData):
     description = 'for ip or fl only empty allowed'
     description_ru = 'для платежей ИП и ФЛ значение должно быть пустым'
 
