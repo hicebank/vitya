@@ -74,7 +74,6 @@ class AlertGenerator:
 
     def get_error_client_alerts(self, exc: Exception) -> List[AlertBody]:
         if not isinstance(exc, ValidationError):
-            print(f'2 {exc=}')
             alert = self._mixin_to_alert(exc)
             if alert is not None:
                 return [AlertBody(
@@ -90,11 +89,9 @@ class AlertGenerator:
 
         result = []
         for error_wrapper in flatten_error_wrappers(exc.raw_errors):
-            print(f'1 {error_wrapper=}')
             if isinstance(error_wrapper.exc, CheckerError):
                 for sub_error in error_wrapper.exc.errors:
                     alert = self._mixin_to_alert(sub_error)
-                    print(f'{sub_error=}')
                     if alert is not None:
                         result.append(AlertBody(
                             alert=alert,
@@ -106,7 +103,6 @@ class AlertGenerator:
             elif isinstance(error_wrapper.exc, (NoneIsNotAllowedError, MissingError)):
                 if len(error_wrapper.loc_tuple()) == 1:
                     field_name = error_wrapper.loc_tuple()[0]
-                    print(f'{field_name=}')
                     if field_name in self._field_name_to_key:
                         target_ru = self._key_to_ru[self._field_name_to_key[field_name]]
                         result.append(AlertBody(
@@ -115,7 +111,6 @@ class AlertGenerator:
                             failed_field_class_name=self._format_failed_field_class_name(field_name)  # type: ignore
                         ))
             else:
-                print(f'else {error_wrapper=}')
                 alert = self._mixin_to_alert(error_wrapper.exc)
                 if alert is not None:
                     result.append(AlertBody(
