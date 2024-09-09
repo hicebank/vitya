@@ -730,7 +730,7 @@ class DocumentNumberValidationBOOnlyEmptyError(DocumentNumberValidationOnlyEmpty
     )
 
 
-class DocumentNumberValidationBOValueError(DocumentNumberValidationError):
+class DocumentNumberValidationBOValueError(DocumentNumberValidationError, IncorrectData):
     description = (
         f'for bo with tax payer status 24 first two chars should be '
         f'in {DOCUMENT_NUMBERS}, and third is equal to ";"'
