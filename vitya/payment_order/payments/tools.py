@@ -2,7 +2,7 @@ from vitya.payment_order.enums import AccountKind
 from vitya.payment_order.fields import AccountNumber
 
 IP_ACCOUNTS_PREFIXES_5 = {
-    '40802', '45814', '45914', '47610', '47611', '47832',
+    '40802', '45914', '47610', '47611', '47832',  # temp fix 10.09.2024 make '45814' hameleon
     *[str(prefix) for prefix in range(42108, 42114 + 1)]
 }
 FL_ACCOUNTS_PREFIXES_5 = {
@@ -18,6 +18,7 @@ CHAMELEON_PREFIXES_3 = {
 CHAMELEON_PREFIXES_5 = {
     '40804', '40805', '40915', '40806', '40809', '40812',
     '40814', '40815', '40827', '40828', '40830', '40831', '40911',
+    '45814', # temp fix 10.09.2024 make '45814' hameleon
 }
 
 PREFIX_5_TO_ACCOUNT_KIND = {
