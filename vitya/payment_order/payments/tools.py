@@ -18,7 +18,7 @@ CHAMELEON_PREFIXES_3 = {
 CHAMELEON_PREFIXES_5 = {
     '40804', '40805', '40915', '40806', '40809', '40812',
     '40814', '40815', '40827', '40828', '40830', '40831', '40911',
-    '45814', # temp fix 10.09.2024 make '45814' hameleon
+    '45814',  # temp fix 10.09.2024 make '45814' hameleon
 }
 
 PREFIX_5_TO_ACCOUNT_KIND = {
