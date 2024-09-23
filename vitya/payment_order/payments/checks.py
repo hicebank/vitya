@@ -359,10 +359,7 @@ def check_payer_status(
     if payment_type == PaymentType.CUSTOMS and value not in FTS_TAX_PAYER_STATUSES:
         raise PayerStatusValidationCustomsIncorrectDataError
 
-    if payment_type == PaymentType.BUDGET_OTHER and (
-        value in FNS_TAX_PAYER_STATUSES + FTS_TAX_PAYER_STATUSES
-        and value not in OTHER_TAX_PAYER_STATUSES
-    ):
+    if payment_type == PaymentType.BUDGET_OTHER and value in FNS_TAX_PAYER_STATUSES + FTS_TAX_PAYER_STATUSES:
         raise PayerStatusValidationOtherIncorrectDataError
 
     if payment_type == PaymentType.CUSTOMS and for_third_person == False and value == '06':  # noqa
