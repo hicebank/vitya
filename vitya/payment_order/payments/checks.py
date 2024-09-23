@@ -106,7 +106,6 @@ from vitya.payment_order.payments.constants import (
     FTS_TAX_PAYER_STATUSES,
     OTHER_OKTMO_RECEIVER_ACCOUNT_PREFIXES,
     OTHER_OKTMO_RECEIVER_ACCOUNT_PREFIXES_2,
-    OTHER_TAX_PAYER_STATUSES,
 )
 from vitya.pydantic_fields import BIC, OKTMO
 
