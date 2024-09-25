@@ -456,8 +456,8 @@ class PayerStatusValidationCustoms05NotAllowedError(PayerStatusValidationError, 
 
 
 class PayerStatusValidationCustomsIncorrectDataError(PayerStatusValidationError, IncorrectData):
-    description = 'for customs payment only values "06", "16", "17", "28", "30", "31" are allowed'
-    description_ru = 'для платежей в таможню значение статуса может быть только "06", "16", "17", "28", "30", "31"'
+    description = 'for customs payment only values "06", "16", "17", "28", "30" are allowed'
+    description_ru = 'для платежей в таможню значение статуса может быть только "06", "16", "17", "28", "30"'
 
 
 class PayerStatusValidationFNSIncorrectDataError(PayerStatusValidationError, IncorrectData):
@@ -466,9 +466,9 @@ class PayerStatusValidationFNSIncorrectDataError(PayerStatusValidationError, Inc
 
 
 class PayerStatusValidationOtherIncorrectDataError(PayerStatusValidationError, IncorrectData):
-    description = 'for other payment values "01", "13", "06", "16", "17", "28", "30", "31" not allowed'
+    description = 'for other payment values "01", "13", "06", "16", "17", "28", "30" not allowed'
     description_ru = (
-        'для платежей в иные организации значение статуса не может быть "01", "13", "06", "16", "17", "28", "30", "31"'
+        'для платежей в иные организации значение статуса не может быть "01", "13", "06", "16", "17", "28", "30"'
     )
 
 
