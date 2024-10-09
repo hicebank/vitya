@@ -239,9 +239,9 @@ class UINValidationBONotEmpty(UINValidationFNSValueError, NeedRequiredField):
     )
 
 
-class UINValidationFNSLenError(UINValidationLenError):
-    description = 'invalid uin: len uin for FNS payment must be 20 or 25 len'
-    description_ru = 'длина УИН для платежей в ФНС должна быть 20 или 15 символов'
+class UINValidationFNSOrFTSLenError(UINValidationLenError):
+    description = 'invalid uin: len uin for FNS or FTS payment must be 20 or 25 len'
+    description_ru = 'длина УИН для платежей в ФНС или ФТС должна быть 20 или 15 символов'
 
 
 class UINValidationOnlyZeroError(UINValidationError, IncorrectData):
