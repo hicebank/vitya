@@ -68,6 +68,7 @@ from vitya.payment_order.errors import (  # DocumentNumberValidationBOValueError
     TaxPeriodValidationFNSValueLenError,
     UINValidationBONotEmpty,
     UINValidationFNSNotValueZeroError,
+    UINValidationFNSOrFTSLenError,
     UINValidationFNSValueZeroError,
     UINValidationValueBudget33PayerStatusIncorrectLength,
     UINValidationValueZeroError,
@@ -210,6 +211,9 @@ def check_uin(
         and (not value or len(value) not in [20, 25] or value == '0' * len(value))
     ):
         raise UINValidationValueBudget33PayerStatusIncorrectLength
+
+    if value is not None and payment_type in {PaymentType.FNS, PaymentType.CUSTOMS} and len(value) not in [25, 20]:
+        raise UINValidationFNSOrFTSLenError
 
     if payment_type == PaymentType.BUDGET_OTHER:
         if receiver_account.startswith('03212') and value is None:

@@ -83,6 +83,7 @@ from vitya.payment_order.errors import (
     TaxPeriodValidationFNSValueLenError,
     UINValidationBONotEmpty,
     UINValidationFNSNotValueZeroError,
+    UINValidationFNSOrFTSLenError,
     UINValidationFNSValueZeroError,
     UINValidationValueBudget33PayerStatusIncorrectLength,
     UINValidationValueZeroError,
@@ -304,6 +305,15 @@ def test_check_purpose_code(
             '33',
             '',
             pytest.raises(UINValidationValueBudget33PayerStatusIncorrectLength),
+            None,
+        ),
+        (
+            INVALID_LEN_UIN,
+            PaymentType.FNS,
+            AccountNumber(IP_ACCOUNT),
+            '',
+            '',
+            pytest.raises(UINValidationFNSOrFTSLenError),
             None,
         ),
     ]
