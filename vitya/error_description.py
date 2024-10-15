@@ -29,6 +29,11 @@ class AlertKeyToFieldName(TypedDict):
     receiver_bic: str
     receiver: str
     receiver_account_number: str
+    receiver_inn: str
+    receiver_kpp: str
+    receiver_bank_name: str
+    receiver_bank_cs: str
+    tax_payer_status: str
 
 
 class AlertBody(TypedDict):
@@ -46,6 +51,11 @@ class AlertGenerator:
         'receiver_account_number': 'Номер счёта получателя',
         'payer_account_number': 'Номер счёта плательщика',
         'payer_bic': 'БИК банка плательщика',
+        'receiver_inn': 'ИНН получателя',
+        'receiver_kpp': 'КПП получателя',
+        'receiver_bank_name': 'Наименование банка получателя',
+        'receiver_bank_cs': 'Кор счет банка получателя',
+        'tax_payer_status': 'Статус плательщика',
     }
 
     def __init__(self, key_to_field_name: AlertKeyToFieldName):
