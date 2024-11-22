@@ -381,34 +381,32 @@ def test_check_uin_before_2024(
 
 
 @pytest.mark.parametrize(
-    'value, payment_type, payer_account, exception_handler, expected_value',
+    'value, payment_type, exception_handler, expected_value',
     [
-        (None, PaymentType.FNS, PayerAccountNumber(IP_ACCOUNT), nullcontext(), None),
+        (None, PaymentType.FNS, nullcontext(), '0'),
         *[
             (
                 None,
                 payment_type,
-                PayerAccountNumber(IP_ACCOUNT),
                 pytest.raises(PurposeValidationValueEmptyErrorForNonFNS),
                 None,
             )
             for payment_type in PaymentType
             if payment_type != PaymentType.FNS
         ],
-        ('some', PaymentType.IP, PayerAccountNumber(IP_ACCOUNT), nullcontext(), 'some'),
-        ('some', PaymentType.BUDGET_OTHER, PayerAccountNumber(IP_ACCOUNT), nullcontext(), 'some'),
-        ('some with НДС', PaymentType.IP, PayerAccountNumber(IP_ACCOUNT), nullcontext(), 'some with НДС'),
+        ('some', PaymentType.IP, nullcontext(), 'some'),
+        ('some', PaymentType.BUDGET_OTHER, nullcontext(), 'some'),
+        ('some with НДС', PaymentType.IP, nullcontext(), 'some with НДС'),
     ]
 )
 def test_check_purpose(
     value: Optional[Purpose],
     payment_type: PaymentType,
-    payer_account: PayerAccountNumber,
     exception_handler: ContextManager,
     expected_value: str
 ) -> None:
     with exception_handler:
-        assert check_purpose(value=value, payment_type=payment_type, payer_account=payer_account) == expected_value
+        assert check_purpose(value=value, payment_type=payment_type) == expected_value
 
 
 @pytest.mark.parametrize(
