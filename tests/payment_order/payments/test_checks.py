@@ -94,7 +94,6 @@ from vitya.payment_order.fields import (
     AccountNumber,
     DocumentNumber,
     OperationKind,
-    PayerAccountNumber,
     PayerStatus,
     Purpose,
     Reason,

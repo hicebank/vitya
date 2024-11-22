@@ -81,7 +81,6 @@ from vitya.payment_order.fields import (
     DocumentNumber,
     ForThirdPerson,
     OperationKind,
-    PayerAccountNumber,
     PayerINN,
     PayerKPP,
     PayerStatus,
