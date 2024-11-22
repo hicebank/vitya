@@ -234,7 +234,7 @@ def check_purpose(
     payment_type: PaymentType,
 ) -> Optional[Purpose]:
     if payment_type == PaymentType.FNS and not value:
-        return '0'
+        return Purpose('0')
 
     if payment_type != PaymentType.FNS and not value:
         raise PurposeValidationValueEmptyErrorForNonFNS
