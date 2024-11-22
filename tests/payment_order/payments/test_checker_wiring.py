@@ -79,10 +79,9 @@ def test_auto_wiring_same_unions():
     class Payment(BaseModelChecker):
         purpose: Optional[Purpose]
         payment_type: PaymentType
-        payer_account: PayerAccountNumber
 
     assert Payment.__final_wired_checkers__ == [
-        (PurposeChecker, ['purpose', 'payment_type', 'payer_account']),
+        (PurposeChecker, ['purpose', 'payment_type']),
     ]
 
 
@@ -90,10 +89,9 @@ def test_auto_wiring_union_subset():
     class Payment(BaseModelChecker):
         purpose: Purpose
         payment_type: PaymentType
-        payer_account: PayerAccountNumber
 
     assert Payment.__final_wired_checkers__ == [
-        (PurposeChecker, ['purpose', 'payment_type', 'payer_account']),
+        (PurposeChecker, ['purpose', 'payment_type']),
     ]
 
 
@@ -146,7 +144,7 @@ def test_auto_wiring_complex():
         (PayerINNChecker, ['src_inn', 'ts', 'for_third_person', 'payment_type']),
         (PayerINNWithUinAndReceiverAccountChecker, ['src_inn', 'ts', 'dst_account', 'uin', 'payment_type']),
         (UINChecker, ['uin', 'dst_account', 'src_inn', 'ts', 'payment_type']),
-        (PurposeChecker, ['purpose', 'payment_type', 'src_account']),
+        (PurposeChecker, ['purpose', 'payment_type']),
         (ReceiverINNChecker, ['dst_inn', 'payment_type']),
         (PayerStatusChecker, ['ts', 'payment_type', 'for_third_person']),
         (PaymentTypeAndForThirdPersonChecker, ['payment_type', 'for_third_person']),
@@ -205,7 +203,7 @@ def test_auto_wiring_all_checkers():
         (PayerINNChecker, ['src_inn', 'ts', 'for_third_person', 'payment_type']),
         (PayerINNWithUinAndReceiverAccountChecker, ['src_inn', 'ts', 'dst_account', 'uin', 'payment_type']),
         (UINChecker, ['uin', 'dst_account', 'src_inn', 'ts', 'payment_type']),
-        (PurposeChecker, ['purpose', 'payment_type', 'src_account']),
+        (PurposeChecker, ['purpose', 'payment_type']),
         (ReceiverINNChecker, ['dst_inn', 'payment_type']),
         (PayerStatusChecker, ['ts', 'payment_type', 'for_third_person']),
         (PaymentTypeAndForThirdPersonChecker, ['payment_type', 'for_third_person']),

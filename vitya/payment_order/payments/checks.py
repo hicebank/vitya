@@ -81,7 +81,6 @@ from vitya.payment_order.fields import (
     DocumentNumber,
     ForThirdPerson,
     OperationKind,
-    PayerAccountNumber,
     PayerINN,
     PayerKPP,
     PayerStatus,
@@ -232,11 +231,14 @@ def check_uin(
 
 def check_purpose(
     value: Optional[Purpose],
-    payer_account: PayerAccountNumber,
     payment_type: PaymentType,
 ) -> Optional[Purpose]:
+    if payment_type == PaymentType.FNS and not value:
+        return Purpose('0')
+
     if payment_type != PaymentType.FNS and not value:
         raise PurposeValidationValueEmptyErrorForNonFNS
+
     return value
 
 

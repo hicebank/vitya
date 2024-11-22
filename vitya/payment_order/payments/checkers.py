@@ -26,7 +26,6 @@ from vitya.payment_order.fields import (
     DocumentNumber,
     ForThirdPerson,
     OperationKind,
-    PayerAccountNumber,
     PayerINN,
     PayerKPP,
     PayerStatus,
@@ -206,14 +205,12 @@ class PurposeChecker(BaseChecker):
         self,
         purpose: Optional[Purpose],
         payment_type: PaymentType,
-        payer_account: PayerAccountNumber,
     ) -> None:
         self.purpose = purpose
         self.payment_type = payment_type
-        self.payer_account = payer_account
 
     def check(self) -> None:
-        check_purpose(value=self.purpose, payment_type=self.payment_type, payer_account=self.payer_account)
+        check_purpose(value=self.purpose, payment_type=self.payment_type)
 
 
 class ReceiverINNChecker(BaseChecker):

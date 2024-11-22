@@ -334,29 +334,27 @@ def test_uin_checker(
 class TestPurposeChecker(BaseModelChecker):
     purpose: Purpose
     payment_type: PaymentType
-    payer_account: AccountNumber
 
     __extra_wired_checkers__ = [
-        (PurposeChecker, ['purpose', 'payment_type', 'payer_account']),
+        (PurposeChecker, ['purpose', 'payment_type']),
     ]
 
 
 @pytest.mark.parametrize(
-    'purpose, payment_type, payer_account, exception',
+    'purpose, payment_type, exception',
     [
-        ('some', PaymentType.IP, AccountNumber(IP_ACCOUNT), None),
-        ('some', PaymentType.BUDGET_OTHER, AccountNumber(IP_ACCOUNT), None),
-        ('some НДС', PaymentType.IP, AccountNumber(IP_ACCOUNT), None),
+        ('some', PaymentType.IP, None),
+        ('some', PaymentType.BUDGET_OTHER, None),
+        ('some НДС', PaymentType.IP, None),
     ]
 )
 def test_purpose_checker(
     purpose: Purpose,
     payment_type: PaymentType,
-    payer_account: AccountNumber,
     exception: Type[Exception]
 ) -> None:
     try:
-        TestPurposeChecker(purpose=purpose, payment_type=payment_type, payer_account=payer_account)
+        TestPurposeChecker(purpose=purpose, payment_type=payment_type)
     except ValidationError as e:
         assert isinstance(e.raw_errors[0].exc.errors[0], exception)
     else:
