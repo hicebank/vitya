@@ -837,3 +837,8 @@ class ReceiverAccountValidationBudgetOtherPayerStatusError(ReceiverAccountValida
     description_ru = (
         'для иных платежей в бюджет со статусом плательщика 31 счет должен начинаться с "03212"'
     )
+
+
+class TaxPeriodValidationBOValueOnlyOneZeroAllowed(TaxPeriodValidationError, IncorrectData):
+    description = 'for bo must be empty or "0"'
+    description_ru = 'для иных платежей в бюджет значение должно быть пустым или "0"'
