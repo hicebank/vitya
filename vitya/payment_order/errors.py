@@ -840,5 +840,5 @@ class ReceiverAccountValidationBudgetOtherPayerStatusError(ReceiverAccountValida
 
 
 class TaxPeriodValidationBOValueOnlyOneZeroAllowed(TaxPeriodValidationError, IncorrectData):
-    description = 'for bo must be empty or "0"'
-    description_ru = 'для иных платежей в бюджет значение должно быть пустым или "0"'
+    description = 'for bo must contain only one "0"'
+    description_ru = 'для иных платежей в бюджет значение не должно состоять из более чем одного "0"'
