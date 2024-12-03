@@ -61,6 +61,7 @@ from vitya.payment_order.errors import (  # DocumentNumberValidationBOValueError
     ReceiverKPPValidationOnlyEmptyError,
     ReceiverKPPValidationStartsWithZeros,
     TaxPeriodValidationBOValueLenError,
+    TaxPeriodValidationBOValueOnlyOneZeroAllowed,
     TaxPeriodValidationCustomsEmptyNotAllowed,
     TaxPeriodValidationCustomsValueLenError,
     TaxPeriodValidationFNS01OnlyEmpty,
@@ -516,6 +517,8 @@ def check_tax_period(
             return None
         elif len(value) > 10:
             raise TaxPeriodValidationBOValueLenError
+        elif value == '0' * len(value):
+            raise TaxPeriodValidationBOValueOnlyOneZeroAllowed
         return value
     elif payment_type == PaymentType.CUSTOMS:
         if value is None:

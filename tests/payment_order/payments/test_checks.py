@@ -76,6 +76,7 @@ from vitya.payment_order.errors import (
     ReceiverKPPValidationOnlyEmptyError,
     ReceiverKPPValidationStartsWithZeros,
     TaxPeriodValidationBOValueLenError,
+    TaxPeriodValidationBOValueOnlyOneZeroAllowed,
     TaxPeriodValidationCustomsEmptyNotAllowed,
     TaxPeriodValidationCustomsValueLenError,
     TaxPeriodValidationFNS01OnlyEmpty,
@@ -723,7 +724,7 @@ def test_check_reason(
     [
         (None, PaymentType.FL, '01', nullcontext(), None),
         (None, PaymentType.BUDGET_OTHER, '01', nullcontext(), None),
-        ('20220222', PaymentType.BUDGET_OTHER, '01', nullcontext(), '20220222'),
+        ('20220', PaymentType.BUDGET_OTHER, '01', nullcontext(), '20220'),
         ('2' * 11, PaymentType.BUDGET_OTHER, '01', pytest.raises(TaxPeriodValidationBOValueLenError), None),
         (None, PaymentType.CUSTOMS, '01', pytest.raises(TaxPeriodValidationCustomsEmptyNotAllowed), None),
         ('20220222', PaymentType.CUSTOMS, '01', nullcontext(), '20220222'),
@@ -733,6 +734,7 @@ def test_check_reason(
         (None, PaymentType.FNS, '01', nullcontext(), None),
         (None, PaymentType.FNS, '13', nullcontext(), None),
         ('1' * 10, PaymentType.FNS, '30', nullcontext(), '1' * 10),
+        ('0' * 2, PaymentType.BUDGET_OTHER, '30', pytest.raises(TaxPeriodValidationBOValueOnlyOneZeroAllowed), None),
     ]
 )
 def test_check_tax_period(
