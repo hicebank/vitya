@@ -724,7 +724,7 @@ def test_check_reason(
     [
         (None, PaymentType.FL, '01', nullcontext(), None),
         (None, PaymentType.BUDGET_OTHER, '01', nullcontext(), None),
-        ('20220', PaymentType.BUDGET_OTHER, '01', pytest.raises(TaxPeriodValidationBOValueOnlyOneZeroAllowed), '20220'),
+        ('20220', PaymentType.BUDGET_OTHER, '01', nullcontext(), '20220'),
         ('2' * 11, PaymentType.BUDGET_OTHER, '01', pytest.raises(TaxPeriodValidationBOValueLenError), None),
         (None, PaymentType.CUSTOMS, '01', pytest.raises(TaxPeriodValidationCustomsEmptyNotAllowed), None),
         ('20220222', PaymentType.CUSTOMS, '01', nullcontext(), '20220222'),

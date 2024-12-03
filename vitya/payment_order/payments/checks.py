@@ -517,7 +517,9 @@ def check_tax_period(
             return None
         elif len(value) > 10:
             raise TaxPeriodValidationBOValueLenError
-        raise TaxPeriodValidationBOValueOnlyOneZeroAllowed
+        elif value == '0' * len(value):
+            raise TaxPeriodValidationBOValueOnlyOneZeroAllowed
+        return value
     elif payment_type == PaymentType.CUSTOMS:
         if value is None:
             raise TaxPeriodValidationCustomsEmptyNotAllowed
