@@ -44,7 +44,8 @@ PAYER_STATUSES_AFTER_2024 = {
     '28',
     '30',
     '31',
-    '33'
+    '33',
+    '34'
 }
 
 CUSTOMS_REASONS = {
@@ -100,4 +101,4 @@ OTHER_OKTMO_RECEIVER_ACCOUNT_PREFIXES_2 = [
 ]
 
 FNS_TAX_PAYER_STATUSES = ['01', '13']
-FTS_TAX_PAYER_STATUSES = ['06', '16', '17', '28', '30']
+FTS_TAX_PAYER_STATUSES = ['06', '16', '17', '28', '30', '34']
