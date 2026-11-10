@@ -11,7 +11,10 @@ from vitya.errors_base import (
     IncorrectLen,
     NeedRequiredField,
 )
-from vitya.payment_order.errors import DocumentNumberValidationBOEmptyNotAllowed
+from vitya.payment_order.errors import (
+    DocumentNumberValidationBOEmptyNotAllowed,
+    ReceiverAccountValidationBICValueError,
+)
 from vitya.payment_order.payments.checkers import CheckerError
 
 
@@ -68,6 +71,8 @@ class AlertGenerator:
             return f'Поле «{exc.target_ru}» содержит неправильное количество символов'
         if isinstance(exc, ExactFieldLenError):
             return f'Поле «{exc.target_ru}» должно содержать ровно {exc.required_len} символов'
+        if isinstance(exc, ReceiverAccountValidationBICValueError):
+            return 'Такого счета нет в банке'
         if isinstance(exc, IncorrectData):
             return f'Поле «{exc.target_ru}» содержит некорректные данные'
         if isinstance(exc, DocumentNumberValidationBOEmptyNotAllowed):

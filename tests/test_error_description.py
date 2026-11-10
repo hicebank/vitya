@@ -1,8 +1,16 @@
 from typing import Optional
 
+import pytest
+from pydantic.error_wrappers import ErrorWrapper, ValidationError
+
 from tests.payment_order.testdata import LE_INN
 from vitya.error_description import AlertBody, AlertGenerator
 from vitya.payment_order.enums import PaymentType
+from vitya.payment_order.errors import (
+    ReceiverAccountNumberValidationDigitsOnlyError,
+    ReceiverAccountValidationBICValueError,
+    ReceiverAccountValidationFNSValueError,
+)
 from vitya.payment_order.fields import (
     Amount,
     PayerAccountNumber,
@@ -14,7 +22,7 @@ from vitya.payment_order.fields import (
     ReceiverBIC,
     ReceiverKPP,
 )
-from vitya.payment_order.payments.checkers import BaseModelChecker
+from vitya.payment_order.payments.checkers import BaseModelChecker, CheckerError
 
 
 class Payment(BaseModelChecker):
@@ -146,3 +154,50 @@ def test_alert_generator_need_required_field():
         ]
     else:
         raise RuntimeError
+
+
+@pytest.mark.parametrize('wrapped', [False, True])
+def test_account_bic_mismatch_alert(wrapped):
+    error = ReceiverAccountValidationBICValueError()
+    if wrapped:
+        error = ValidationError([ErrorWrapper(CheckerError([error]), loc='__root__')], Payment)
+
+    assert ALERT_GENERATOR.get_error_client_alerts(error) == [
+        AlertBody(
+            alert='Такого счета нет в банке',
+            failed_field='receiver account',
+            failed_field_class_name=None,
+        ),
+    ]
+
+
+@pytest.mark.parametrize('error_type', [
+    ReceiverAccountNumberValidationDigitsOnlyError,
+    ReceiverAccountValidationFNSValueError,
+])
+def test_other_receiver_account_errors_keep_generic_alert(error_type):
+    assert ALERT_GENERATOR.get_error_client_alerts(error_type()) == [
+        AlertBody(
+            alert='Поле «Счет получателя» содержит некорректные данные',
+            failed_field='receiver account',
+            failed_field_class_name=None,
+        ),
+    ]
+
+
+def test_missing_receiver_account_keeps_required_alert():
+    with pytest.raises(ValidationError) as error:
+        Payment(
+            src_account='40802810822200040036',
+            amount='1',
+            dst_name='Foo',
+            dst_bic='044525225',
+        )
+
+    assert ALERT_GENERATOR.get_error_client_alerts(error.value) == [
+        AlertBody(
+            alert='Поле «Номер счёта получателя» должно быть заполнено',
+            failed_field='receiver_account_number',
+            failed_field_class_name='dst_account',
+        ),
+    ]
