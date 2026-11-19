@@ -19,6 +19,17 @@ If passed value is wrong, all functions will raise ```ValidationError```.
 
 Also, optionally, you can use validators as Pydantic fields
 
+The compatibility matrix includes Python 3.11 with Pydantic 1.10.27 and
+Python 3.14.10 with Pydantic 2.14.4. Install Pydantic in the application
+environment. Under Pydantic 2, declare an explicit `= None` if a nullable
+field may also be omitted.
+
+An empty banking identifier (for example the raw string `'0'` for `INN`) is treated as missing by required model fields. Nullable model fields
+normalize it to `None`. For a standalone Pydantic 2 adapter or a composite
+annotation mixing required and nullable slots of the same type, use
+`Nullable` from `vitya.pydantic_fields`, for example
+`TypeAdapter(Nullable[INN])` or `tuple[INN, Nullable[INN]]`.
+
 ### Examples:
 
 ```python

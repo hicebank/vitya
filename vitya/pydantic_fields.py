@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Generator, Optional
+from typing import TYPE_CHECKING, Any, Callable, Generator, Optional, TypeVar
 
-from pydantic.fields import ModelField
-
+from ._pydantic import PYDANTIC_V2, PydanticValueError
 from .validators import (
     ValidationError,
     validate_bic,
@@ -16,16 +15,32 @@ from .validators import (
     validate_snils,
 )
 
-try:
-    from pydantic.errors import MissingError, PydanticValueError
-except ImportError:  # pragma: no cover
-    pass
+if PYDANTIC_V2:
+    from pydantic import WrapValidator
+    from pydantic_core import PydanticCustomError, core_schema
+    from typing_extensions import Annotated
+
+    from ._pydantic_v2 import allows_empty, field_schema, normalize_nullable
+else:
+    from pydantic.errors import MissingError
+    from pydantic.fields import ModelField
+
+_T = TypeVar('_T')
+if TYPE_CHECKING or not PYDANTIC_V2:
+    Nullable = Optional[_T]
+else:
+    Nullable = Annotated[Optional[_T], WrapValidator(normalize_nullable)]
+
 
 CallableGenerator = Generator[Callable[..., Any], None, None]
 
 
 class PydanticValidationError(PydanticValueError):
     msg_template = 'invalid {name}: {reason}'
+
+    if PYDANTIC_V2:
+        def __init__(self, name: str, reason: str) -> None:
+            super().__init__(self.msg_template.format(name=name, reason=reason))
 
 
 class EmptyError(Exception):
@@ -43,8 +58,8 @@ def _validate_wrapper(func: Callable[[str], None], name: str, value: str) -> str
 
 class FieldMixin(ABC):
     def __new__(cls, value: Any) -> 'FieldMixin':
-        if type(value) == cls:
-            return value  # type: ignore
+        if type(value) is cls:
+            return value
         value = cls._validate(value)
         if value is None:
             raise EmptyError
@@ -55,16 +70,36 @@ class FieldMixin(ABC):
     def _validate(cls, value: Any) -> Any:
         pass
 
-    @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
-        def validator(value: Any, field: ModelField) -> Any:
-            try:
-                return cls(value)
-            except EmptyError:
-                if field.allow_none:
-                    return None
-                raise MissingError
-        yield validator
+    if PYDANTIC_V2:
+        @classmethod
+        def __get_pydantic_core_schema__(cls, source_type: Any, handler: Any) -> core_schema.CoreSchema:
+            nullable = allows_empty(cls, handler)
+
+            def validate(value: Any) -> Any:
+                if value is None:
+                    raise PydanticCustomError('none_not_allowed', 'none is not an allowed value')
+                try:
+                    return cls(value)
+                except EmptyError:
+                    if nullable:
+                        return None
+                    raise PydanticCustomError('vitya_empty', 'field required')
+                except (ValueError, TypeError) as exc:
+                    # Preserve the domain exception used to build localized field alerts.
+                    raise PydanticCustomError('vitya', '{message}', {'message': str(exc), 'error': exc}) from exc
+
+            return field_schema(cls, validate, handler)
+    else:
+        @classmethod
+        def __get_validators__(cls) -> CallableGenerator:
+            def validator(value: Any, field: 'ModelField') -> Any:
+                try:
+                    return cls(value)
+                except EmptyError:
+                    if field.allow_none:
+                        return None
+                    raise MissingError
+            yield validator
 
 
 class INN(FieldMixin, str):
@@ -141,6 +176,24 @@ class BoolWrapper:
         if isinstance(other, bool):
             return self._value == other
         return NotImplemented
+
+    if PYDANTIC_V2:
+        @classmethod
+        def __get_pydantic_core_schema__(cls, source_type: Any, handler: Any) -> core_schema.CoreSchema:
+            def validate(value: Any, _handler: Any) -> Any:
+                if isinstance(value, cls):
+                    return value
+                if isinstance(value, bool):
+                    return cls(value)
+                raise PydanticCustomError('bool_type', 'value is not a valid boolean')
+
+            return core_schema.no_info_wrap_validator_function(
+                validate,
+                core_schema.bool_schema(),
+                serialization=core_schema.plain_serializer_function_ser_schema(
+                    bool, return_schema=core_schema.bool_schema(), when_used='json',
+                ),
+            )
 
     @classmethod
     def __get_validators__(cls) -> CallableGenerator:

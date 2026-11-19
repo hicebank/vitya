@@ -1,5 +1,4 @@
-from pydantic.errors import PydanticTypeError, PydanticValueError
-
+from vitya._pydantic import PydanticTypeError, PydanticValueError
 from vitya.errors_base import (
     ExactFieldLenError,
     IncorrectData,

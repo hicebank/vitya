@@ -1,10 +1,8 @@
-from itertools import chain
-from typing import List, Optional, Sequence, TypedDict
+from typing import Any, Iterator, List, Optional, Sequence, Tuple, TypedDict
 
-import pydantic
-from pydantic.error_wrappers import ErrorWrapper, ValidationError
-from pydantic.errors import MissingError, NoneIsNotAllowedError
+from pydantic import ValidationError
 
+from vitya._pydantic import PYDANTIC_V2
 from vitya.errors_base import (
     ExactFieldLenError,
     IncorrectData,
@@ -17,11 +15,27 @@ from vitya.payment_order.errors import (
 )
 from vitya.payment_order.payments.checkers import CheckerError
 
+if not PYDANTIC_V2:
+    from itertools import chain
 
-def flatten_error_wrappers(error_list: pydantic.error_wrappers.ErrorList) -> List[ErrorWrapper]:
-    if isinstance(error_list, Sequence):
-        return list(chain.from_iterable(map(flatten_error_wrappers, error_list)))
-    return [error_list]
+    from pydantic.error_wrappers import ErrorList, ErrorWrapper
+    from pydantic.errors import MissingError, NoneIsNotAllowedError
+
+    def flatten_error_wrappers(error_list: ErrorList) -> List[ErrorWrapper]:
+        if isinstance(error_list, Sequence):
+            return list(chain.from_iterable(map(flatten_error_wrappers, error_list)))
+        return [error_list]
+
+
+def _validation_issues(exc: ValidationError) -> Iterator[Tuple[Tuple[Any, ...], Optional[Exception], bool]]:
+    if PYDANTIC_V2:
+        for detail in exc.errors(include_url=False):
+            cause = detail.get('ctx', {}).get('error')
+            missing = detail['type'] in ('missing', 'vitya_empty') or (cause is None and detail.get('input') is None)
+            yield detail['loc'], cause, missing
+    else:
+        for wrapper in flatten_error_wrappers(exc.raw_errors):
+            yield wrapper.loc_tuple(), wrapper.exc, isinstance(wrapper.exc, (NoneIsNotAllowedError, MissingError))
 
 
 class AlertKeyToFieldName(TypedDict):
@@ -41,7 +55,7 @@ class AlertKeyToFieldName(TypedDict):
 
 class AlertBody(TypedDict):
     alert: Optional[str]
-    failed_field: str
+    failed_field: Optional[str]
     failed_field_class_name: Optional[str]
 
 
@@ -93,7 +107,7 @@ class AlertGenerator:
             if alert is not None:
                 return [AlertBody(
                     alert=alert,
-                    failed_field=exc.target,  # type: ignore
+                    failed_field=getattr(exc, 'target', None),
                     failed_field_class_name=None
                 )]
             return [AlertBody(
@@ -103,44 +117,30 @@ class AlertGenerator:
             )]
 
         result = []
-        for error_wrapper in flatten_error_wrappers(exc.raw_errors):
-            if isinstance(error_wrapper.exc, CheckerError):
-                for sub_error in error_wrapper.exc.errors:
+        for loc, cause, missing in _validation_issues(exc):
+            field_name = loc[0] if loc else '__root__'
+            class_name = self._format_failed_field_class_name(field_name)
+            if missing:
+                if len(loc) == 1 and field_name in self._field_name_to_key:
+                    key = self._field_name_to_key[field_name]
+                    result.append(AlertBody(
+                        alert=f'Поле «{self._key_to_ru[key]}» должно быть заполнено',
+                        failed_field=key,
+                        failed_field_class_name=class_name,
+                    ))
+            elif isinstance(cause, CheckerError):
+                for sub_error in cause.errors:
                     alert = self._mixin_to_alert(sub_error)
                     if alert is not None:
                         result.append(AlertBody(
                             alert=alert,
-                            failed_field=sub_error.target,  # type: ignore
-                            failed_field_class_name=self._format_failed_field_class_name(
-                                error_wrapper.loc_tuple()[0]  # type: ignore
-                            )
-                        ))
-            elif isinstance(error_wrapper.exc, (NoneIsNotAllowedError, MissingError)):
-                if len(error_wrapper.loc_tuple()) == 1:
-                    field_name = error_wrapper.loc_tuple()[0]
-                    if field_name in self._field_name_to_key:
-                        target_ru = self._key_to_ru[self._field_name_to_key[field_name]]
-                        result.append(AlertBody(
-                            alert=f'Поле «{target_ru}» должно быть заполнено',
-                            failed_field=self._field_name_to_key[field_name],
-                            failed_field_class_name=self._format_failed_field_class_name(field_name)  # type: ignore
+                            failed_field=getattr(sub_error, 'target', None),
+                            failed_field_class_name=class_name,
                         ))
             else:
-                alert = self._mixin_to_alert(error_wrapper.exc)
-                if alert is not None:
-                    result.append(AlertBody(
-                        alert=alert,
-                        failed_field=error_wrapper.exc.target,  # type: ignore
-                        failed_field_class_name=self._format_failed_field_class_name(
-                            error_wrapper.loc_tuple()[0]  # type: ignore
-                        )
-                    ))
-                else:
-                    result.append(AlertBody(
-                        alert=None,
-                        failed_field=error_wrapper.exc.target,  # type: ignore
-                        failed_field_class_name=self._format_failed_field_class_name(
-                            error_wrapper.loc_tuple()[0]  # type: ignore
-                        )
-                    ))
+                result.append(AlertBody(
+                    alert=self._mixin_to_alert(cause) if cause is not None else None,
+                    failed_field=getattr(cause, 'target', None),
+                    failed_field_class_name=class_name,
+                ))
         return result

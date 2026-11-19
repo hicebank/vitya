@@ -1,7 +1,7 @@
 from typing import Optional
 
 import pytest
-from pydantic.error_wrappers import ErrorWrapper, ValidationError
+from pydantic import ValidationError
 
 from tests.payment_order.testdata import LE_INN
 from vitya.error_description import AlertBody, AlertGenerator
@@ -22,7 +22,7 @@ from vitya.payment_order.fields import (
     ReceiverBIC,
     ReceiverKPP,
 )
-from vitya.payment_order.payments.checkers import BaseModelChecker, CheckerError
+from vitya.payment_order.payments.checkers import BaseChecker, BaseModelChecker
 
 
 class Payment(BaseModelChecker):
@@ -31,7 +31,7 @@ class Payment(BaseModelChecker):
     amount: Amount  # [7]
     dst_name: Receiver  # [16]
     dst_bic: ReceiverBIC  # [14]
-    dst_kpp: Optional[ReceiverKPP]  # [103]
+    dst_kpp: Optional[ReceiverKPP] = None  # [103]
 
 
 ALERT_GENERATOR = AlertGenerator(
@@ -160,7 +160,16 @@ def test_alert_generator_need_required_field():
 def test_account_bic_mismatch_alert(wrapped):
     error = ReceiverAccountValidationBICValueError()
     if wrapped:
-        error = ValidationError([ErrorWrapper(CheckerError([error]), loc='__root__')], Payment)
+        class RejectAccount(BaseChecker):
+            def check(self):
+                raise ReceiverAccountValidationBICValueError()
+
+        class CheckedPayment(BaseModelChecker):
+            __extra_wired_checkers__ = [(RejectAccount, [])]
+
+        with pytest.raises(ValidationError) as caught:
+            CheckedPayment()
+        error = caught.value
 
     assert ALERT_GENERATOR.get_error_client_alerts(error) == [
         AlertBody(
