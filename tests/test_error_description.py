@@ -3,7 +3,7 @@ from typing import Optional
 import pytest
 from pydantic import ValidationError
 
-from tests.payment_order.testdata import LE_INN
+from tests.payment_order.testdata import IP_ACCOUNT, LE_INN, VALID_BIC
 from vitya.error_description import AlertBody, AlertGenerator
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
@@ -66,25 +66,22 @@ def test_alert_generator_not_none_field():
         raise RuntimeError
 
 
-def test_alert_generator_incorrect_len():
-    try:
+@pytest.mark.parametrize('raw_amount, alert', [
+    ('1' * 20, 'Поле «Сумма» содержит неправильное количество символов'),
+    ('-1', 'Поле «Сумма» содержит некорректные данные'),
+])
+def test_alert_generator_invalid_amount(raw_amount, alert):
+    with pytest.raises(ValidationError) as caught:
         Payment(
-            src_account=PayerAccountNumber('40802810822200040036'),
-            dst_account=ReceiverAccountNumber('40702810438000185552'),
-            amount=Amount('1' * 20),
-            dst_name=Receiver('Foo'),
-            dst_bic=ReceiverBIC('044525225'),
+            src_account='40802810822200040036',
+            dst_account='40702810438000185552',
+            amount=raw_amount,
+            dst_name='Foo',
+            dst_bic='044525225',
         )
-    except Exception as e:
-        assert ALERT_GENERATOR.get_error_client_alerts(e) == [
-            AlertBody(
-                alert='Поле «Сумма» содержит неправильное количество символов',
-                failed_field='amount',
-                failed_field_class_name=None
-            )
-        ]
-    else:
-        raise RuntimeError
+    assert ALERT_GENERATOR.get_error_client_alerts(caught.value) == [
+        AlertBody(alert=alert, failed_field='amount', failed_field_class_name='amount'),
+    ]
 
 
 def test_alert_generator_exact_field_len():
@@ -108,25 +105,23 @@ def test_alert_generator_exact_field_len():
         raise RuntimeError
 
 
-def test_alert_generator_incorrect_data():
-    try:
-        Payment(
-            src_account=PayerAccountNumber('40802810822200040036'),
-            dst_account=ReceiverAccountNumber('40702810438000185552'),
-            amount=Amount('-1'),
-            dst_name=Receiver('Foo'),
-            dst_bic=ReceiverBIC('044525225'),
+def test_field_error_and_independent_payment_rule_keep_order():
+    class TypedPayment(Payment):
+        payment_type: PaymentType
+
+    with pytest.raises(ValidationError) as caught:
+        TypedPayment(
+            amount='-1',
+            src_account='40802810822200040036',
+            dst_account=IP_ACCOUNT,
+            dst_name='Foo',
+            dst_bic=VALID_BIC[:-1] + '1',
+            payment_type=PaymentType.IP,
         )
-    except Exception as e:
-        assert ALERT_GENERATOR.get_error_client_alerts(e) == [
-            AlertBody(
-                alert='Поле «Сумма» содержит некорректные данные',
-                failed_field='amount',
-                failed_field_class_name=None
-            )
-        ]
-    else:
-        raise RuntimeError
+    assert ALERT_GENERATOR.get_error_client_alerts(caught.value) == [
+        AlertBody(alert='Поле «Сумма» содержит некорректные данные', failed_field='amount', failed_field_class_name='amount'),
+        AlertBody(alert='Такого счета нет в банке', failed_field='receiver account', failed_field_class_name=None),
+    ]
 
 
 class TestPayerKppChecker(BaseModelChecker):

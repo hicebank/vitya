@@ -67,8 +67,10 @@ from vitya.pydantic_fields import OKTMO
 from vitya.typing_helpers import NoneType, is_union, normalize_type
 
 if PYDANTIC_V2:
-    from pydantic import model_validator
-    from pydantic_core import PydanticCustomError
+    from pydantic import GetCoreSchemaHandler
+    from pydantic_core import PydanticCustomError, core_schema
+
+    from vitya._pydantic_v2 import check_model_fields, unwrap_annotated
 else:
     from pydantic import root_validator
 
@@ -543,11 +545,11 @@ class BaseModelChecker(BaseModel):
         type_to_fields: DefaultDict[Any, List[str]] = defaultdict(list)
         if PYDANTIC_V2:
             for name, info in cls.model_fields.items():
-                annotation = info.annotation
+                annotation = unwrap_annotated(info.annotation)
                 args = get_args(annotation)
                 # v1 strips a single nullable layer from ModelField.type_.
                 if is_union(annotation) and len(args) == 2 and NoneType in args:
-                    annotation = next(arg for arg in args if arg is not NoneType)
+                    annotation = unwrap_annotated(next(arg for arg in args if arg is not NoneType))
                 type_to_fields[normalize_type(annotation)].append(name)
         else:
             for name, field in cls.__fields__.items():
@@ -629,13 +631,18 @@ class BaseModelChecker(BaseModel):
         def run_checkers(cls, values: Dict[str, Any]) -> Dict[str, Any]:
             return cls._check_values(values)
 
-        @model_validator(mode='after')
-        def _validate_checkers(self) -> 'BaseModelChecker':
+        @classmethod
+        def __get_pydantic_core_schema__(cls, source: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
+            schema = handler(source)
+            check_model_fields(handler.resolve_ref_schema(schema), cls, cls._validate_checkers)
+            return schema
+
+        @classmethod
+        def _validate_checkers(cls, values: Dict[str, Any]) -> None:
             try:
-                self.run_checkers(vars(self))
+                cls.run_checkers(values)
             except CheckerError as exc:
                 raise PydanticCustomError('vitya_checker', '{message}', {'message': str(exc), 'error': exc}) from exc
-            return self
     else:
         @root_validator(pre=False)
         def run_checkers(cls, values: Dict[str, Any]) -> Dict[str, Any]:
