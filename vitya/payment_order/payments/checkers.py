@@ -64,7 +64,7 @@ from vitya.payment_order.payments.checks import (
     check_uin,
 )
 from vitya.pydantic_fields import OKTMO
-from vitya.typing_helpers import is_union, normalize_type
+from vitya.typing_helpers import NoneType, is_union, normalize_type
 
 if PYDANTIC_V2:
     from pydantic import model_validator
@@ -546,8 +546,8 @@ class BaseModelChecker(BaseModel):
                 annotation = info.annotation
                 args = get_args(annotation)
                 # v1 strips a single nullable layer from ModelField.type_.
-                if is_union(annotation) and len(args) == 2 and type(None) in args:
-                    annotation = next(arg for arg in args if arg is not type(None))
+                if is_union(annotation) and len(args) == 2 and NoneType in args:
+                    annotation = next(arg for arg in args if arg is not NoneType)
                 type_to_fields[normalize_type(annotation)].append(name)
         else:
             for name, field in cls.__fields__.items():
