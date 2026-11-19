@@ -21,14 +21,16 @@ Also, optionally, you can use validators as Pydantic fields
 
 The compatibility matrix includes Python 3.11 with Pydantic 1.10.27 and
 Python 3.14.10 with Pydantic 2.14.4. Install Pydantic in the application
-environment. Under Pydantic 2, declare an explicit `= None` if a nullable
-field may also be omitted.
+environment. Payment models derived from `BaseModelChecker` accept omitted
+fields declared as bare `Optional[T]` and default them to `None` on both
+versions. Use `Field(...)` for a nullable field that must be supplied.
+On ordinary Pydantic 2 models, use `= None` for fields that may be omitted.
 
 An empty banking identifier (for example the raw string `'0'` for `INN`) is treated as missing by required model fields. Nullable model fields
-normalize it to `None`. For a standalone Pydantic 2 adapter or a composite
-annotation mixing required and nullable slots of the same type, use
-`Nullable` from `vitya.pydantic_fields`, for example
-`TypeAdapter(Nullable[INN])` or `tuple[INN, Nullable[INN]]`.
+normalize it to `None`, including individual positions in a model field
+such as `tuple[INN, Optional[INN]]`. For a standalone Pydantic 2 adapter,
+mark the nullable positions with `Nullable` from `vitya.pydantic_fields`,
+for example `TypeAdapter(Nullable[INN])`.
 
 ### Examples:
 

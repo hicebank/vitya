@@ -1,7 +1,8 @@
 """Core-schema helpers for Pydantic 2."""
+from contextlib import contextmanager
 from contextvars import ContextVar
 from decimal import Decimal
-from functools import wraps
+from functools import lru_cache, wraps
 from typing import (
     Any,
     Callable,
@@ -9,7 +10,9 @@ from typing import (
     Iterator,
     List,
     Optional,
+    Tuple,
     Type,
+    cast,
     get_args,
     get_origin,
 )
@@ -18,56 +21,91 @@ from ._pydantic import PYDANTIC_V2
 from .typing_helpers import is_union
 
 if PYDANTIC_V2:
+    from pydantic.fields import FieldInfo
     from pydantic_core import (
-        ErrorDetails,
-        InitErrorDetails,
         PydanticCustomError,
+        PydanticUndefined,
         ValidationError,
         core_schema,
     )
     from typing_extensions import Annotated
 
-    def unwrap_annotated(annotation: Any) -> Any:
+    def unwrap_field_type(annotation: Any) -> Any:
         if get_origin(annotation) is Annotated:
-            return get_args(annotation)[0]
+            return unwrap_field_type(get_args(annotation)[0])
+        if hasattr(annotation, '__supertype__'):  # NewType, including nested aliases
+            return unwrap_field_type(annotation.__supertype__)
         return annotation
 
-    def _line_error(detail: ErrorDetails) -> InitErrorDetails:
-        # from_exception_data accepts built-in codes, but needs the error object
-        # for custom codes, including those supplied by a consuming service.
-        code = detail['type']
-        error: InitErrorDetails = {'type': code, 'loc': detail['loc'], 'input': detail['input']}
-        if code not in get_args(core_schema.ErrorType):
-            error['type'] = PydanticCustomError(code, detail['msg'], detail.get('ctx'))
-        if 'ctx' in detail:
-            error['ctx'] = detail['ctx']
-        return error
+    def apply_optional_defaults(model: Type[Any]) -> None:
+        for field in model.model_fields.values():
+            annotation = unwrap_field_type(field.annotation)
+            if not (field.is_required() and is_union(annotation) and type(None) in get_args(annotation)):
+                continue
+            # A bare Optional had an implicit None in v1. Field(...) and other
+            # explicitly assigned fields must keep the requiredness chosen by the caller.
+            if getattr(field, '_original_assignment', ...) is not PydanticUndefined:
+                continue
+            original = field._original_annotation
+            if get_origin(original) is Annotated and any(isinstance(m, FieldInfo) for m in get_args(original)[1:]):
+                continue
+            field.default = None
+
+    def with_checker_error(exc: ValidationError, checker_error: PydanticCustomError, value: Any) -> ValidationError:
+        # The pickle protocol retains the original PydanticCustomError objects
+        # (including their templates), input mode and hide_input flag. errors()
+        # only exposes rendered messages and string codes shared with built-in errors.
+        _, args = cast(Tuple[Any, Tuple[Any, ...]], exc.__reduce__())
+        title, errors, input_type, hide_input = args
+        for error in errors:
+            # Older core versions pickle custom errors as rendered details.
+            if isinstance(error['type'], str) and 'url' not in error:
+                error['type'] = PydanticCustomError(error['type'], error['msg'], error.get('ctx'))
+        errors.append({'type': checker_error, 'loc': (), 'input': value})
+        return ValidationError.from_exception_data(title, errors, input_type, hide_input)
 
     class _ParsedFields:
         def __init__(self) -> None:
             self.data: Optional[Dict[str, Any]] = None
             self.defaults: Dict[str, Any] = {}
+            self.failed_values: Optional[Dict[str, Any]] = None
+            self.complete = False
 
-    def check_model_fields(schema: Any, model: Type[Any], check: Callable[[Dict[str, Any]], Any]) -> None:
-        # Work inside the model, before pydantic-core commits a validated assignment.
+    _active: ContextVar[_ParsedFields] = ContextVar('vitya_parsed_fields')
+
+    @contextmanager
+    def capture_fields() -> Iterator[_ParsedFields]:
+        partial = _ParsedFields()
+        token = _active.set(partial)
+        try:
+            yield partial
+        finally:
+            _active.reset(token)
+
+    def observe_model_fields(schema: Any, model: Type[Any]) -> None:
+        # A wrap model_validator only gets a model if every field succeeded.
+        # Capture the values already parsed by core for the failure path.
         parent = schema
         while parent['schema']['type'] != 'model-fields':
             parent = parent['schema']
         fields_schema = parent['schema']
-        active: ContextVar[_ParsedFields] = ContextVar('parsed_fields')
+        metadata = fields_schema.setdefault('metadata', {})
+        if metadata.get('vitya_fields_observed'):
+            return  # Pydantic reuses the same schema when nesting an existing model.
+        metadata['vitya_fields_observed'] = True
         static_defaults: List[str] = []
 
         def observe(value: Any, info: core_schema.ValidationInfo) -> Any:
             # This is the live dictionary to which core adds each successful field,
             # including fields processed after the first error.
-            active.get().data = info.data
+            _active.get().data = info.data
             return value
 
         def observe_factory(name: str, factory: Callable[..., Any]) -> Callable[..., Any]:
             @wraps(factory)
             def wrapped(*args: Any) -> Any:
                 value = factory(*args)
-                partial = active.get(None)
+                partial = _active.get(None)
                 if partial is not None and partial.data is None:
                     partial.defaults[name] = value
                 return value
@@ -84,9 +122,8 @@ if PYDANTIC_V2:
                     static_defaults.append(name)
             inner['schema'] = core_schema.with_info_before_validator_function(observe, inner['schema'])
 
-        def validate(value: Any, handler: core_schema.ValidatorFunctionWrapHandler, info: core_schema.ValidationInfo) -> Any:
-            partial = _ParsedFields()
-            token = active.set(partial)
+        def validate(value: Any, handler: core_schema.ValidatorFunctionWrapHandler) -> Any:
+            partial = _active.get()
             try:
                 result = handler(value)
             except ValidationError as exc:
@@ -99,32 +136,31 @@ if PYDANTIC_V2:
                 if values is None:
                     values = {name: model.model_fields[name].get_default() for name in static_defaults}
                     values.update(partial.defaults)
-                try:
-                    check(values)
-                except PydanticCustomError as checker_error:
-                    errors: List[InitErrorDetails] = [_line_error(detail) for detail in details]
-                    errors.append({'type': checker_error, 'loc': (), 'input': value})
-                    raise ValidationError.from_exception_data(
-                        exc.title, errors, input_type='json' if info.mode == 'json' else 'python',
-                        hide_input=model.model_config.get('hide_input_in_errors', False),
-                    ) from None
+                partial.failed_values = values
                 raise
-            finally:
-                active.reset(token)
-            check(result[0])
+            partial.complete = True
             return result
 
-        parent['schema'] = core_schema.with_info_wrap_validator_function(validate, fields_schema)
+        parent['schema'] = core_schema.no_info_wrap_validator_function(validate, fields_schema)
 
-    def nullable_occurrences(annotation: Any, target: Type[Any], nullable: bool = False) -> Iterator[bool]:
-        annotation = unwrap_annotated(annotation)
-        if annotation is target:
-            yield nullable
-            return
-        args = get_args(annotation)
-        nullable = is_union(annotation) and type(None) in args
-        for arg in args:
-            yield from nullable_occurrences(arg, target, nullable)
+    def _nullable_slot(schema: Any, validator: Callable[..., Any], nullable: bool = False) -> bool:
+        if isinstance(schema, (list, tuple)):
+            return any(_nullable_slot(item, validator, nullable) for item in schema)
+        if not isinstance(schema, dict):
+            return False
+        kind = schema.get('type')
+        if kind == 'function-wrap' and schema['function']['function'] is validator:
+            return nullable
+        # Wrappers and union alternatives validate the same input. A collection
+        # itself being nullable says nothing about its keys, values or items.
+        for key in ('schema', 'choices', 'steps', 'json_schema', 'python_schema', 'lax_schema', 'strict_schema'):
+            if key in schema and _nullable_slot(schema[key], validator, nullable or kind == 'nullable'):
+                return True
+        for key in ('items_schema', 'keys_schema', 'values_schema', 'definitions'):
+            if key in schema and _nullable_slot(schema[key], validator):
+                return True
+        fields = schema.get('fields', {})
+        return isinstance(fields, dict) and any(_nullable_slot(field, validator) for field in fields.values())
 
     def normalize_nullable(value: Any, validate: Callable[[Any], Any]) -> Any:
         try:
@@ -135,22 +171,23 @@ if PYDANTIC_V2:
                 return None
             raise
 
-    def allows_empty(field_type: Type[Any], handler: Any) -> bool:
-        # The inner schema hook receives T for both T and Optional[T]. Only the
-        # enclosing field has the annotation that distinguishes these cases.
+    def field_schema(
+        cls: Type[Any], validate: Callable[[Any, Callable[[], bool]], Any], handler: Any,
+    ) -> 'core_schema.CoreSchema':
+        # The leaf hook receives T for both T and Optional[T]. Its own callback
+        # identifies this exact occurrence in the completed model schema.
         generator = getattr(handler, '_generate_schema', None)
-        stack = getattr(generator, 'model_type_stack', None)
-        model = stack.get() if stack is not None else None
-        fields = getattr(model, 'model_fields', {})
-        field = fields.get(getattr(handler, 'field_name', None))
-        if field is None:
-            return False
-        # A repeated type can occupy both required and nullable slots in a tuple.
-        # Keep required slots strict; Nullable[T] marks the individual nullable slot.
-        return set(nullable_occurrences(field.annotation, field_type)) == {True}
+        # The builder fills these definitions after the leaf hook returns.
+        # Keep this generation's schemas, so existing TypeAdapters also work
+        # after their model is rebuilt.
+        definitions = getattr(getattr(generator, 'defs', None), '_definitions', {})
 
-    def field_schema(cls: Type[Any], validate: Callable[[Any], Any], handler: Any) -> 'core_schema.CoreSchema':
+        @lru_cache(maxsize=1)
+        def allows_empty() -> bool:
+            return any(_nullable_slot(schema, validate_slot) for schema in definitions.values())
+
+        def validate_slot(value: Any, _handler: Any) -> Any:
+            return validate(value, allows_empty)
+
         primitive = next((t for t in cls.__mro__ if t in (str, int, Decimal, float)), Any)
-        return core_schema.no_info_wrap_validator_function(
-            lambda value, _handler: validate(value), handler.generate_schema(primitive),
-        )
+        return core_schema.no_info_wrap_validator_function(validate_slot, handler.generate_schema(primitive))

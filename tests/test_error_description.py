@@ -31,7 +31,7 @@ class Payment(BaseModelChecker):
     amount: Amount  # [7]
     dst_name: Receiver  # [16]
     dst_bic: ReceiverBIC  # [14]
-    dst_kpp: Optional[ReceiverKPP] = None  # [103]
+    dst_kpp: Optional[ReceiverKPP]  # [103]
 
 
 ALERT_GENERATOR = AlertGenerator(

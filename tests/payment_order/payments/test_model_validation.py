@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import NewType, Optional, Tuple
 
 import pytest
 from pydantic import BaseModel, Field, ValidationError
@@ -10,7 +10,7 @@ from vitya.payment_order.errors import (
     OperationKindValidationBudgetValueError,
     PurposeValidationValueEmptyErrorForNonFNS,
 )
-from vitya.payment_order.fields import Amount, OperationKind, Purpose
+from vitya.payment_order.fields import Amount, ForThirdPerson, OperationKind, Purpose
 from vitya.payment_order.payments.checkers import BaseModelChecker
 from vitya.pydantic_fields import INN
 
@@ -33,6 +33,78 @@ def test_annotated_purpose_runs_payment_checker():
     with pytest.raises(ValidationError) as error:
         Payment(purpose=None, payment_type=PaymentType.IP)
     assert isinstance(first_validation_cause(error.value).errors[0], PurposeValidationValueEmptyErrorForNonFNS)
+
+
+def test_newtype_runs_operation_kind_checker():
+    Kind = NewType('Kind', OperationKind)
+    NestedKind = NewType('NestedKind', Kind)
+
+    class Payment(BaseModelChecker):
+        operation_kind: Optional[NestedKind]
+        payment_type: PaymentType
+
+    with pytest.raises(ValidationError) as error:
+        Payment(operation_kind='03', payment_type=PaymentType.FNS)
+    assert isinstance(first_validation_cause(error.value).errors[0], OperationKindValidationBudgetValueError)
+    assert Payment(operation_kind='01', payment_type=PaymentType.FNS).operation_kind == '01'
+
+
+def test_omitted_optional_preserves_payment_rules():
+    class Payment(BaseModelChecker):
+        purpose: Optional[Purpose]
+        other: Optional[str] = Field(...)
+        payment_type: PaymentType
+
+    payment = Payment(other=None, payment_type=PaymentType.FNS)
+    assert payment.purpose is None
+    with pytest.raises(ValidationError) as missing:
+        Payment(payment_type=PaymentType.FNS)
+    assert [e['loc'] for e in missing.value.errors()] == [('other',)]
+    with pytest.raises(ValidationError) as invalid:
+        Payment(other=None, payment_type=PaymentType.IP)
+    assert isinstance(first_validation_cause(invalid.value).errors[0], PurposeValidationValueEmptyErrorForNonFNS)
+    schema = Payment.model_json_schema() if PYDANTIC_V2 else Payment.schema()
+    assert set(schema['required']) == {'other', 'payment_type'}
+
+
+def test_mixed_optional_in_reverse_order():
+    class Model(BaseModel):
+        pair: Tuple[Optional[Annotated[INN, Field(description='ИНН')]], INN]
+
+    assert Model(pair=('0', '3664069397')).pair == (None, '3664069397')
+    with pytest.raises(ValidationError) as caught:
+        Model(pair=('0', '0'))
+    assert [e['loc'] for e in caught.value.errors()] == [('pair', 1)]
+
+
+@pytest.mark.skipif(not PYDANTIC_V2, reason='PydanticCustomError is a Pydantic 2 API')
+def test_combined_errors_preserve_service_code_message_and_context():
+    from pydantic import field_validator
+    from pydantic_core import PydanticCustomError
+
+    class Payment(BaseModelChecker):
+        amount: int
+        flag: ForThirdPerson
+        operation_kind: OperationKind
+        payment_type: PaymentType
+
+        @field_validator('amount')
+        @classmethod
+        def check_limit(cls, value):
+            raise PydanticCustomError('greater_than', 'Сумма вне лимита {limit}', {'limit': 100})
+
+    values = dict(amount=110, flag=1, payment_type=PaymentType.FNS)
+    with pytest.raises(ValidationError) as fields:
+        Payment(operation_kind='01', **values)
+    with pytest.raises(ValidationError) as combined:
+        Payment(operation_kind='03', **values)
+    details = combined.value.errors()
+    assert details[:-1] == fields.value.errors()
+    assert [(e['type'], e['msg']) for e in details[:-1]] == [
+        ('greater_than', 'Сумма вне лимита 100'),
+        ('bool_type', 'value is not a valid boolean'),
+    ]
+    assert isinstance(details[-1]['ctx']['error'].errors[0], OperationKindValidationBudgetValueError)
 
 
 def test_rejected_assignment_preserves_payment():

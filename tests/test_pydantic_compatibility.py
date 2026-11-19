@@ -15,7 +15,7 @@ class Identifiers(BaseModel):
     required: INN
     nullable: Optional[INN] = None
     items: List[Optional[INN]]
-    pair: Tuple[INN, Nullable[INN]]
+    pair: Tuple[INN, Optional[INN]]
 
 
 @pytest.mark.parametrize('empty', ['', '0', None])
@@ -48,6 +48,22 @@ def test_standalone_nullable_adapter():
         TypeAdapter(INN).validate_python('0')
     with pytest.raises(ValidationError):
         TypeAdapter(Nullable[INN]).validate_python('abcdef')
+
+
+@pytest.mark.skipif(not PYDANTIC_V2, reason='Pydantic 2 schema rebuild')
+def test_nullable_slots_survive_schema_rebuild():
+    from pydantic import TypeAdapter
+
+    class Model(BaseModel):
+        pair: Tuple[Optional[List[INN]], Optional[INN]]
+
+    previous = TypeAdapter(Model)
+    Model.model_rebuild(force=True)
+    for adapter in (previous, TypeAdapter(Model)):
+        assert adapter.validate_python({'pair': (None, '0')}).pair == (None, None)
+        with pytest.raises(ValidationError) as error:
+            adapter.validate_python({'pair': (['0'], '0')})
+        assert [detail['loc'] for detail in error.value.errors()] == [('pair', 0, 0)]
 
 
 @pytest.mark.skipif(not PYDANTIC_V2, reason='Pydantic 2 JSON schema and serialization')

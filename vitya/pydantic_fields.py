@@ -20,7 +20,7 @@ if PYDANTIC_V2:
     from pydantic_core import PydanticCustomError, core_schema
     from typing_extensions import Annotated
 
-    from ._pydantic_v2 import allows_empty, field_schema, normalize_nullable
+    from ._pydantic_v2 import field_schema, normalize_nullable
 else:
     from pydantic.errors import MissingError
     from pydantic.fields import ModelField
@@ -73,15 +73,13 @@ class FieldMixin(ABC):
     if PYDANTIC_V2:
         @classmethod
         def __get_pydantic_core_schema__(cls, source_type: Any, handler: Any) -> core_schema.CoreSchema:
-            nullable = allows_empty(cls, handler)
-
-            def validate(value: Any) -> Any:
+            def validate(value: Any, allows_empty: Callable[[], bool]) -> Any:
                 if value is None:
                     raise PydanticCustomError('none_not_allowed', 'none is not an allowed value')
                 try:
                     return cls(value)
                 except EmptyError:
-                    if nullable:
+                    if allows_empty():
                         return None
                     raise PydanticCustomError('vitya_empty', 'field required')
                 except (ValueError, TypeError) as exc:

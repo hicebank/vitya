@@ -67,10 +67,22 @@ from vitya.pydantic_fields import OKTMO
 from vitya.typing_helpers import NoneType, is_union, normalize_type
 
 if PYDANTIC_V2:
-    from pydantic import GetCoreSchemaHandler
+    from pydantic import (
+        GetCoreSchemaHandler,
+        ModelWrapValidatorHandler,
+        ValidationError,
+        model_validator,
+    )
     from pydantic_core import PydanticCustomError, core_schema
+    from typing_extensions import Self
 
-    from vitya._pydantic_v2 import check_model_fields, unwrap_annotated
+    from vitya._pydantic_v2 import (
+        apply_optional_defaults,
+        capture_fields,
+        observe_model_fields,
+        unwrap_field_type,
+        with_checker_error,
+    )
 else:
     from pydantic import root_validator
 
@@ -545,11 +557,11 @@ class BaseModelChecker(BaseModel):
         type_to_fields: DefaultDict[Any, List[str]] = defaultdict(list)
         if PYDANTIC_V2:
             for name, info in cls.model_fields.items():
-                annotation = unwrap_annotated(info.annotation)
+                annotation = unwrap_field_type(info.annotation)
                 args = get_args(annotation)
                 # v1 strips a single nullable layer from ModelField.type_.
                 if is_union(annotation) and len(args) == 2 and NoneType in args:
-                    annotation = unwrap_annotated(next(arg for arg in args if arg is not NoneType))
+                    annotation = unwrap_field_type(next(arg for arg in args if arg is not NoneType))
                 type_to_fields[normalize_type(annotation)].append(name)
         else:
             for name, field in cls.__fields__.items():
@@ -633,9 +645,36 @@ class BaseModelChecker(BaseModel):
 
         @classmethod
         def __get_pydantic_core_schema__(cls, source: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
+            apply_optional_defaults(cls)
             schema = handler(source)
-            check_model_fields(handler.resolve_ref_schema(schema), cls, cls._validate_checkers)
+            observe_model_fields(handler.resolve_ref_schema(schema), cls)
             return schema
+
+        @model_validator(mode='wrap')
+        @classmethod
+        def _check_model(cls, data: Any, handler: ModelWrapValidatorHandler[Self]) -> Self:
+            # validate_assignment writes to its input model. Stage those writes
+            # so a rejected payment and its fields_set stay untouched.
+            candidate = data
+            if isinstance(data, cls) and cls.model_config.get('validate_assignment'):
+                candidate = data.model_copy()
+            with capture_fields() as parsed:
+                try:
+                    model = handler(candidate)
+                except ValidationError as exc:
+                    if parsed.failed_values is not None:
+                        try:
+                            cls._validate_checkers(parsed.failed_values)
+                        except PydanticCustomError as checker_error:
+                            raise with_checker_error(exc, checker_error, data) from None
+                    raise
+                if parsed.complete:
+                    cls._validate_checkers(vars(model))
+                if isinstance(data, cls) and candidate is not data and model is candidate:
+                    if parsed.complete:
+                        BaseModel.__setstate__(data, BaseModel.__getstate__(model))
+                    return data
+                return model
 
         @classmethod
         def _validate_checkers(cls, values: Dict[str, Any]) -> None:
