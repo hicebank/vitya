@@ -2,7 +2,6 @@ from typing import Optional
 
 import pytest
 from pydantic import BaseModel, ValidationError as PydanticValidationError
-from pydantic.errors import PydanticValueError
 
 from vitya import (
     ValidationError as VityaValidationError,
@@ -17,6 +16,9 @@ from vitya import (
     validate_snils,
 )
 from vitya.errors import (
+    BICValidationError,
+    INNValidationError,
+    KPPValidationError,
     OKTMOValidationTypeError,
     OKTMOValidationValueError,
     OKTMOValidationValueLenError,
@@ -128,7 +130,7 @@ def test_valid_inn_le(inn):
     ]
 )
 def test_wrong_inn(inn):
-    with pytest.raises(PydanticValueError):
+    with pytest.raises(INNValidationError):
         validate_inn(inn)
 
     with pytest.raises(PydanticValidationError):
@@ -165,7 +167,7 @@ def test_valid_kpp(kpp):
     ]
 )
 def test_wrong_kpp(kpp):
-    with pytest.raises(PydanticValueError):
+    with pytest.raises(KPPValidationError):
         validate_kpp(kpp)
 
     with pytest.raises(PydanticValidationError):
@@ -197,7 +199,7 @@ def test_valid_bic(bic):
     ]
 )
 def test_wrong_bic(bic):
-    with pytest.raises(PydanticValueError):
+    with pytest.raises(BICValidationError):
         validate_bic(bic)
 
     with pytest.raises(PydanticValidationError):

@@ -1,8 +1,7 @@
 from datetime import date
 from typing import Any
 
-from pydantic.errors import PydanticTypeError, PydanticValueError
-
+from vitya._pydantic import PydanticTypeError, PydanticValueError
 from vitya.errors import (
     INNValidationError,
     INNValidationLenError,

@@ -12,12 +12,13 @@ from typing import (
     Sequence,
     Tuple,
     Type,
+    get_args,
     get_type_hints,
 )
 
-from pydantic import BaseModel, root_validator
-from pydantic.fields import ModelField
+from pydantic import BaseModel
 
+from vitya._pydantic import PYDANTIC_V2
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.fields import (
     CBC,
@@ -63,7 +64,27 @@ from vitya.payment_order.payments.checks import (
     check_uin,
 )
 from vitya.pydantic_fields import OKTMO
-from vitya.typing_helpers import is_union, normalize_type
+from vitya.typing_helpers import NoneType, is_union, normalize_type
+
+if PYDANTIC_V2:
+    from pydantic import (
+        GetCoreSchemaHandler,
+        ModelWrapValidatorHandler,
+        ValidationError,
+        model_validator,
+    )
+    from pydantic_core import PydanticCustomError, core_schema
+    from typing_extensions import Self
+
+    from vitya._pydantic_v2 import (
+        apply_optional_defaults,
+        capture_fields,
+        observe_model_fields,
+        unwrap_field_type,
+        with_checker_error,
+    )
+else:
+    from pydantic import root_validator
 
 
 class CheckerError(ValueError):
@@ -491,11 +512,32 @@ class BaseModelChecker(BaseModel):
 
     __final_wired_checkers__: ClassVar[Sequence[WiredChecker]]  # this value is computed at __init_subclass__
 
-    def __init_subclass__(cls, **kwargs: Dict[str, Any]) -> None:  # pragma: no cover
-        # built error
+    if PYDANTIC_V2:
+        @classmethod
+        def __pydantic_init_subclass__(cls, **kwargs: Any) -> None:
+            super().__pydantic_init_subclass__(**kwargs)
+            # Before Pydantic 2.12 this was the hook called after fields were built.
+            if not hasattr(BaseModel, '__pydantic_on_complete__'):
+                cls._bind_checkers()
+
+        @classmethod
+        def __pydantic_on_complete__(cls) -> None:
+            super().__pydantic_on_complete__()
+            cls._bind_checkers()
+    else:
+        def __init_subclass__(cls, **kwargs: Any) -> None:
+            super().__init_subclass__(**kwargs)
+            cls._bind_checkers()
+
+    @classmethod
+    def _bind_checkers(cls) -> None:
+        if PYDANTIC_V2:
+            field_names = cls.model_fields.keys()
+        else:
+            field_names = cls.__fields__.keys()
         errors = []
         for checker, fields in cls.__extra_wired_checkers__:
-            wild_fields = set(fields) - cls.__fields__.keys()
+            wild_fields = set(fields) - field_names
             if wild_fields:
                 errors.append(f'Checker {checker} require unknown model fields {wild_fields}')
         if errors:
@@ -512,9 +554,18 @@ class BaseModelChecker(BaseModel):
             for checker_cls in cls.__auto_checkers__
             if checker_cls not in cls.__excluded_auto_checkers__
         ]
-        type_to_fields: DefaultDict[Any, List[ModelField]] = defaultdict(list)
-        for field in cls.__fields__.values():
-            type_to_fields[normalize_type(field.type_)].append(field)
+        type_to_fields: DefaultDict[Any, List[str]] = defaultdict(list)
+        if PYDANTIC_V2:
+            for name, info in cls.model_fields.items():
+                annotation = unwrap_field_type(info.annotation)
+                args = get_args(annotation)
+                # v1 strips a single nullable layer from ModelField.type_.
+                if is_union(annotation) and len(args) == 2 and NoneType in args:
+                    annotation = unwrap_field_type(next(arg for arg in args if arg is not NoneType))
+                type_to_fields[normalize_type(annotation)].append(name)
+        else:
+            for name, field in cls.__fields__.items():
+                type_to_fields[normalize_type(field.type_)].append(name)
         type_to_fields.default_factory = None
 
         result: List[WiredChecker] = []
@@ -528,7 +579,7 @@ class BaseModelChecker(BaseModel):
     @classmethod
     def _wire_checker(
         cls,
-        type_to_fields: Mapping[Any, Sequence[ModelField]],
+        type_to_fields: Mapping[Any, Sequence[str]],
         checker_cls: Type[BaseChecker],
     ) -> Optional[WiredChecker]:
         parameters = get_type_hints(checker_cls.__init__)  # by default get_type_hints strips Annotated
@@ -541,11 +592,11 @@ class BaseModelChecker(BaseModel):
             if len(fields) == 0:
                 return None
             elif len(fields) == 1:
-                field_names.append(fields[0].name)
+                field_names.append(fields[0])
             else:
                 raise ValueError(
                     f'{checker_cls} requires field with type {param_type},'
-                    f' but there are several candidates {[field.name for field in fields]}'
+                    f' but there are several candidates {fields}'
                 )
 
         return checker_cls, field_names
@@ -553,14 +604,14 @@ class BaseModelChecker(BaseModel):
     @classmethod
     def _get_matching_fields_by_type(
         cls,
-        type_to_fields: Mapping[Any, Sequence[ModelField]],
+        type_to_fields: Mapping[Any, Sequence[str]],
         tp: Any,
-    ) -> Sequence[ModelField]:
+    ) -> Sequence[str]:
         if not is_union(tp):
             return type_to_fields.get(normalize_type(tp), [])
 
         union_args = set(tp.__args__)
-        result: List[ModelField] = []
+        result: List[str] = []
         for field_type, fields in type_to_fields.items():
             norm_field_type = normalize_type(field_type)
             if not is_union(norm_field_type):
@@ -570,8 +621,8 @@ class BaseModelChecker(BaseModel):
                 result.extend(fields)
         return result
 
-    @root_validator(pre=False)
-    def run_checkers(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+    @classmethod
+    def _check_values(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         errors = []
         for checker, fields_names in cls.__final_wired_checkers__:
             try:
@@ -586,3 +637,52 @@ class BaseModelChecker(BaseModel):
         if errors:
             raise CheckerError(errors)
         return values
+
+    if PYDANTIC_V2:
+        @classmethod
+        def run_checkers(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+            return cls._check_values(values)
+
+        @classmethod
+        def __get_pydantic_core_schema__(cls, source: Any, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
+            apply_optional_defaults(cls)
+            schema = handler(source)
+            observe_model_fields(handler.resolve_ref_schema(schema), cls)
+            return schema
+
+        @model_validator(mode='wrap')
+        @classmethod
+        def _check_model(cls, data: Any, handler: ModelWrapValidatorHandler[Self]) -> Self:
+            # validate_assignment writes to its input model. Stage those writes
+            # so a rejected payment and its fields_set stay untouched.
+            candidate = data
+            if isinstance(data, cls) and cls.model_config.get('validate_assignment'):
+                candidate = data.model_copy()
+            with capture_fields() as parsed:
+                try:
+                    model = handler(candidate)
+                except ValidationError as exc:
+                    if parsed.failed_values is not None:
+                        try:
+                            cls._validate_checkers(parsed.failed_values)
+                        except PydanticCustomError as checker_error:
+                            raise with_checker_error(exc, checker_error, data) from None
+                    raise
+                if parsed.complete:
+                    cls._validate_checkers(vars(model))
+                if isinstance(data, cls) and candidate is not data and model is candidate:
+                    if parsed.complete:
+                        BaseModel.__setstate__(data, BaseModel.__getstate__(model))
+                    return data
+                return model
+
+        @classmethod
+        def _validate_checkers(cls, values: Dict[str, Any]) -> None:
+            try:
+                cls.run_checkers(values)
+            except CheckerError as exc:
+                raise PydanticCustomError('vitya_checker', '{message}', {'message': str(exc), 'error': exc}) from exc
+    else:
+        @root_validator(pre=False)
+        def run_checkers(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+            return cls._check_values(values)

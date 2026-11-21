@@ -1,9 +1,14 @@
-pydantic<2.0 # Optional dependency for this package
+# Test matrix for the supported Python versions.
+pydantic==1.10.12; python_version < '3.11'
+pydantic==1.10.27; python_version >= '3.11' and python_version < '3.14'
+pydantic==2.14.4; python_version >= '3.14'
 
-# CI
-pytest==7.4.0
-mypy==0.812
-flake8==3.8.4
-isort==5.7.0
-importlib-metadata<5.0
-freezegun==1.2.2
+pytest==7.4.0; python_version < '3.11'
+pytest==9.2.0; python_version >= '3.11'
+freezegun==1.2.2; python_version < '3.11'
+freezegun==1.5.5; python_version >= '3.11'
+mypy==1.10.1; python_version < '3.14'
+mypy==2.4.1; python_version >= '3.14'
+flake8==5.0.4; python_version < '3.11'
+flake8==7.5.0; python_version >= '3.11'
+isort==5.13.2

@@ -5,7 +5,7 @@ import pytest
 from freezegun import freeze_time
 from pydantic import ValidationError
 
-from tests.helpers import parametrize_with_dict
+from tests.helpers import first_validation_cause, parametrize_with_dict
 from tests.payment_order.testdata import (
     IP_ACCOUNT,
     IP_INN,
@@ -19,7 +19,6 @@ from tests.payment_order.testdata import (
 )
 from vitya.payment_order.enums import PaymentType
 from vitya.payment_order.errors import (
-    AccountValidationBICValueError,
     CBCValidationEmptyNotAllowed,
     DocumentDateValidationBOLenError,
     DocumentDateValidationCustomsLenError,
@@ -157,7 +156,7 @@ def test_receiver_account_checker(
     try:
         TestReceiverAccountModelChecker(account_number=account_number, bic=bic, payment_type=payment_type)
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -178,7 +177,7 @@ def test_receiver_account_checker_with_payment_type(
     try:
         TestReceiverAccountModelCheckerWithPaymentType(account_number=account_number, payment_type=payment_type)
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -208,7 +207,7 @@ def test_operation_kind_checker(
     try:
         TestOperationKindChecker(operation_kind=operation_kind, payment_type=payment_type)
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -245,7 +244,7 @@ def test_payer_inn_checker(
             payment_type=payment_type,
         )
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -285,7 +284,7 @@ def test_payer_inn_with_uin_and_receiver_account_checker(
             uin=uin,
         )
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -326,7 +325,7 @@ def test_uin_checker(
             payment_type=payment_type
         )
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -356,7 +355,7 @@ def test_purpose_checker(
     try:
         TestPurposeChecker(purpose=purpose, payment_type=payment_type)
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -375,7 +374,7 @@ class TestSeveralChecker(BaseModelChecker):
     'account_number, bic, payment_type, exceptions',
     [
         (IP_ACCOUNT, VALID_BIC[:-1] + '1', PaymentType.FNS,
-         (AccountValidationBICValueError, ReceiverAccountValidationFNSValueError))
+         (ReceiverAccountValidationFNSValueError,))
     ]
 )
 def test_several_checker(
@@ -387,8 +386,8 @@ def test_several_checker(
     try:
         TestSeveralChecker(account_number=account_number, bic=bic, payment_type=payment_type)
     except ValidationError as e:
-        errors = [e for e in e.raw_errors[0].exc.errors]
-        assert all(isinstance(error, exceptions) for error in errors)
+        errors = first_validation_cause(e).errors
+        assert tuple(type(error) for error in errors) == exceptions
     else:
         if exceptions:  # pragma: no cover
             raise NotImplementedError
@@ -421,7 +420,7 @@ def test_receiver_inn_checker(
     try:
         TestReceiverInnChecker(receiver_inn=receiver_inn, payment_type=payment_type)
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -456,7 +455,7 @@ def test_payer_status_checker(
     try:
         TestPayerStatusChecker(payer_status=payer_status, payment_type=payment_type, for_third_face=for_third_face)
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -507,7 +506,7 @@ def test_payer_kpp_checker(
             payer_status=payer_status,
         )
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -534,7 +533,7 @@ def test_for_third_person_and_purpose_checker(
     try:
         TestForThirdPersonAndPurposeChecker(purpose=purpose, for_third_person=ForThirdPerson(for_third_person))
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -566,7 +565,7 @@ def test_receiver_kpp_checker(
     try:
         TestReceiverKppChecker(receiver_kpp=receiver_kpp, payment_type=payment_type)
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -597,7 +596,7 @@ def test_cbc_checker(
     try:
         TestCBCChecker(cbc=cbc, payment_type=payment_type)
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -635,7 +634,7 @@ def test_oktmo_checker(
     try:
         TestOktmoChecker(oktmo=oktmo, payment_type=payment_type)
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -656,7 +655,7 @@ def test_oktmo_checker_before_2024(
     try:
         TestOktmoWithPayerStatusChecker(oktmo=oktmo, payment_type=payment_type, payer_status=payer_status)
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -684,7 +683,7 @@ def test_reason_checker(
     try:
         TestReasonChecker(reason=reason, payment_type=payment_type)
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -718,7 +717,7 @@ def test_tax_period_checker(
     try:
         TestTaxPeriodChecker(tax_period=tax_period, payment_type=payment_type, payer_status=payer_status)
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -740,7 +739,7 @@ def test_tax_period_checker_before_2024(
     try:
         TestTaxPeriodChecker(tax_period=tax_period, payment_type=payment_type, payer_status=payer_status)
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -863,7 +862,7 @@ def test_document_number_checker(
             reason=reason,
         )
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -893,7 +892,7 @@ def test_document_date_checker(
     try:
         TestDocumentDateChecker(document_date=document_date, payment_type=payment_type)
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None
 
@@ -923,6 +922,6 @@ def test_document_date_with_reason_checker(
     try:
         TestDocumentDateWithReasonChecker(document_date=document_date, payment_type=payment_type, reason=reason)
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc.errors[0], exception)
+        assert isinstance(first_validation_cause(e).errors[0], exception)
     else:
         assert exception is None

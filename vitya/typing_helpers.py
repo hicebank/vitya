@@ -1,14 +1,12 @@
+import types
 from typing import Any, Union, get_origin
 
-try:
-    from types import UnionType  # type: ignore[attr-defined]
-except ImportError:
-    UnionType = None
+UnionType = getattr(types, 'UnionType', None)
 
 
 def is_union(tp: Any) -> bool:
     origin = get_origin(tp)
-    return origin == Union or (UnionType is not None and origin == UnionType)
+    return origin is Union or (UnionType is not None and origin is UnionType)
 
 
 NoneType = type(None)

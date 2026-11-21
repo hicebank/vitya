@@ -14,3 +14,9 @@ def parametrize_with_dict(argnames: List[str], cases: Iterable[Dict[str, Any]]):
         )(func)
 
     return decorator
+
+
+def first_validation_cause(error):
+    if hasattr(error, 'raw_errors'):
+        return error.raw_errors[0].exc
+    return error.errors()[0]['ctx']['error']

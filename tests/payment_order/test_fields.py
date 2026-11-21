@@ -1,10 +1,10 @@
+from decimal import Decimal
 from typing import Optional, Type
 
 import pytest
-from pydantic import BaseModel
-from pydantic.error_wrappers import ValidationError
-from pydantic.errors import Decimal
+from pydantic import BaseModel, ValidationError
 
+from tests.helpers import first_validation_cause
 from tests.payment_order.testdata import INVALID_UIN, IP_ACCOUNT, VALID_UIN
 from vitya.payment_order.errors import (
     AccountNumberValidationDigitsOnlyError,
@@ -60,7 +60,7 @@ def test_number(
     try:
         assert TestNumberModel(field=value).field == expected
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc, exception)
+        assert isinstance(first_validation_cause(e), exception)
 
 
 class TestAmountModel(BaseModel):
@@ -84,7 +84,7 @@ def test_amount(
     try:
         assert TestAmountModel(field=value).field == expected
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc, exception)
+        assert isinstance(first_validation_cause(e), exception)
 
 
 class TestPayerModel(BaseModel):
@@ -107,7 +107,7 @@ def test_payer(
     try:
         assert TestPayerModel(field=value).field == expected
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc, exception)
+        assert isinstance(first_validation_cause(e), exception)
 
 
 class TestPayeeModel(BaseModel):
@@ -131,7 +131,7 @@ def test_receiver(
     try:
         assert TestPayeeModel(field=value).field == expected
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc, exception)
+        assert isinstance(first_validation_cause(e), exception)
 
 
 class TestPaymentOrderModel(BaseModel):
@@ -155,7 +155,7 @@ def test_payment_order(
     try:
         assert TestPaymentOrderModel(field=value).field == expected
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc, exception)
+        assert isinstance(first_validation_cause(e), exception)
 
 
 class TestAccountNumberModel(BaseModel):
@@ -180,7 +180,7 @@ def test_account_number(
     try:
         assert TestAccountNumberModel(field=value).field == expected
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc, exception)
+        assert isinstance(first_validation_cause(e), exception)
 
 
 class TestOperationKindModel(BaseModel):
@@ -204,7 +204,7 @@ def test_operation_kind(
     try:
         assert TestOperationKindModel(field=value).field == expected
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc, exception)
+        assert isinstance(first_validation_cause(e), exception)
 
 
 class TestUINModel(BaseModel):
@@ -230,7 +230,7 @@ def test_uin(
     try:
         assert TestUINModel(field=value).field == expected
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc, exception)
+        assert isinstance(first_validation_cause(e), exception)
 
 
 class TestPurposeCodeModel(BaseModel):
@@ -252,7 +252,7 @@ def test_purpose_code(
     try:
         assert TestPurposeCodeModel(field=value).field == expected
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc, exception)
+        assert isinstance(first_validation_cause(e), exception)
 
 
 class TestPurposeModel(BaseModel):
@@ -276,4 +276,4 @@ def test_purpose(
     try:
         assert TestPurposeModel(field=value).field == expected
     except ValidationError as e:
-        assert isinstance(e.raw_errors[0].exc, exception)
+        assert isinstance(first_validation_cause(e), exception)
